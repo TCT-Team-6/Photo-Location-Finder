@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: Storage
+    description: Private photo uploads and serving endpoints.
+  - name: Investigations
+    description: Photo location investigations and the user's saved library.
 paths:
   /healthz:
     get:
@@ -24,7 +28,182 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [Storage]
+      summary: Request a private photo upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Invalid file metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /investigations:
+    get:
+      operationId: listInvestigations
+      tags: [Investigations]
+      summary: List the signed-in user's investigations
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+      responses:
+        "200":
+          description: Investigations belonging to the current user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Investigation"
+    post:
+      operationId: createInvestigation
+      tags: [Investigations]
+      summary: Analyze and save an uploaded photo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvestigationInput"
+      responses:
+        "201":
+          description: Photo analyzed and investigation saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+        "400":
+          description: Invalid investigation data or unsupported image.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "502":
+          description: Photo analysis failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /investigations/summary:
+    get:
+      operationId: getInvestigationSummary
+      tags: [Investigations]
+      summary: Get counts and the latest saved investigation
+      responses:
+        "200":
+          description: Current user's library summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestigationSummary"
+  /investigations/{id}:
+    get:
+      operationId: getInvestigation
+      tags: [Investigations]
+      summary: Get one saved investigation
+      parameters:
+        - $ref: "#/components/parameters/InvestigationId"
+      responses:
+        "200":
+          description: The requested investigation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+        "404":
+          description: Investigation not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    patch:
+      operationId: updateInvestigation
+      tags: [Investigations]
+      summary: Update an investigation's title or background notes
+      parameters:
+        - $ref: "#/components/parameters/InvestigationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvestigationUpdate"
+      responses:
+        "200":
+          description: Updated investigation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+        "404":
+          description: Investigation not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    delete:
+      operationId: deleteInvestigation
+      tags: [Investigations]
+      summary: Delete an investigation from the library
+      parameters:
+        - $ref: "#/components/parameters/InvestigationId"
+      responses:
+        "204":
+          description: Investigation deleted.
+        "404":
+          description: Investigation not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /investigations/{id}/photo:
+    get:
+      operationId: getInvestigationPhoto
+      tags: [Investigations]
+      summary: Serve the private photo attached to an investigation
+      parameters:
+        - $ref: "#/components/parameters/InvestigationId"
+      responses:
+        "200":
+          description: Photo bytes.
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Investigation or photo not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
+  parameters:
+    InvestigationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +212,160 @@ components:
           type: string
       required:
         - status
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        size:
+          type: integer
+          minimum: 1
+          maximum: 26214400
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/avif]
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
+    LocationCandidate:
+      type: object
+      required: [place, region, country, confidence, rationale, clues, mapsUrl]
+      properties:
+        place:
+          type: string
+        region:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        rationale:
+          type: string
+        clues:
+          type: array
+          items:
+            type: string
+        mapsUrl:
+          type: string
+          format: uri
+    VisualClue:
+      type: object
+      required: [label, observation, significance]
+      properties:
+        label:
+          type: string
+        observation:
+          type: string
+        significance:
+          type: string
+    Investigation:
+      type: object
+      required:
+        - id
+        - title
+        - originalName
+        - contentType
+        - context
+        - shotAt
+        - summary
+        - candidates
+        - clues
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        originalName:
+          type: string
+        contentType:
+          type: string
+        context:
+          type: ["string", "null"]
+        shotAt:
+          type: ["string", "null"]
+          format: date
+        summary:
+          type: string
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocationCandidate"
+        clues:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisualClue"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    InvestigationInput:
+      type: object
+      required: [objectPath, originalName, contentType]
+      properties:
+        objectPath:
+          type: string
+          minLength: 1
+        originalName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/avif]
+        context:
+          type: string
+          maxLength: 3000
+        shotAt:
+          type: ["string", "null"]
+          format: date
+        title:
+          type: string
+          maxLength: 120
+    InvestigationUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        context:
+          type: ["string", "null"]
+          maxLength: 3000
+    InvestigationSummary:
+      type: object
+      required: [total, thisMonth, latest]
+      properties:
+        total:
+          type: integer
+        thisMonth:
+          type: integer
+        latest:
+          anyOf:
+            - $ref: "#/components/schemas/Investigation"
+            - type: "null"
 
