@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Whereabouts"
+description = "A photo-location investigation app where people upload images, use visible clues and background information to find likely places, then save and revisit their investigations in a private library."
+version = "1.0.0"
+id = "artifacts/whereabouts"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18508
+
+[services.development]
+run = "pnpm --filter @workspace/whereabouts run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/whereabouts", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/whereabouts/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18508"
+BASE_PATH = "/"
