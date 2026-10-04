@@ -23,6 +23,7 @@ import { and, count, desc, eq, gte, ilike, or } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectPermission } from "../lib/objectAcl";
+import { searchLocationPhotoReferences } from "../lib/locationPhotoSearch";
 import {
   ObjectNotFoundError,
   ObjectStorageService,
@@ -141,17 +142,12 @@ function defaultTitle(originalName: string): string {
 }
 
 async function analyzePhoto(
+  client: OpenAI,
   image: Buffer,
   contentType: string,
   context: string | null,
   shotAt: string | null,
 ): Promise<{ summary: string; candidates: LocationCandidate[]; clues: VisualClue[] }> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Photo analysis is not configured.");
-  }
-
-  const client = new OpenAI({ apiKey });
   const completion = await client.chat.completions.create({
     model: process.env.OPENAI_MODEL || "gpt-5.4-mini",
     max_completion_tokens: 8192,
@@ -330,11 +326,50 @@ router.post(
       const shotAt = parsed.data.shotAt
         ? parsed.data.shotAt.toISOString().slice(0, 10)
         : null;
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error("Photo analysis is not configured.");
+      }
+      const openAIClient = new OpenAI({ apiKey });
       const analysis = await analyzePhoto(
+        openAIClient,
         buffer,
         contentType,
         context,
         shotAt,
+      );
+      const candidates = await Promise.all(
+        analysis.candidates.map(
+          async (candidate): Promise<LocationCandidate> => {
+            try {
+              const photoReferences = await searchLocationPhotoReferences(
+                openAIClient,
+                candidate,
+              );
+              return {
+                ...candidate,
+                photoReferences,
+                photoSearchStatus: photoReferences.length
+                  ? "found"
+                  : "no_results",
+              };
+            } catch (error) {
+              req.log.warn(
+                {
+                  location: candidate.place,
+                  error:
+                    error instanceof Error ? error.message : "Unknown error",
+                },
+                "Location photo search failed",
+              );
+              return {
+                ...candidate,
+                photoReferences: [],
+                photoSearchStatus: "unavailable",
+              };
+            }
+          },
+        ),
       );
 
       await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
@@ -352,7 +387,7 @@ router.post(
           context,
           shotAt,
           summary: analysis.summary,
-          candidates: analysis.candidates,
+          candidates,
           clues: analysis.clues,
         })
         .returning();

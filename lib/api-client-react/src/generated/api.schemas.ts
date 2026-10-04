@@ -43,6 +43,24 @@ export interface UploadUrlResponse {
   metadata?: UploadUrlRequest;
 }
 
+export type LocationCandidatePhotoSearchStatus = typeof LocationCandidatePhotoSearchStatus[keyof typeof LocationCandidatePhotoSearchStatus];
+
+
+export const LocationCandidatePhotoSearchStatus = {
+  found: 'found',
+  no_results: 'no_results',
+  unavailable: 'unavailable',
+} as const;
+
+export interface LocationPhotoReference {
+  imageUrl: string;
+  /** @nullable */
+  thumbnailUrl?: string | null;
+  sourceUrl: string;
+  /** @nullable */
+  caption?: string | null;
+}
+
 export interface LocationCandidate {
   place: string;
   /** @nullable */
@@ -57,6 +75,8 @@ export interface LocationCandidate {
   rationale: string;
   clues: string[];
   mapsUrl: string;
+  photoReferences?: LocationPhotoReference[];
+  photoSearchStatus?: LocationCandidatePhotoSearchStatus;
 }
 
 export interface VisualClue {

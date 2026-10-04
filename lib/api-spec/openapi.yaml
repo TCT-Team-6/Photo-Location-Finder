@@ -267,6 +267,28 @@ components:
         mapsUrl:
           type: string
           format: uri
+        photoReferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocationPhotoReference"
+        photoSearchStatus:
+          type: string
+          enum: [found, no_results, unavailable]
+    LocationPhotoReference:
+      type: object
+      required: [imageUrl, sourceUrl]
+      properties:
+        imageUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: ["string", "null"]
+          format: uri
+        sourceUrl:
+          type: string
+          format: uri
+        caption:
+          type: ["string", "null"]
     VisualClue:
       type: object
       required: [label, observation, significance]

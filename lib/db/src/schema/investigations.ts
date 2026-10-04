@@ -18,6 +18,8 @@ export type LocationCandidate = {
   rationale: string;
   clues: string[];
   mapsUrl: string;
+  photoReferences?: LocationPhotoReference[];
+  photoSearchStatus?: LocationPhotoSearchStatus;
 };
 
 export type VisualClue = {
@@ -25,6 +27,15 @@ export type VisualClue = {
   observation: string;
   significance: string;
 };
+
+export type LocationPhotoReference = {
+  imageUrl: string;
+  thumbnailUrl: string | null;
+  sourceUrl: string;
+  caption: string | null;
+};
+
+export type LocationPhotoSearchStatus = "found" | "no_results" | "unavailable";
 
 export const investigationsTable = pgTable(
   "investigations",

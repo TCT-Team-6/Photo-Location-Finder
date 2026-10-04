@@ -15,6 +15,8 @@ export * from './investigationSummary';
 export * from './investigationUpdate';
 export * from './listInvestigationsParams';
 export * from './locationCandidate';
+export * from './locationCandidatePhotoSearchStatus';
+export * from './locationPhotoReference';
 export * from './uploadUrlRequest';
 export * from './uploadUrlRequestContentType';
 export * from './uploadUrlResponse';

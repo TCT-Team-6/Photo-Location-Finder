@@ -80,7 +80,14 @@ export const ListInvestigationsResponseItem = zod.object({
   "confidence": zod.number().min(listInvestigationsResponseCandidatesItemConfidenceMin).max(listInvestigationsResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url()
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
 })),
   "clues": zod.array(zod.object({
   "label": zod.string(),
@@ -134,7 +141,14 @@ export const CreateInvestigationResponse = zod.object({
   "confidence": zod.number().min(createInvestigationResponseCandidatesItemConfidenceMin).max(createInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url()
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
 })),
   "clues": zod.array(zod.object({
   "label": zod.string(),
@@ -172,7 +186,14 @@ export const GetInvestigationSummaryResponse = zod.object({
   "confidence": zod.number().min(getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMin).max(getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url()
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
 })),
   "clues": zod.array(zod.object({
   "label": zod.string(),
@@ -212,7 +233,14 @@ export const GetInvestigationResponse = zod.object({
   "confidence": zod.number().min(getInvestigationResponseCandidatesItemConfidenceMin).max(getInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url()
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
 })),
   "clues": zod.array(zod.object({
   "label": zod.string(),
@@ -262,7 +290,14 @@ export const UpdateInvestigationResponse = zod.object({
   "confidence": zod.number().min(updateInvestigationResponseCandidatesItemConfidenceMin).max(updateInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url()
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
 })),
   "clues": zod.array(zod.object({
   "label": zod.string(),

@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { LocationCandidatePhotoSearchStatus } from './locationCandidatePhotoSearchStatus';
+import type { LocationPhotoReference } from './locationPhotoReference';
 
 export interface LocationCandidate {
   place: string;
@@ -20,4 +22,6 @@ export interface LocationCandidate {
   rationale: string;
   clues: string[];
   mapsUrl: string;
+  photoReferences?: LocationPhotoReference[];
+  photoSearchStatus?: LocationCandidatePhotoSearchStatus;
 }

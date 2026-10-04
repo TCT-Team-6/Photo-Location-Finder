@@ -483,9 +483,9 @@ function InvestigatePage() {
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => setShotAt(event.target.value)} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         {(localError || uploadUrl.isError || create.isError) && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError || 'Your investigation could not be saved. Please try again.'}</p>}
         <button type="submit" disabled={pending} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70">
-          {pending ? <><LoaderCircle size={17} className="animate-spin" />{uploadUrl.isPending ? 'Preparing secure upload…' : 'Reading the scene…'}</> : <>Begin investigation <Sparkles size={16} /></>}
+          {pending ? <><LoaderCircle size={17} className="animate-spin" />{uploadUrl.isPending ? 'Preparing secure upload…' : 'Analyzing and finding references…'}</> : <>Begin investigation <Sparkles size={16} /></>}
         </button>
-        <p className="mt-3 text-center font-data text-[9px] uppercase tracking-[.12em] text-[#909b90]"><ShieldCheck size={12} className="mr-1 inline" />Private photo storage</p>
+        <p className="mt-3 text-center font-data text-[9px] uppercase tracking-[.12em] text-[#909b90]"><ShieldCheck size={12} className="mr-1 inline" />Private photo storage · Web search uses place names only</p>
       </div>
     </form>
   </div>;
@@ -593,12 +593,25 @@ function InvestigationPage() {
       </div>
       <div>
         <div className="mb-4 flex items-end justify-between"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.candidates.length} leads</span></div>
+        <p className="mb-4 text-xs leading-5 text-[#859187]">Public photo references are searched by place name only. Your original photo and notes are not sent to image search.</p>
         {item.candidates.length ? <div className="space-y-4">{item.candidates.map((candidate, index) => <article key={`${candidate.place}-${index}`} className={`relative overflow-hidden rounded-2xl border p-5 ${index === 0 ? 'border-[#b8c4b5] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec]'}`} data-testid={`card-candidate-${index}`}>
           {index === 0 && <span className="absolute right-4 top-4 rounded-full bg-[#385e51] px-3 py-1 font-data text-[8px] uppercase tracking-[.12em] text-[#f4f0e6]">Strongest lead</span>}
           <div className="flex items-start gap-3 pr-24"><span className={`map-pin mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full ${index === 0 ? 'bg-[#c8794d] text-white' : 'bg-[#e2e4d9] text-[#607a68]'}`}><MapPin size={17} /></span><div><h3 className="font-editorial text-2xl tracking-[-.02em]">{candidate.place}</h3><p className="mt-1 text-xs text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</p></div></div>
           <div className="mt-5 flex items-center justify-between border-y border-[#c9d0c2] py-3"><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Confidence</span><span className="font-data text-sm text-[#385e51]">{Math.round(candidate.confidence * 100)}%</span></div>
           <p className="mt-4 text-sm leading-6 text-[#596d61]">{candidate.rationale}</p>
           {candidate.clues.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{candidate.clues.map((clue) => <span key={clue} className="rounded-full border border-[#c7d0c1] px-3 py-1.5 text-[10px] text-[#627569]">{clue}</span>)}</div>}
+          {(candidate.photoReferences ?? []).length > 0 ? <div className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${index}`}>
+            <p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {(candidate.photoReferences ?? []).map((reference, referenceIndex) => <a key={`${reference.imageUrl}-${referenceIndex}`} href={reference.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-photo-reference-${index}-${referenceIndex}`} className="group min-w-0 overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-0.5 hover:shadow-sm">
+                <div className="aspect-[4/3] overflow-hidden bg-[#e5e3d6]">
+                  <img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Public photo reference for ${candidate.place}`} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" />
+                </div>
+                <span className="block line-clamp-2 px-2 pt-2 text-[10px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${candidate.place}`}</span>
+                <span className="block truncate px-2 pb-2 pt-1 text-[8px] text-[#929b90]">{photoReferenceHost(reference.sourceUrl)} <ArrowUpRight size={10} className="ml-0.5 inline" /></span>
+              </a>)}
+            </div>
+          </div> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${index}`}>{candidate.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : candidate.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
           <a href={candidate.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${index}`} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] hover:text-[#b36e48]">Explore on map <ArrowUpRight size={14} /></a>
         </article>)}</div> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
         <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[9px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-xs leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
@@ -610,6 +623,14 @@ function InvestigationPage() {
 function formatDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+}
+
+function photoReferenceHost(value: string) {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '');
+  } catch {
+    return 'Source';
+  }
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
