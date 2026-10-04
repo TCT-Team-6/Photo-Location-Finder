@@ -17,12 +17,12 @@ import {
   investigationsTable,
   pendingPhotoUploadsTable,
   type LocationCandidate,
-  type VisualClue,
 } from "@workspace/db";
 import { and, count, desc, eq, gte, ilike, or } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectPermission } from "../lib/objectAcl";
+import { analyzeImageLocation } from "../lib/imageLocationAnalysis";
 import { searchLocationPhotoReferences } from "../lib/locationPhotoSearch";
 import {
   ObjectNotFoundError,
@@ -38,155 +38,21 @@ const SUPPORTED_IMAGE_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/avif",
+  "image/gif",
+  "image/bmp",
+  "image/x-ms-bmp",
+  "image/tiff",
+  "image/x-tiff",
+  "image/heic",
+  "image/heif",
 ]);
 
 router.use(requireUser);
-
-function mapsSearchUrl(candidate: Pick<LocationCandidate, "place" | "region" | "country">): string {
-  const query = [candidate.place, candidate.region, candidate.country]
-    .filter(Boolean)
-    .join(", ");
-  const url = new URL("https://www.google.com/maps/search/");
-  url.searchParams.set("api", "1");
-  url.searchParams.set("query", query);
-  return url.toString();
-}
-
-function cleanAnalysis(raw: unknown): {
-  summary: string;
-  candidates: LocationCandidate[];
-  clues: VisualClue[];
-} {
-  if (!raw || typeof raw !== "object") {
-    throw new Error("The analysis response was not an object.");
-  }
-  const value = raw as Record<string, unknown>;
-  if (typeof value.summary !== "string" || !value.summary.trim()) {
-    throw new Error("The analysis did not include a summary.");
-  }
-
-  const candidates: LocationCandidate[] = Array.isArray(value.candidates)
-    ? value.candidates.slice(0, 4).flatMap((item) => {
-        if (!item || typeof item !== "object") return [];
-        const candidate = item as Record<string, unknown>;
-        if (
-          typeof candidate.place !== "string" ||
-          !candidate.place.trim() ||
-          typeof candidate.rationale !== "string"
-        ) {
-          return [];
-        }
-        const base = {
-          place: candidate.place.trim().slice(0, 180),
-          region:
-            typeof candidate.region === "string"
-              ? candidate.region.slice(0, 120)
-              : null,
-          country:
-            typeof candidate.country === "string"
-              ? candidate.country.slice(0, 120)
-              : null,
-        };
-        const numericConfidence = Number(candidate.confidence);
-        return [
-          {
-            ...base,
-            confidence: Number.isFinite(numericConfidence)
-              ? Math.max(0, Math.min(1, numericConfidence))
-              : 0.25,
-            rationale: candidate.rationale.trim().slice(0, 1200),
-            clues: Array.isArray(candidate.clues)
-              ? candidate.clues
-                  .filter((clue): clue is string => typeof clue === "string")
-                  .slice(0, 8)
-                  .map((clue) => clue.slice(0, 220))
-              : [],
-            mapsUrl: mapsSearchUrl(base),
-          },
-        ];
-      })
-    : [];
-
-  const clues: VisualClue[] = Array.isArray(value.clues)
-    ? value.clues.slice(0, 10).flatMap((item) => {
-        if (!item || typeof item !== "object") return [];
-        const clue = item as Record<string, unknown>;
-        if (
-          typeof clue.label !== "string" ||
-          typeof clue.observation !== "string" ||
-          typeof clue.significance !== "string"
-        ) {
-          return [];
-        }
-        return [
-          {
-            label: clue.label.trim().slice(0, 120),
-            observation: clue.observation.trim().slice(0, 500),
-            significance: clue.significance.trim().slice(0, 500),
-          },
-        ];
-      })
-    : [];
-
-  return {
-    summary: value.summary.trim().slice(0, 2000),
-    candidates,
-    clues,
-  };
-}
 
 function defaultTitle(originalName: string): string {
   const withoutExtension = originalName.replace(/\.[^.]+$/, "");
   const readable = withoutExtension.replace(/[_-]+/g, " ").trim();
   return (readable || "Untitled investigation").slice(0, 120);
-}
-
-async function analyzePhoto(
-  client: OpenAI,
-  image: Buffer,
-  contentType: string,
-  context: string | null,
-  shotAt: string | null,
-): Promise<{ summary: string; candidates: LocationCandidate[]; clues: VisualClue[] }> {
-  const completion = await client.chat.completions.create({
-    model: process.env.OPENAI_MODEL || "gpt-5.4-mini",
-    max_completion_tokens: 8192,
-    response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content: [
-          "You are a careful visual geolocation assistant. Analyze the photograph and any user-provided background notes and capture date.",
-          "Return one JSON object with exactly these keys: summary (string), candidates (array), clues (array).",
-          "Each candidate has place, region, country, confidence (0 to 1), rationale, and clues (array of short strings). Use null for unknown region or country.",
-          "Each clue has label, observation, and significance. Return no more than 4 candidates and 10 visual clues.",
-          "Use visible evidence such as signage, architecture, landscape, vegetation, road markings, and weather together with the supplied context. A date or note is context, not proof.",
-          "Be explicit about uncertainty. Do not invent details, claim to have searched the web, or state a precise location when the image does not support one. If there is no credible location lead, return an empty candidates array and explain the limits in the summary.",
-          "Do not infer sensitive personal attributes or identify people.",
-        ].join(" "),
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Background notes: ${context?.trim() || "None provided"}\nCapture date: ${shotAt || "Unknown"}\nAnalyze this image for likely geographic location and explain the evidence.`,
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${contentType};base64,${image.toString("base64")}`,
-              detail: "high",
-            },
-          },
-        ],
-      },
-    ],
-  });
-
-  const content = completion.choices[0]?.message.content;
-  if (!content) throw new Error("The analysis service returned an empty response.");
-  return cleanAnalysis(JSON.parse(content));
 }
 
 router.get(
@@ -326,21 +192,19 @@ router.post(
       const shotAt = parsed.data.shotAt
         ? parsed.data.shotAt.toISOString().slice(0, 10)
         : null;
+      const analysis = await analyzeImageLocation(buffer, contentType, originalName);
       const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Photo analysis is not configured.");
-      }
-      const openAIClient = new OpenAI({ apiKey });
-      const analysis = await analyzePhoto(
-        openAIClient,
-        buffer,
-        contentType,
-        context,
-        shotAt,
-      );
+      const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
       const candidates = await Promise.all(
         analysis.candidates.map(
           async (candidate): Promise<LocationCandidate> => {
+            if (!openAIClient) {
+              return {
+                ...candidate,
+                photoReferences: [],
+                photoSearchStatus: "unavailable",
+              };
+            }
             try {
               const photoReferences = await searchLocationPhotoReferences(
                 openAIClient,

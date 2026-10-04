@@ -14,4 +14,11 @@ export const UploadUrlRequestContentType = {
   'image/png': 'image/png',
   'image/webp': 'image/webp',
   'image/avif': 'image/avif',
+  'image/gif': 'image/gif',
+  'image/bmp': 'image/bmp',
+  'image/x-ms-bmp': 'image/x-ms-bmp',
+  'image/tiff': 'image/tiff',
+  'image/x-tiff': 'image/x-tiff',
+  'image/heic': 'image/heic',
+  'image/heif': 'image/heif',
 } as const;

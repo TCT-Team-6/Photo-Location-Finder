@@ -29,7 +29,7 @@ export const requestUploadUrlBodySizeMax = 26214400;
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).max(requestUploadUrlBodyNameMax),
   "size": zod.number().int().min(1).max(requestUploadUrlBodySizeMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif'])
 })
 
 export const requestUploadUrlResponseMetadataNameMax = 255;
@@ -44,7 +44,7 @@ export const RequestUploadUrlResponse = zod.object({
   "metadata": zod.object({
   "name": zod.string().min(1).max(requestUploadUrlResponseMetadataNameMax),
   "size": zod.number().int().min(1).max(requestUploadUrlResponseMetadataSizeMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif'])
 }).optional()
 })
 
@@ -115,7 +115,7 @@ export const createInvestigationBodyTitleMax = 120;
 export const CreateInvestigationBody = zod.object({
   "objectPath": zod.string().min(1),
   "originalName": zod.string().min(1).max(createInvestigationBodyOriginalNameMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif']),
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif']),
   "context": zod.string().max(createInvestigationBodyContextMax).optional(),
   "shotAt": zod.coerce.date().nullish(),
   "title": zod.string().max(createInvestigationBodyTitleMax).optional()

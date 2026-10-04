@@ -35,6 +35,23 @@ const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 if (!clerkPubKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
 
+const supportedImageTypes = new Set<InvestigationInputContentType>([
+  'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif',
+  'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif',
+]);
+const imageTypeByExtension: Record<string, InvestigationInputContentType> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+  avif: 'image/avif', gif: 'image/gif', bmp: 'image/bmp', tif: 'image/tiff',
+  tiff: 'image/tiff', heic: 'image/heic', heif: 'image/heif',
+};
+
+function imageContentType(file: File): InvestigationInputContentType | null {
+  const declaredType = file.type.toLowerCase() as InvestigationInputContentType;
+  if (supportedImageTypes.has(declaredType)) return declaredType;
+  const extension = file.name.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
+  return extension ? imageTypeByExtension[extension] ?? null : null;
+}
+
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
 }
@@ -407,6 +424,7 @@ function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?:
 
 function InvestigatePage() {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUnavailable, setPreviewUnavailable] = useState(false);
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [shotAt, setShotAt] = useState('');
@@ -417,21 +435,22 @@ function InvestigatePage() {
   const create = useCreateInvestigation();
   const client = useQueryClient();
   const pending = uploadUrl.isPending || create.isPending;
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
   const setSelectedFile = (selected: File | undefined) => {
     setLocalError('');
     if (!selected) return;
-    if (!allowed.includes(selected.type)) { setLocalError('Choose a JPEG, PNG, WebP, or AVIF image.'); return; }
+    if (!imageContentType(selected)) { setLocalError('Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.'); return; }
     if (selected.size > 25 * 1024 * 1024) { setLocalError('This image is larger than 25 MB. Choose a smaller file.'); return; }
     setFile(selected);
+    setPreviewUnavailable(false);
     if (!title) setTitle(selected.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '));
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setLocalError('');
     if (!file) { setLocalError('Choose a photograph before starting the investigation.'); return; }
+    const mime = imageContentType(file);
+    if (!mime) { setLocalError('Choose a supported image format before starting the investigation.'); return; }
     try {
-      const mime = file.type as InvestigationInputContentType;
       const uploadResponse = await uploadUrl.mutateAsync({ data: { name: file.name, size: file.size, contentType: mime } });
       const putResponse = await fetch(uploadResponse.uploadURL, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
       if (!putResponse.ok) throw new Error('The photograph could not be stored. Please try again.');
@@ -456,7 +475,7 @@ function InvestigatePage() {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   return <div className="fade-up mx-auto max-w-[960px]">
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-    <div className="mb-8"><PageEyebrow>Open a new case file / 01</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Add a photograph and the few things you know. We’ll look for the details that can point the way.</p></div>
+    <div className="mb-8"><PageEyebrow>Open a new case file / 01</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Send a photograph to the Image Locator service for analysis. Your notes and capture date are saved with the case but are not sent to that service.</p></div>
     <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_.83fr]">
       <div>
         <label
@@ -466,9 +485,12 @@ function InvestigatePage() {
           className={`relative flex min-h-[360px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed px-7 py-8 text-center transition ${dragging ? 'border-[#385e51] bg-[#e8eee4]' : 'border-[#b8bfb1] bg-[#ecebdd] hover:bg-[#e8e8db]'}`}
           data-testid="dropzone-photo-upload"
         >
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={(event) => setSelectedFile(event.target.files?.[0])} className="sr-only" data-testid="input-photo-file" />
-          {file ? <div className="absolute inset-0 p-3"><img src={preview} alt={`Selected photo ${file.name}`} className="h-full w-full rounded-2xl object-contain" data-testid="img-selected-photo" /><span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-[#263d36]/90 px-4 py-2 text-xs text-[#f4f0e6]">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</span></div>
-            : <><span className="grid h-16 w-16 place-items-center rounded-full bg-[#dfe5d9] text-[#426454]"><Upload size={25} strokeWidth={1.6} /></span><p className="mt-5 font-editorial text-2xl">Drop your photograph here</p><p className="mt-2 text-sm text-[#77847a]">or browse your files</p><span className="mt-6 rounded-full border border-[#bcc4b6] px-4 py-2 font-data text-[9px] uppercase tracking-[.13em] text-[#6c7d70]">JPEG · PNG · WEBP · AVIF / up to 25 MB</span></>}
+          <input type="file" accept="image/*,.heic,.heif,.tif,.tiff,.bmp" onChange={(event) => setSelectedFile(event.target.files?.[0])} className="sr-only" data-testid="input-photo-file" />
+          {file ? <div className="absolute inset-0 p-3">{previewUnavailable
+            ? <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl bg-[#e1e3d8] px-6 text-center text-sm text-[#66796e]"><FileImage size={32} /><span>This format can’t be previewed here, but it will still be sent for analysis.</span></div>
+            : <img src={preview} alt={`Selected photo ${file.name}`} onError={() => setPreviewUnavailable(true)} className="h-full w-full rounded-2xl object-contain" data-testid="img-selected-photo" />}
+            <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-[#263d36]/90 px-4 py-2 text-xs text-[#f4f0e6]">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</span></div>
+            : <><span className="grid h-16 w-16 place-items-center rounded-full bg-[#dfe5d9] text-[#426454]"><Upload size={25} strokeWidth={1.6} /></span><p className="mt-5 font-editorial text-2xl">Drop your photograph here</p><p className="mt-2 text-sm text-[#77847a]">or browse your files</p><span className="mt-6 rounded-full border border-[#bcc4b6] px-4 py-2 font-data text-[9px] uppercase tracking-[.13em] text-[#6c7d70]">JPEG · PNG · WEBP · AVIF · GIF · BMP · TIFF · HEIC / up to 25 MB</span></>}
         </label>
         {file && <button type="button" onClick={() => { setFile(null); setLocalError(''); }} data-testid="button-remove-photo" className="mt-3 inline-flex items-center gap-2 text-xs text-[#9a6c56] hover:text-[#a64e43]"><X size={14} />Remove photograph</button>}
       </div>
@@ -483,9 +505,9 @@ function InvestigatePage() {
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => setShotAt(event.target.value)} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         {(localError || uploadUrl.isError || create.isError) && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError || 'Your investigation could not be saved. Please try again.'}</p>}
         <button type="submit" disabled={pending} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70">
-          {pending ? <><LoaderCircle size={17} className="animate-spin" />{uploadUrl.isPending ? 'Preparing secure upload…' : 'Analyzing and finding references…'}</> : <>Begin investigation <Sparkles size={16} /></>}
+          {pending ? <><LoaderCircle size={17} className="animate-spin" />{uploadUrl.isPending ? 'Preparing secure upload…' : 'Analyzing location and finding references…'}</> : <>Begin investigation <Sparkles size={16} /></>}
         </button>
-        <p className="mt-3 text-center font-data text-[9px] uppercase tracking-[.12em] text-[#909b90]"><ShieldCheck size={12} className="mr-1 inline" />Private photo storage · Web search uses place names only</p>
+        <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">The photo is sent to Image Locator for analysis. Notes stay in your private record; reference-photo search uses place names only.</p>
       </div>
     </form>
   </div>;
@@ -593,7 +615,7 @@ function InvestigationPage() {
       </div>
       <div>
         <div className="mb-4 flex items-end justify-between"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.candidates.length} leads</span></div>
-        <p className="mb-4 text-xs leading-5 text-[#859187]">Public photo references are searched by place name only. Your original photo and notes are not sent to image search.</p>
+        <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
         {item.candidates.length ? <div className="space-y-4">{item.candidates.map((candidate, index) => <article key={`${candidate.place}-${index}`} className={`relative overflow-hidden rounded-2xl border p-5 ${index === 0 ? 'border-[#b8c4b5] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec]'}`} data-testid={`card-candidate-${index}`}>
           {index === 0 && <span className="absolute right-4 top-4 rounded-full bg-[#385e51] px-3 py-1 font-data text-[8px] uppercase tracking-[.12em] text-[#f4f0e6]">Strongest lead</span>}
           <div className="flex items-start gap-3 pr-24"><span className={`map-pin mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full ${index === 0 ? 'bg-[#c8794d] text-white' : 'bg-[#e2e4d9] text-[#607a68]'}`}><MapPin size={17} /></span><div><h3 className="font-editorial text-2xl tracking-[-.02em]">{candidate.place}</h3><p className="mt-1 text-xs text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</p></div></div>

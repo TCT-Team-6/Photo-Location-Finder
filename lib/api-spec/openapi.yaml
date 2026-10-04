@@ -232,7 +232,18 @@ components:
           maximum: 26214400
         contentType:
           type: string
-          enum: [image/jpeg, image/png, image/webp, image/avif]
+          enum:
+            - image/jpeg
+            - image/png
+            - image/webp
+            - image/avif
+            - image/gif
+            - image/bmp
+            - image/x-ms-bmp
+            - image/tiff
+            - image/x-tiff
+            - image/heic
+            - image/heif
     UploadUrlResponse:
       type: object
       required: [uploadURL, objectPath]
@@ -357,7 +368,18 @@ components:
           maxLength: 255
         contentType:
           type: string
-          enum: [image/jpeg, image/png, image/webp, image/avif]
+          enum:
+            - image/jpeg
+            - image/png
+            - image/webp
+            - image/avif
+            - image/gif
+            - image/bmp
+            - image/x-ms-bmp
+            - image/tiff
+            - image/x-tiff
+            - image/heic
+            - image/heif
         context:
           type: string
           maxLength: 3000
