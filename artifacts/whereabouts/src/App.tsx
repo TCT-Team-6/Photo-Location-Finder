@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Search, ShieldCheck, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
   getGetInvestigationQueryKey,
@@ -22,6 +22,7 @@ import {
 } from '@workspace/api-client-react';
 import type { Investigation, InvestigationInputContentType } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { PhotoUploadSlot, type PhotoUploadSlotDefinition, type PhotoUploadSlotId } from '@/components/photo-upload-slot';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -51,6 +52,24 @@ function imageContentType(file: File): InvestigationInputContentType | null {
   const extension = file.name.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
   return extension ? imageTypeByExtension[extension] ?? null : null;
 }
+
+const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
+  {
+    id: 'original',
+    label: 'Original photo',
+    description: 'The image you want to investigate.',
+  },
+  {
+    id: 'recreation',
+    label: 'Recreation',
+    description: 'A recreated or staged version of the scene.',
+  },
+  {
+    id: 'fake-news',
+    label: 'Fake News',
+    description: 'An image associated with a news claim.',
+  },
+];
 
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -423,91 +442,217 @@ function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?:
 }
 
 function InvestigatePage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUnavailable, setPreviewUnavailable] = useState(false);
+  const [files, setFiles] = useState<Record<PhotoUploadSlotId, File | null>>({
+    original: null,
+    recreation: null,
+    'fake-news': null,
+  });
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [shotAt, setShotAt] = useState('');
-  const [dragging, setDragging] = useState(false);
   const [localError, setLocalError] = useState('');
-  const [, setLocation] = useLocation();
+  const [batchStatus, setBatchStatus] = useState('');
+  const [progress, setProgress] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [slotErrors, setSlotErrors] = useState<
+    Partial<Record<PhotoUploadSlotId, string>>
+  >({});
+  const [savedInvestigations, setSavedInvestigations] = useState<
+    Array<{ id: string; title: string; slotLabel: string }>
+  >([]);
   const uploadUrl = useRequestUploadUrl();
   const create = useCreateInvestigation();
   const client = useQueryClient();
-  const pending = uploadUrl.isPending || create.isPending;
-  const setSelectedFile = (selected: File | undefined) => {
+  const selectedCount = investigationPhotoSlots.filter(
+    (slot) => files[slot.id],
+  ).length;
+  const pending = submitting || uploadUrl.isPending || create.isPending;
+  const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
     setLocalError('');
-    if (!selected) return;
-    if (!imageContentType(selected)) { setLocalError('Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.'); return; }
-    if (selected.size > 25 * 1024 * 1024) { setLocalError('This image is larger than 25 MB. Choose a smaller file.'); return; }
-    setFile(selected);
-    setPreviewUnavailable(false);
-    if (!title) setTitle(selected.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '));
+    setBatchStatus('');
+    setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
+    if (!imageContentType(selected)) {
+      setFiles((current) => ({ ...current, [slotId]: null }));
+      setSlotErrors((current) => ({
+        ...current,
+        [slotId]:
+          'Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.',
+      }));
+      return;
+    }
+    if (selected.size > 25 * 1024 * 1024) {
+      setFiles((current) => ({ ...current, [slotId]: null }));
+      setSlotErrors((current) => ({
+        ...current,
+        [slotId]: 'This image is larger than 25 MB. Choose a smaller file.',
+      }));
+      return;
+    }
+    setFiles((current) => ({ ...current, [slotId]: selected }));
   };
-  const submit = async (event: FormEvent) => {
+  const removeSelectedFile = (slotId: PhotoUploadSlotId) => {
+    setFiles((current) => ({ ...current, [slotId]: null }));
+    setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
+    setBatchStatus('');
+  };
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLocalError('');
-    if (!file) { setLocalError('Choose a photograph before starting the investigation.'); return; }
-    const mime = imageContentType(file);
-    if (!mime) { setLocalError('Choose a supported image format before starting the investigation.'); return; }
+    setBatchStatus('');
+    setSlotErrors({});
+    const selected = investigationPhotoSlots.flatMap((slot) => {
+      const file = files[slot.id];
+      return file ? [{ slot, file }] : [];
+    });
+    if (!selected.length) {
+      setLocalError('Choose at least one photograph before starting the investigations.');
+      return;
+    }
+
+    setSubmitting(true);
+    const created: Array<{ id: string; title: string; slotLabel: string }> = [];
+    const failed: Partial<Record<PhotoUploadSlotId, string>> = {};
     try {
-      const uploadResponse = await uploadUrl.mutateAsync({ data: { name: file.name, size: file.size, contentType: mime } });
-      const putResponse = await fetch(uploadResponse.uploadURL, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-      if (!putResponse.ok) throw new Error('The photograph could not be stored. Please try again.');
-      const result = await create.mutateAsync({ data: {
-        objectPath: uploadResponse.objectPath,
-        originalName: file.name,
-        contentType: mime,
-        ...(context.trim() ? { context: context.trim() } : {}),
-        ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
-        ...(title.trim() ? { title: title.trim() } : {}),
-      } });
-      await Promise.all([
-        client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() }),
-        client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() }),
-      ]);
-      setLocation(`/investigation/${result.id}`);
-    } catch (error) {
-      setLocalError(error instanceof Error ? error.message : 'Something went wrong while starting your investigation.');
+      for (const [index, { slot, file }] of selected.entries()) {
+        const mime = imageContentType(file);
+        if (!mime) {
+          failed[slot.id] = 'Choose a supported image format.';
+          continue;
+        }
+        try {
+          setProgress(`Uploading ${index + 1} of ${selected.length}: ${slot.label}`);
+          const uploadResponse = await uploadUrl.mutateAsync({
+            data: { name: file.name, size: file.size, contentType: mime },
+          });
+          const putResponse = await fetch(uploadResponse.uploadURL, {
+            method: 'PUT',
+            headers: { 'Content-Type': mime },
+            body: file,
+          });
+          if (!putResponse.ok) {
+            throw new Error('The photograph could not be stored. Please try again.');
+          }
+
+          setProgress(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`);
+          const fileTitle = file.name
+            .replace(/\.[^.]+$/, '')
+            .replace(/[_-]+/g, ' ')
+            .trim();
+          const caseTitle = `${slot.label} — ${title.trim() || fileTitle || slot.label}`.slice(
+            0,
+            120,
+          );
+          const result = await create.mutateAsync({
+            data: {
+              objectPath: uploadResponse.objectPath,
+              originalName: file.name,
+              contentType: mime,
+              ...(context.trim() ? { context: context.trim() } : {}),
+              ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
+              title: caseTitle,
+            },
+          });
+          created.push({
+            id: result.id,
+            title: result.title,
+            slotLabel: slot.label,
+          });
+          setFiles((current) => ({ ...current, [slot.id]: null }));
+        } catch (error) {
+          failed[slot.id] =
+            error instanceof Error
+              ? error.message
+              : 'This photo could not be uploaded and analyzed.';
+        }
+      }
+
+      if (created.length) {
+        setSavedInvestigations((current) => [...current, ...created]);
+        await Promise.all([
+          client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() }),
+          client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() }),
+        ]);
+      }
+      setSlotErrors(failed);
+      if (created.length) {
+        const failedCount = Object.keys(failed).length;
+        setBatchStatus(
+          failedCount
+            ? `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. ${failedCount} photo${failedCount === 1 ? '' : 's'} could not be processed; retry the remaining upload${failedCount === 1 ? '' : 's'} below.`
+            : `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. Open one below or find them in your library.`,
+        );
+      } else {
+        setLocalError('No investigations were saved. Review the highlighted upload and try again.');
+      }
+    } finally {
+      setSubmitting(false);
+      setProgress('');
     }
   };
-  const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file]);
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
   return <div className="fade-up mx-auto max-w-[960px]">
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-    <div className="mb-8"><PageEyebrow>Open a new case file / 01</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Send a photograph to the Image Locator service for analysis. Your notes and capture date are saved with the case but are not sent to that service.</p></div>
-    <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_.83fr]">
-      <div>
-        <label
-          onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => { event.preventDefault(); setDragging(false); setSelectedFile(event.dataTransfer.files[0]); }}
-          className={`relative flex min-h-[360px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed px-7 py-8 text-center transition ${dragging ? 'border-[#385e51] bg-[#e8eee4]' : 'border-[#b8bfb1] bg-[#ecebdd] hover:bg-[#e8e8db]'}`}
-          data-testid="dropzone-photo-upload"
-        >
-          <input type="file" accept="image/*,.heic,.heif,.tif,.tiff,.bmp" onChange={(event) => setSelectedFile(event.target.files?.[0])} className="sr-only" data-testid="input-photo-file" />
-          {file ? <div className="absolute inset-0 p-3">{previewUnavailable
-            ? <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl bg-[#e1e3d8] px-6 text-center text-sm text-[#66796e]"><FileImage size={32} /><span>This format can’t be previewed here, but it will still be sent for analysis.</span></div>
-            : <img src={preview} alt={`Selected photo ${file.name}`} onError={() => setPreviewUnavailable(true)} className="h-full w-full rounded-2xl object-contain" data-testid="img-selected-photo" />}
-            <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-[#263d36]/90 px-4 py-2 text-xs text-[#f4f0e6]">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</span></div>
-            : <><span className="grid h-16 w-16 place-items-center rounded-full bg-[#dfe5d9] text-[#426454]"><Upload size={25} strokeWidth={1.6} /></span><p className="mt-5 font-editorial text-2xl">Drop your photograph here</p><p className="mt-2 text-sm text-[#77847a]">or browse your files</p><span className="mt-6 rounded-full border border-[#bcc4b6] px-4 py-2 font-data text-[9px] uppercase tracking-[.13em] text-[#6c7d70]">JPEG · PNG · WEBP · AVIF · GIF · BMP · TIFF · HEIC / up to 25 MB</span></>}
-        </label>
-        {file && <button type="button" onClick={() => { setFile(null); setLocalError(''); }} data-testid="button-remove-photo" className="mt-3 inline-flex items-center gap-2 text-xs text-[#9a6c56] hover:text-[#a64e43]"><X size={14} />Remove photograph</button>}
-      </div>
-      <div className="rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
+    <div className="mb-8"><PageEyebrow>Open new case files / 01–03</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images. Each selected photo is analyzed separately and saved as its own investigation. Recreation and Fake News are labels only; this service estimates photo locations and does not fact-check claims.</p></div>
+    <form onSubmit={submit} className="space-y-6">
+      <section className="rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 md:p-6">
+        <div className="mb-5">
+          <PageEyebrow>Three separate photo investigations</PageEyebrow>
+          <p className="mt-2 text-xs leading-5 text-[#718078]">Select any combination. The shared name, notes, and capture date below apply to each photo you submit.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {investigationPhotoSlots.map((slot) => (
+            <PhotoUploadSlot
+              key={slot.id}
+              slot={slot}
+              file={files[slot.id]}
+              error={slotErrors[slot.id]}
+              disabled={pending}
+              onSelectFile={(file) => setSelectedFile(slot.id, file)}
+              onRemoveFile={() => removeSelectedFile(slot.id)}
+            />
+          ))}
+        </div>
+      </section>
+      <div className="mx-auto max-w-[720px] rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
         <PageEyebrow>Set the scene</PageEyebrow>
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Investigation name <span className="font-normal text-[#97a095]">optional</span></label>
-        <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. The blue doorway" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
+        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Shared case name <span className="font-normal text-[#97a095]">optional</span></label>
+        <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
+        <p className="mt-1 text-xs text-[#87938a]">Each title also includes its upload label; without a name, the photo filename is used.</p>
         <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know?</label>
         <textarea id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-right font-data text-[9px] text-[#a1a79d]">{context.length} / 3000</p>
         <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span></label>
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => setShotAt(event.target.value)} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
-        {(localError || uploadUrl.isError || create.isError) && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError || 'Your investigation could not be saved. Please try again.'}</p>}
+        {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         <button type="submit" disabled={pending} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70">
-          {pending ? <><LoaderCircle size={17} className="animate-spin" />{uploadUrl.isPending ? 'Preparing secure upload…' : 'Analyzing location and finding references…'}</> : <>Begin investigation <Sparkles size={16} /></>}
+          {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
         </button>
-        <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">The photo is sent to Image Locator for analysis. Notes stay in your private record; reference-photo search uses place names only.</p>
+        <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">Only the selected images are sent to Image Locator. Your shared name, notes, and date stay in each private record.</p>
+        {batchStatus && (
+          <div
+            role="status"
+            className="mt-5 rounded-2xl border border-[#b9c9b8] bg-[#edf1e7] p-4"
+            data-testid="status-created-investigations"
+          >
+            <p className="text-sm font-semibold text-[#385e51]">{batchStatus}</p>
+            {savedInvestigations.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {savedInvestigations.map((saved) => (
+                  <li key={saved.id}>
+                    <Link
+                      href={`/investigation/${saved.id}`}
+                      data-testid={`link-created-investigation-${saved.id}`}
+                      className="inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] underline decoration-[#9aaf9d] underline-offset-4 hover:text-[#a56743]"
+                    >
+                      {saved.slotLabel}: {saved.title}
+                      <ArrowUpRight size={13} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </form>
   </div>;
