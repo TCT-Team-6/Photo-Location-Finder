@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
   getGetInvestigationQueryKey,
@@ -500,6 +500,7 @@ function InvestigatePage() {
     setLocalError('');
     setBatchStatus('');
     setSlotErrors({});
+    setSavedInvestigations([]);
     const selected = investigationPhotoSlots.flatMap((slot) => {
       const file = files[slot.id];
       return file ? [{ slot, file }] : [];
