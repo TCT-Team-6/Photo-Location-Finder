@@ -1,0 +1,470 @@
+# Redesign the App: Three Distinct Themed Workspaces + Tactile UI
+
+Redesign the existing application to support three fully realized themed workspaces:
+
+1. **Investigation** — investigating missing-person cases using photographs, geographic clues, metadata, timelines, and evidence.
+2. **Recreation** — identifying the locations where photographs were taken for personal exploration, revisiting places, travel, and discovering locations.
+3. **Investigative Journalism** — evaluating claims from unfamiliar, emerging, or unverified sources and determining whether they are credible, misleading, unsupported, or false.
+
+## Core requirement: These must be different experiences, not recolored versions of the same UI.
+
+The current implementation mostly changes colors between themes. That is not sufficient. Each theme must have its own visual language, layout structure, interaction model, component styling, information hierarchy, and atmosphere.
+
+Treat each workspace as a distinct application built on the same underlying platform. Shared functionality, data, and application infrastructure should remain reusable, but the interface should feel purpose-built for its specific activity.
+
+Do not replace the entire application blindly. First inspect the existing codebase, identify the current theme-switching mechanism, component hierarchy, routing, state management, and existing functionality. Preserve working features and integrate the redesign into the current architecture.
+
+---
+
+# 1. INVESTIGATION WORKSPACE
+## Theme: A professional missing-person investigation workstation
+
+### Design philosophy
+
+This workspace should feel like specialized investigative software used by a professional analysis team. Take inspiration from digital forensics tools, geographic information systems, intelligence-analysis workstations, evidence-management software, and carefully designed case-management interfaces.
+
+It should feel serious, methodical, information-dense, and operational. Avoid generic SaaS dashboards, oversized rounded cards, playful illustrations, gradients, and excessive empty space.
+
+The interface should communicate that every piece of information belongs to a case and that every conclusion should be traceable to evidence.
+
+This workspace is specifically for investigating missing-person cases. Do not frame it as a kidnapping-investigation product by default. The system should support missing-person investigations regardless of why someone is missing, without assuming criminal activity.
+
+### Visual identity
+
+- Use a restrained palette of charcoal, graphite, muted slate, off-white, and subtle amber or desaturated blue accents.
+- Use darker surfaces for the main workstation and lighter surfaces for documents, evidence sheets, and detailed records.
+- Establish a clear typographic hierarchy using a highly legible sans-serif for the interface and optional monospaced typography for case identifiers, coordinates, timestamps, evidence IDs, and technical metadata.
+- Use thin dividers, precise alignment, compact labels, structured tables, restrained borders, and small status indicators.
+- Make the application feel engineered and dependable rather than cinematic or like a fictional hacker interface.
+- Avoid excessive neon, glowing outlines, animated scanning effects, and fake classified stamps.
+- Use color semantically: amber for attention or unresolved issues, red for genuine critical warnings, and green only for verified or completed states when appropriate.
+
+### Layout and spatial organization
+
+Create a case-centered workspace rather than a generic dashboard.
+
+**A. Persistent case navigation**
+
+Provide a narrow left navigation rail or collapsible sidebar containing:
+
+- Case list and case switching.
+- Recently opened cases.
+- Case overview.
+- Evidence.
+- Photographs.
+- Geographic analysis.
+- Timeline.
+- Notes.
+- Reports and exports.
+
+When a case is active, display its identifier and status clearly. Allow the user to collapse the navigation to make more room for analysis.
+
+**B. Main investigative canvas**
+
+Use a flexible multi-panel workspace. On desktop, support a large central working area with resizable or collapsible side panels.
+
+Depending on the selected tool, the canvas could contain:
+
+- A photograph viewer with zoom and pan.
+- A geographic map with candidate locations.
+- An evidence table.
+- A chronological timeline.
+- A metadata inspection panel.
+- A side-by-side comparison of candidate locations or photographs.
+
+The user should be able to focus on one tool or compare several simultaneously without navigating through an endless stack of cards.
+
+**C. Evidence inspector**
+
+Create a dedicated inspector panel for the selected evidence item.
+
+For a photograph, show relevant available information such as:
+
+- Original filename.
+- Upload date and time.
+- Image dimensions.
+- Available EXIF metadata.
+- GPS coordinates, if present.
+- Metadata availability and integrity limitations.
+- Associated analysis results.
+- Candidate location references.
+- Investigator notes.
+- Links to related evidence.
+
+Never fabricate metadata or present inferred information as original metadata. Clearly distinguish source metadata from AI-generated analysis and investigator conclusions.
+
+**D. Case timeline**
+
+Provide a chronological evidence and activity timeline. Items should be individually selectable, expandable, and linked to their associated evidence or notes.
+
+Use a compact, structured presentation rather than a decorative social-media timeline.
+
+**E. Geographic analysis**
+
+When viewing location-analysis results, emphasize the map and supporting evidence. Provide a candidate-location list alongside the map, including confidence information where available, supporting visual clues, and links to the relevant photograph or analysis.
+
+Distinguish model confidence from independently verified accuracy. Allow candidates to be marked as unreviewed, under review, supported, rejected, or independently verified. These labels should represent review states, not automatically established facts.
+
+### Tactile interactions
+
+This mode should feel like physically operating a serious analytical workstation.
+
+- Evidence rows should have a clear hover state, a subtle pressed state, and an unmistakable selected state.
+- Clicking an evidence item should select it in place and update the inspector, not unnecessarily open a new page.
+- Split panels should have draggable dividers and visible resize affordances.
+- Tabs should feel like solid, precisely aligned control surfaces.
+- Expandable sections should open with short, controlled animations.
+- Support keyboard navigation, focus indicators, and sensible keyboard shortcuts.
+- Toolbars should have compact buttons with clear icons, concise labels, tooltips, and visible active states.
+- Use restrained mechanical-feeling motion for selecting, expanding, switching, and rearranging panels.
+- Make zooming, panning, filtering, and selecting geographic candidates feel responsive and direct.
+- Provide immediate visual confirmation when an item is saved, attached to a case, marked for review, or added to a timeline.
+
+The result should feel like a real analytical instrument, not a collection of decorative cards.
+
+---
+
+# 2. RECREATION WORKSPACE
+## Theme: A personal photographic location explorer
+
+### Design philosophy
+
+This workspace should feel fundamentally different from Investigation. It is not a case-management tool and should not look like a law-enforcement workstation.
+
+Its purpose is to help a user discover where a photograph was taken, understand the surroundings, explore candidate locations, revisit places, and organize discoveries for personal use.
+
+Take inspiration from premium travel journals, photographic field guides, cartography, location-discovery applications, and beautifully designed personal archives.
+
+The atmosphere should be curious, calm, immersive, and visually driven. The user should feel like they are exploring a place through an image.
+
+### Visual identity
+
+- Use warm paper-like neutrals, natural stone, muted olive, deep forest green, warm gray, and restrained earth tones.
+- Allow large photographic areas to dominate the interface.
+- Use editorial typography for place names and section headings, paired with a clean, highly legible sans-serif for controls and supporting information.
+- Incorporate subtle paper textures or fine grain only if they are performant and do not reduce readability.
+- Use generous image space, asymmetrical layouts, layered photographic compositions, and quiet visual transitions.
+- Avoid generic dashboard cards, dense metadata tables, neon accents, excessive borders, and the dark investigative aesthetic.
+- Do not simply recolor the Investigation workspace. Create a new composition designed around photography and geographic discovery.
+
+### Layout and spatial organization
+
+**A. Image-first landing workspace**
+
+Make the photograph the primary visual element.
+
+Provide a large central image viewer with intuitive zoom and pan. When no image has been selected, present an elegant upload or drag-and-drop area that feels like opening a photographic field journal.
+
+Once an image is loaded, the image should occupy most of the initial workspace.
+
+**B. Interactive geographic exploration**
+
+Give the map a prominent role without letting it overwhelm the photograph.
+
+Allow users to explore candidate locations through a map and an adjacent or overlaid candidate panel. Selecting a candidate should update the map, supporting imagery, and location details.
+
+Where available, show:
+
+- Place name.
+- Region and country.
+- Candidate confidence.
+- Relevant architectural, landscape, signage, or environmental clues.
+- Nearby landmarks.
+- Distance between a candidate and other selected places.
+- Links to mapping or street-level imagery services when available.
+
+Clearly distinguish a likely match from a confirmed location. Do not imply that a location has been verified solely because an AI model suggested it.
+
+**C. Candidate-location gallery**
+
+Present possible locations as an image-led gallery rather than a dense evidence table.
+
+Each candidate should include a prominent preview, place name, short explanation of matching visual clues, and confidence information where available.
+
+Allow the user to switch between a visual gallery and a more compact list.
+
+**D. Personal location journal**
+
+Allow users to save discoveries into personal collections such as:
+
+- Places to visit.
+- Locations from my photographs.
+- Architecture.
+- Hiking and landscapes.
+- Places I have revisited.
+- Unidentified photographs.
+
+These are example collection names, not mandatory hard-coded categories.
+
+Each saved place should support a personal note, related photographs, a location reference, and a visit status. Use existing backend functionality where available; do not make saved data appear persistent if it only exists in temporary client state.
+
+**E. Immersive place view**
+
+When a user opens a candidate, transition into a more immersive place-focused layout with:
+
+- The original photograph.
+- The candidate location.
+- A map or geographic preview.
+- Matching visual details.
+- Nearby places or landmarks.
+- The user's personal notes.
+- A clear action to save the place or open it in a mapping service.
+
+Make this feel like opening a page in a beautifully designed travel journal.
+
+### Tactile interactions
+
+This workspace should feel exploratory, fluid, and connected to the user's photographs.
+
+- Dragging a photograph into the workspace should produce an immediate, polished response.
+- Image zooming and panning should feel natural, with no unnecessary controls obstructing the image.
+- Candidate thumbnails should enlarge or shift subtly on hover and respond decisively to selection.
+- Switching candidates should produce a smooth visual transition without unnecessarily reloading the entire interface.
+- Map markers should respond to hovering and selection, with a clear relationship between the selected marker and the selected candidate.
+- Saving a location should feel like adding a photograph to a personal journal: a brief, restrained animation and a persistent saved-state indicator.
+- Collections should support intuitive browsing and, where practical, drag-and-drop organization.
+- Use image-centered transitions, gentle parallax only where appropriate, and short, natural animations.
+- Keep controls quiet until they are needed, while maintaining discoverability and accessibility.
+
+The result should feel like a premium photographic exploration tool, not an investigation dashboard with green colors.
+
+---
+
+# 3. INVESTIGATIVE JOURNALISM WORKSPACE
+## Theme: A source-verification and claims-analysis desk
+
+### Design philosophy
+
+This workspace should feel like a modern fact-checking newsroom, research desk, and digital verification laboratory.
+
+Its purpose is to help users investigate claims originating from unfamiliar websites, emerging publishers, social posts, documents, screenshots, and other sources that have not yet established credibility.
+
+The main activity is not finding a missing person or exploring a travel destination. It is establishing what a source actually claims, tracing the source of that claim, comparing it with independent evidence, and determining what can responsibly be concluded.
+
+The design should communicate skepticism, transparency, and intellectual rigor. It must not look like a sensationalist conspiracy website, a generic AI chatbot, or a fictional intelligence agency.
+
+### Visual identity
+
+- Use a newsroom-inspired palette of warm white, ink black, paper gray, and restrained burgundy or dark navy.
+- Use editorial serif typography for major headlines and claim titles, paired with a neutral sans-serif for the application UI.
+- Use monospaced typography sparingly for URLs, source identifiers, timestamps, and technical provenance.
+- Introduce subtle document-inspired details: thin rules, citation markers, pull quotes, source labels, and carefully aligned columns.
+- Make long-form text pleasant to read.
+- Distinguish claims, evidence, sources, analysis, and conclusions through layout and typography, not just color.
+- Avoid oversized gradients, neon, glowing elements, gamified credibility scores, and dramatic red warning screens.
+- Avoid giving sources a credibility rating based on appearance alone.
+
+### Layout and spatial organization
+
+**A. Claim-centered workspace**
+
+Organize the interface around an explicit claim rather than a case or photograph.
+
+Each investigation should begin with a claim title and a record of the exact claim being assessed.
+
+Support the following workflow:
+
+1. Enter or import a claim.
+2. Record the original wording and source.
+3. Identify the publisher or account and the date of publication.
+4. Collect corroborating and contradicting sources.
+5. Compare the sources and their evidence.
+6. Document unresolved questions.
+7. Write a conclusion supported by the available evidence.
+
+The workflow should be visible without forcing the user through a rigid wizard.
+
+**B. Source document viewer**
+
+Make source material central to the experience.
+
+When reviewing an article, webpage, document, or screenshot, provide a reading-focused panel with:
+
+- Source title.
+- Publisher or account.
+- URL or source identifier.
+- Publication date, if known.
+- Retrieval date, if recorded.
+- Author attribution, if available.
+- Relevant excerpts.
+- Original context.
+- Links or references to supporting material.
+
+Allow the user to attach notes and highlight relevant passages. Preserve the distinction between a quotation, a paraphrase, and the user's own interpretation.
+
+When original source content cannot be retrieved, clearly explain that limitation rather than fabricating an article preview.
+
+**C. Evidence comparison canvas**
+
+Provide a side-by-side or multi-column comparison view for sources related to the same claim.
+
+For example:
+
+- The original claim.
+- An independent source supporting it.
+- A source contradicting it.
+- Primary documentation.
+- Missing evidence or unanswered questions.
+
+Make the relationship between sources visible. Selecting a citation should navigate to the corresponding source passage or evidence record when available.
+
+Allow users to connect sources to claims and mark the relationship as supporting, contradicting, contextualizing, or unrelated.
+
+**D. Source provenance panel**
+
+Give users a dedicated area to inspect the history and context of a source.
+
+Where data is available, show:
+
+- Original publication and author attribution.
+- Publication and retrieval dates.
+- Links to primary sources.
+- Whether another source independently corroborates the claim.
+- Whether several articles appear to rely on the same original source.
+- Relevant corrections, retractions, or updates.
+- Known gaps in the available evidence.
+
+Do not equate multiple websites repeating the same claim with multiple independent confirmations.
+
+Do not claim to have verified domain ownership, author identity, publication history, or source authenticity unless the relevant verification actually occurred.
+
+**E. Assessment and conclusion panel**
+
+Create a structured conclusion area with states such as:
+
+- Supported by the available evidence.
+- Partially supported.
+- Contradicted by the available evidence.
+- Unverified.
+- Insufficient evidence to determine.
+
+These are evidence-assessment states, not absolute guarantees of truth.
+
+The user should be able to record a written explanation, link each important conclusion to supporting evidence, document uncertainty, and identify what additional evidence would change the assessment.
+
+Avoid simplistic numerical trust scores that hide uncertainty or imply more precision than the evidence supports.
+
+### Tactile interactions
+
+This workspace should feel like working with physical documents and connecting evidence on a research desk.
+
+- Source documents should feel like distinct reading surfaces rather than ordinary app cards.
+- Highlighting a passage should reveal contextual actions such as adding a note, creating a citation, or linking the passage to a claim.
+- Evidence connections should be represented through subtle lines, linked references, or a relationship graph when useful.
+- Dragging a source into an evidence group should produce a clear placement preview.
+- Citation references should be interactive and take the user directly to the relevant evidence.
+- Source comparison should allow panels to be resized and aligned.
+- Tabs should distinguish the claim, sources, analysis, and conclusion while retaining context.
+- Expanding a source should reveal additional provenance information without destroying the reading layout.
+- Saving a note or updating an assessment should produce immediate, clear feedback.
+- Use subtle editorial transitions, restrained selection animations, and precise controls.
+
+The interface should feel like arranging documents on a desk, examining their connections, and carefully assembling an evidence-based argument.
+
+---
+
+# 4. MAKE THE ENTIRE APP SIGNIFICANTLY MORE TACTILE
+
+This requirement applies to all three workspaces, but each workspace must interpret tactile design differently.
+
+Tactility does not mean adding random animations, excessive shadows, or making every element look like a physical button. It means that the user should consistently feel that interface elements have a purpose, respond to interaction, and provide clear feedback.
+
+## A. Give controls physical presence
+
+Create a coherent interaction system for:
+
+- Buttons.
+- Toggle controls.
+- Tabs.
+- Selectable rows.
+- Dropdowns.
+- Toolbars.
+- Sliders.
+- Expandable sections.
+- Image thumbnails.
+- Map markers.
+- Panels and dividers.
+
+Interactive elements should have clearly distinguishable resting, hover, pressed, selected, focused, disabled, and loading states where applicable.
+
+For buttons, use a restrained pressed effect: a small change in elevation, position, border, or surface shading. The effect should be immediate and short, not a cartoonish bounce.
+
+Use elevation and shadows selectively to establish hierarchy. Flat controls should remain flat when that suits the design.
+
+## B. Improve direct manipulation
+
+Where appropriate, allow users to manipulate the content itself instead of forcing them through menus.
+
+Examples:
+
+- Drag and drop photographs.
+- Resize panels.
+- Reorder evidence.
+- Move between image candidates.
+- Zoom and pan.
+- Drag items into collections.
+- Select and organize source documents.
+- Connect claims and supporting evidence.
+
+Use proper drag previews, drop-target indicators, clear success feedback, and sensible cancellation behavior.
+
+Only introduce these interactions where they genuinely improve the workflow. Every drag-and-drop feature must work rather than simply look interactive.
+
+## C. Use responsive microinteractions
+
+Use short, purposeful transitions for:
+
+- Selecting an item.
+- Switching tabs.
+- Opening a detail panel.
+- Expanding a section.
+- Saving a change.
+- Switching candidates.
+- Changing the active workspace.
+
+Prefer restrained transitions of approximately 100–220 ms for common UI actions, with slightly longer durations for meaningful changes in layout.
+
+Avoid animating every element simultaneously. Preserve a feeling of precision.
+
+Respect reduced-motion preferences and provide non-animated equivalents when appropriate.
+
+## D. Make state changes unmistakable
+
+Users must always understand:
+
+- What is selected.
+- What is being edited.
+- What has been saved.
+- What is loading.
+- What failed.
+- What is unavailable.
+- What action will happen next.
+
+Do not rely on color alone. Use text, icons, focus indicators, or other redundant signals.
+
+Show clear feedback for successful actions, errors, and destructive operations. Use confirmation for genuinely consequential actions rather than interrupting every interaction.
+
+## E. Use a consistent but flexible component system
+
+Build shared interaction primitives and design tokens for:
+
+- Spacing.
+- Typography.
+- Border treatments.
+- Elevation.
+- Focus states.
+- Animation durations.
+- Control sizes.
+- Hover and pressed states.
+
+Then let each workspace apply its own visual and spatial language.
+
+Shared components should not force all three workspaces into identical layouts. Reuse interaction logic and accessibility behavior while allowing theme-specific presentation.
+
+## F. Avoid fake tactility
+
+Do not add:
+
+- Random sound effects.
+- Excessive bounce animations.
+- Heavy shadows on every card
