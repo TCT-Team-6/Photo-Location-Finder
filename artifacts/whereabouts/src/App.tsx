@@ -23,6 +23,10 @@ import {
 import type { Investigation, InvestigationInputContentType } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { PhotoUploadSlot, type PhotoUploadSlotDefinition, type PhotoUploadSlotId } from '@/components/photo-upload-slot';
+import {
+  clearErrorsForSelectedPhotoSlots,
+  processInvestigationPhotoUploads,
+} from '@/lib/investigation-photo-uploads';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -499,73 +503,46 @@ function InvestigatePage() {
     event.preventDefault();
     setLocalError('');
     setBatchStatus('');
-    setSlotErrors({});
     setSavedInvestigations([]);
     const selected = investigationPhotoSlots.flatMap((slot) => {
       const file = files[slot.id];
       return file ? [{ slot, file }] : [];
     });
+    setSlotErrors((current) =>
+      clearErrorsForSelectedPhotoSlots(
+        current,
+        selected.map(({ slot }) => slot.id),
+      ),
+    );
     if (!selected.length) {
       setLocalError('Choose at least one photograph before starting the investigations.');
       return;
     }
 
     setSubmitting(true);
-    const created: Array<{ id: string; title: string; slotLabel: string }> = [];
-    const failed: Partial<Record<PhotoUploadSlotId, string>> = {};
     try {
-      for (const [index, { slot, file }] of selected.entries()) {
-        const mime = imageContentType(file);
-        if (!mime) {
-          failed[slot.id] = 'Choose a supported image format.';
-          continue;
-        }
-        try {
-          setProgress(`Uploading ${index + 1} of ${selected.length}: ${slot.label}`);
-          const uploadResponse = await uploadUrl.mutateAsync({
-            data: { name: file.name, size: file.size, contentType: mime },
-          });
-          const putResponse = await fetch(uploadResponse.uploadURL, {
+      const { created, failed } = await processInvestigationPhotoUploads({
+        selected,
+        title,
+        context,
+        shotAt,
+        getContentType: imageContentType,
+        requestUploadUrl: (variables) => uploadUrl.mutateAsync(variables),
+        uploadFile: async (uploadURL, file, contentType) => {
+          const response = await fetch(uploadURL, {
             method: 'PUT',
-            headers: { 'Content-Type': mime },
+            headers: { 'Content-Type': contentType },
             body: file,
           });
-          if (!putResponse.ok) {
+          if (!response.ok) {
             throw new Error('The photograph could not be stored. Please try again.');
           }
-
-          setProgress(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`);
-          const fileTitle = file.name
-            .replace(/\.[^.]+$/, '')
-            .replace(/[_-]+/g, ' ')
-            .trim();
-          const caseTitle = `${slot.label} — ${title.trim() || fileTitle || slot.label}`.slice(
-            0,
-            120,
-          );
-          const result = await create.mutateAsync({
-            data: {
-              objectPath: uploadResponse.objectPath,
-              originalName: file.name,
-              contentType: mime,
-              ...(context.trim() ? { context: context.trim() } : {}),
-              ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
-              title: caseTitle,
-            },
-          });
-          created.push({
-            id: result.id,
-            title: result.title,
-            slotLabel: slot.label,
-          });
-          setFiles((current) => ({ ...current, [slot.id]: null }));
-        } catch (error) {
-          failed[slot.id] =
-            error instanceof Error
-              ? error.message
-              : 'This photo could not be uploaded and analyzed.';
-        }
-      }
+        },
+        createInvestigation: (variables) => create.mutateAsync(variables),
+        onProgress: setProgress,
+        onSaved: (slotId) =>
+          setFiles((current) => ({ ...current, [slotId]: null })),
+      });
 
       if (created.length) {
         setSavedInvestigations((current) => [...current, ...created]);
@@ -574,7 +551,7 @@ function InvestigatePage() {
           client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() }),
         ]);
       }
-      setSlotErrors(failed);
+      setSlotErrors((current) => ({ ...current, ...failed }));
       if (created.length) {
         const failedCount = Object.keys(failed).length;
         setBatchStatus(
