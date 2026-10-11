@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { InvestigationInputContentType } from './investigationInputContentType';
+import type { InvestigationInputDesk } from './investigationInputDesk';
 
 export interface InvestigationInput {
   /** @minLength 1 */
@@ -16,6 +17,7 @@ export interface InvestigationInput {
      */
   originalName: string;
   contentType: InvestigationInputContentType;
+  desk: InvestigationInputDesk;
   /** @maxLength 3000 */
   context?: string;
   /** @nullable */

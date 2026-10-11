@@ -68,6 +68,7 @@ export const listInvestigationsResponseCandidatesItemConfidenceMax = 1;
 export const ListInvestigationsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
   "contentType": zod.string(),
   "context": zod.string().nullable(),
@@ -116,6 +117,7 @@ export const CreateInvestigationBody = zod.object({
   "objectPath": zod.string().min(1),
   "originalName": zod.string().min(1).max(createInvestigationBodyOriginalNameMax),
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif']),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "context": zod.string().max(createInvestigationBodyContextMax).optional(),
   "shotAt": zod.coerce.date().nullish(),
   "title": zod.string().max(createInvestigationBodyTitleMax).optional()
@@ -129,6 +131,7 @@ export const createInvestigationResponseCandidatesItemConfidenceMax = 1;
 export const CreateInvestigationResponse = zod.object({
   "id": zod.string().uuid(),
   "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
   "contentType": zod.string(),
   "context": zod.string().nullable(),
@@ -174,6 +177,7 @@ export const GetInvestigationSummaryResponse = zod.object({
   "latest": zod.union([zod.object({
   "id": zod.string().uuid(),
   "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
   "contentType": zod.string(),
   "context": zod.string().nullable(),
@@ -221,6 +225,7 @@ export const getInvestigationResponseCandidatesItemConfidenceMax = 1;
 export const GetInvestigationResponse = zod.object({
   "id": zod.string().uuid(),
   "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
   "contentType": zod.string(),
   "context": zod.string().nullable(),
@@ -278,6 +283,7 @@ export const updateInvestigationResponseCandidatesItemConfidenceMax = 1;
 export const UpdateInvestigationResponse = zod.object({
   "id": zod.string().uuid(),
   "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
   "contentType": zod.string(),
   "context": zod.string().nullable(),

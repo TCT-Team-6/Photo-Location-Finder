@@ -85,6 +85,7 @@ export async function processInvestigationPhotoUploads({
       const result = await createInvestigation({
         data: {
           objectPath: upload.objectPath,
+          desk: slot.id,
           originalName: file.name,
           contentType,
           ...(context.trim() ? { context: context.trim() } : {}),

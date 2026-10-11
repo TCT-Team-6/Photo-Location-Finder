@@ -83,6 +83,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
       result.created.map((item) => item.slotLabel),
       slots.filter((slot) => slotIds.includes(slot.id)).map((slot) => slot.label),
     );
+    assert.deepEqual(investigationInputs.map((input) => input.desk), slotIds);
     for (const input of investigationInputs) {
       assert.match(input.title ?? "", /^((Original photo)|(Recreation)|(Fake News)) — Mountain trip$/);
       assert.equal(input.context, "Light came from the west.");

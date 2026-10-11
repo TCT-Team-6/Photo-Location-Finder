@@ -315,6 +315,7 @@ components:
       required:
         - id
         - title
+        - desk
         - originalName
         - contentType
         - context
@@ -330,6 +331,9 @@ components:
           format: uuid
         title:
           type: string
+        desk:
+          type: string
+          enum: [original, recreation, fake-news]
         originalName:
           type: string
         contentType:
@@ -357,7 +361,7 @@ components:
           format: date-time
     InvestigationInput:
       type: object
-      required: [objectPath, originalName, contentType]
+      required: [objectPath, originalName, contentType, desk]
       properties:
         objectPath:
           type: string
@@ -380,6 +384,9 @@ components:
             - image/x-tiff
             - image/heic
             - image/heif
+        desk:
+          type: string
+          enum: [original, recreation, fake-news]
         context:
           type: string
           maxLength: 3000

@@ -43,6 +43,7 @@ export const investigationsTable = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id").notNull(),
     title: text("title").notNull(),
+    desk: text("desk").notNull().default("original"),
     originalName: text("original_name").notNull(),
     contentType: text("content_type").notNull(),
     objectPath: text("object_path").notNull(),

@@ -5,12 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { InvestigationDesk } from './investigationDesk';
 import type { LocationCandidate } from './locationCandidate';
 import type { VisualClue } from './visualClue';
 
 export interface Investigation {
   id: string;
   title: string;
+  desk: InvestigationDesk;
   originalName: string;
   contentType: string;
   /** @nullable */

@@ -74,6 +74,11 @@ const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
     description: 'An image associated with a news claim.',
   },
 ];
+const fieldDesks = [
+  { id: 'original', label: 'Original photo', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
+  { id: 'recreation', label: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Recreated and staged scenes' },
+  { id: 'fake-news', label: 'Fake News', icon: <ShieldCheck size={16} />, subtitle: 'Images associated with news claims' },
+] satisfies { id: PhotoUploadSlotId; label: string; icon: ReactNode; subtitle: string }[];
 
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -315,6 +320,7 @@ function ClerkProviderWithRoutes() {
       <Route path="/user-portal" component={PortalRoute} />
       <Route path="/investigate" component={InvestigateRoute} />
       <Route path="/library" component={LibraryRoute} />
+      <Route path="/desk/:deskId" component={FieldDeskRoute} />
       <Route path="/investigation/:id" component={DetailRoute} />
       <Route component={NotFound} />
     </Switch>
@@ -328,6 +334,7 @@ function Protected({ children }: { children: ReactNode }) {
 function PortalRoute() { return <Protected><AppShell><DashboardPage /></AppShell></Protected>; }
 function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></AppShell></Protected>; }
 function LibraryRoute() { return <Protected><AppShell><LibraryPage /></AppShell></Protected>; }
+function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }
 function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppShell></Protected>; }
 
 function AppShell({ children }: { children: ReactNode }) {
@@ -342,12 +349,17 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
   ];
+  const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
     <aside className="hidden w-[252px] shrink-0 flex-col bg-[#263d36] px-5 pb-5 pt-6 text-[#f4f0e6] md:flex">
       <Mark inverse />
       <p className="mb-3 mt-12 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Your field desk</p>
       <nav className="space-y-1">
         {navLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}{item.href === '/investigate' && <span className="ml-auto text-[#d78b5a]">+</span>}</Link>)}
+      </nav>
+      <p className="mb-2 mt-7 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
+      <nav className="space-y-1">
+        {deskLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}</Link>)}
       </nav>
       <div className="mt-auto">
         <div className="mb-4 flex items-center gap-3 border-t border-[#52695d] pt-5">
@@ -367,6 +379,8 @@ function AppShell({ children }: { children: ReactNode }) {
         <nav className="w-[min(84vw,320px)] bg-[#263d36] p-5 text-[#f4f0e6]" onClick={(event) => event.stopPropagation()}>
           <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-9 w-9 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
           {navLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#d0d9ce] hover:bg-white/10">{item.icon}{item.label}</Link>)}
+          <p className="mb-2 mt-6 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
+          {deskLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-desk-${item.id}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs text-[#d0d9ce] hover:bg-white/10">{item.icon}{item.label}</Link>)}
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
         </nav>
       </div>}
@@ -443,6 +457,24 @@ function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?:
       <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
   </article>;
+}
+
+function FieldDeskPage() {
+  const [, params] = useRoute('/desk/:deskId');
+  const desk = fieldDesks.find((item) => item.id === params?.deskId);
+  const query = useListInvestigations();
+  if (!desk) return <NotFound />;
+  const rows = (query.data ?? []).filter((item) => item.desk === desk.id);
+  return <div className="fade-up">
+    <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <div><PageEyebrow>Private archive / field desk</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">{desk.label}.</h1><p className="mt-3 text-sm text-[#718078]">{desk.subtitle}.</p></div>
+      <Link href="/investigate" data-testid={`button-new-from-desk-${desk.id}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6]"><ImagePlus size={15} />Add a photo</Link>
+    </div>
+    {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
+      : query.isError ? <QueryError retry={() => query.refetch()} text={`The ${desk.label} desk is unavailable just now.`} />
+      : rows.length === 0 ? <EmptyState icon={desk.icon} eyebrow="Desk is ready" title="No investigations here yet." text={`Photos submitted in the ${desk.label} upload spot will be filed here.`} action={<Link href="/investigate" data-testid={`empty-desk-start-${desk.id}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add a photo <ArrowRight size={15} /></Link>} />
+      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
+  </div>;
 }
 
 function InvestigatePage() {
@@ -575,7 +607,7 @@ function InvestigatePage() {
       <section className="rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 md:p-6">
         <div className="mb-5">
           <PageEyebrow>Three separate photo investigations</PageEyebrow>
-          <p className="mt-2 text-xs leading-5 text-[#718078]">Select any combination. The shared name, notes, and capture date below apply to each photo you submit.</p>
+          <p className="mt-2 text-xs leading-5 text-[#718078]">Select any combination. Each photo is filed in its matching field desk; the shared name, notes, and capture date apply to each one.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {investigationPhotoSlots.map((slot) => (

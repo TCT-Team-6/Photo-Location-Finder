@@ -92,9 +92,19 @@ export interface VisualClue {
   significance: string;
 }
 
+export type InvestigationDesk = typeof InvestigationDesk[keyof typeof InvestigationDesk];
+
+
+export const InvestigationDesk = {
+  original: 'original',
+  recreation: 'recreation',
+  'fake-news': 'fake-news',
+} as const;
+
 export interface Investigation {
   id: string;
   title: string;
+  desk: InvestigationDesk;
   originalName: string;
   contentType: string;
   /** @nullable */
@@ -125,6 +135,15 @@ export const InvestigationInputContentType = {
   'image/heif': 'image/heif',
 } as const;
 
+export type InvestigationInputDesk = typeof InvestigationInputDesk[keyof typeof InvestigationInputDesk];
+
+
+export const InvestigationInputDesk = {
+  original: 'original',
+  recreation: 'recreation',
+  'fake-news': 'fake-news',
+} as const;
+
 export interface InvestigationInput {
   /** @minLength 1 */
   objectPath: string;
@@ -134,6 +153,7 @@ export interface InvestigationInput {
      */
   originalName: string;
   contentType: InvestigationInputContentType;
+  desk: InvestigationInputDesk;
   /** @maxLength 3000 */
   context?: string;
   /** @nullable */

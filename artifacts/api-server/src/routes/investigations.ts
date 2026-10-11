@@ -245,6 +245,7 @@ router.post(
         .values({
           userId,
           title: parsed.data.title?.trim() || defaultTitle(originalName),
+          desk: parsed.data.desk,
           originalName,
           contentType,
           objectPath,
