@@ -16,7 +16,7 @@ import {
 } from "./investigation-photo-uploads";
 
 const slots: PhotoUploadSlotDefinition[] = [
-  { id: "original", label: "Original photo", description: "Original" },
+  { id: "original", label: "Investigations", description: "Original" },
   { id: "recreation", label: "Recreation", description: "Recreation" },
   { id: "fake-news", label: "Fake News", description: "Fake News" },
 ];
@@ -85,7 +85,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
     );
     assert.deepEqual(investigationInputs.map((input) => input.desk), slotIds);
     for (const input of investigationInputs) {
-      assert.match(input.title ?? "", /^((Original photo)|(Recreation)|(Fake News)) — Mountain trip$/);
+      assert.match(input.title ?? "", /^((Investigations)|(Recreation)|(Fake News)) — Mountain trip$/);
       assert.equal(input.context, "Light came from the west.");
       assert.equal(input.shotAt, "2024-03-05T00:00:00.000Z");
     }
@@ -127,7 +127,7 @@ test("keeps successful slots cleared and retries only a failed slot", async () =
   const firstAttempt = await runBatch();
   assert.deepEqual(
     firstAttempt.created.map((item) => item.slotLabel),
-    ["Original photo", "Fake News"],
+    ["Investigations", "Fake News"],
   );
   assert.deepEqual(firstAttempt.failed, { recreation: "Analysis temporarily failed" });
   assert.deepEqual([...remaining.keys()], ["recreation"]);
@@ -152,7 +152,7 @@ test("keeps validation failures attached to their slot and preserves errors for 
       objectPath: "/objects/uploads/1",
     }),
     uploadFile: async () => {},
-    createInvestigation: async () => ({ id: "saved-original", title: "Original photo — original" }),
+    createInvestigation: async () => ({ id: "saved-original", title: "Investigations — original" }),
   });
 
   assert.deepEqual(result.failed, { recreation: "Choose a supported image format." });

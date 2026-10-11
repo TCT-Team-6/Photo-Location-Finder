@@ -60,7 +60,7 @@ function imageContentType(file: File): InvestigationInputContentType | null {
 const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
   {
     id: 'original',
-    label: 'Original photo',
+    label: 'Investigations',
     description: 'The image you want to investigate.',
   },
   {
@@ -75,7 +75,7 @@ const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
   },
 ];
 const fieldDesks = [
-  { id: 'original', label: 'Original photo', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
+  { id: 'original', label: 'Investigations', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
   { id: 'recreation', label: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Recreated and staged scenes' },
   { id: 'fake-news', label: 'Fake News', icon: <ShieldCheck size={16} />, subtitle: 'Images associated with news claims' },
 ] satisfies { id: PhotoUploadSlotId; label: string; icon: ReactNode; subtitle: string }[];
@@ -478,6 +478,7 @@ function FieldDeskPage() {
 }
 
 function InvestigatePage() {
+  const [activeSlotId, setActiveSlotId] = useState<PhotoUploadSlotId>('original');
   const [files, setFiles] = useState<Record<PhotoUploadSlotId, File | null>>({
     original: null,
     recreation: null,
@@ -502,6 +503,7 @@ function InvestigatePage() {
   const selectedCount = investigationPhotoSlots.filter(
     (slot) => files[slot.id],
   ).length;
+  const activeSlot = investigationPhotoSlots.find((slot) => slot.id === activeSlotId)!;
   const pending = submitting || uploadUrl.isPending || create.isPending;
   const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
     setLocalError('');
@@ -602,25 +604,45 @@ function InvestigatePage() {
 
   return <div className="fade-up mx-auto max-w-[960px]">
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-    <div className="mb-8"><PageEyebrow>Open new case files / 01–03</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images. Each selected photo is analyzed separately and saved as its own investigation. Recreation and Fake News are labels only; this service estimates photo locations and does not fact-check claims.</p></div>
+    <div className="mb-8"><PageEyebrow>Open new case files / 01–03</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images, one field desk at a time. Each selected photo is analyzed separately and saved as its own investigation. Recreation and Fake News are labels only; this service estimates photo locations and does not fact-check claims.</p></div>
     <form onSubmit={submit} className="space-y-6">
       <section className="rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 md:p-6">
         <div className="mb-5">
-          <PageEyebrow>Three separate photo investigations</PageEyebrow>
-          <p className="mt-2 text-xs leading-5 text-[#718078]">Select any combination. Each photo is filed in its matching field desk; the shared name, notes, and capture date apply to each one.</p>
+          <PageEyebrow>Choose a field desk</PageEyebrow>
+          <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {investigationPhotoSlots.map((slot) => (
-            <PhotoUploadSlot
-              key={slot.id}
-              slot={slot}
-              file={files[slot.id]}
-              error={slotErrors[slot.id]}
+        <div className="mb-4 grid grid-cols-3 gap-2 rounded-2xl border border-[#ded8ca] bg-[#eeebdf] p-1.5" role="group" aria-label="Choose photo field desk">
+          {fieldDesks.map((desk) => {
+            const isActive = activeSlotId === desk.id;
+            const hasPhoto = Boolean(files[desk.id]);
+            const hasError = Boolean(slotErrors[desk.id]);
+            return <button
+              key={desk.id}
+              type="button"
+              aria-pressed={isActive}
+              aria-label={`${desk.label}${hasPhoto ? ', photo selected' : ''}${hasError ? ', needs attention' : ''}`}
               disabled={pending}
-              onSelectFile={(file) => setSelectedFile(slot.id, file)}
-              onRemoveFile={() => removeSelectedFile(slot.id)}
-            />
-          ))}
+              onClick={() => setActiveSlotId(desk.id)}
+              data-testid={`toggle-photo-desk-${desk.id}`}
+              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[11px] font-semibold transition sm:gap-2 sm:px-3 sm:text-xs ${isActive ? 'bg-[#385e51] text-[#f4f0e6] shadow-sm' : 'text-[#64766a] hover:bg-white/60'} disabled:cursor-wait disabled:opacity-60`}
+            >
+              <span className="hidden sm:inline-flex">{desk.icon}</span>
+              <span className="truncate">{desk.label}</span>
+              {hasPhoto && <Check size={13} aria-hidden="true" className={isActive ? 'text-[#dfe9d8]' : 'text-[#58755f]'} />}
+              {hasError && <span className="h-1.5 w-1.5 rounded-full bg-[#b75d4d]" aria-hidden="true" />}
+            </button>;
+          })}
+        </div>
+        <div role="region" aria-label={`${activeSlot.label} photo upload`}>
+          <PhotoUploadSlot
+            key={activeSlot.id}
+            slot={activeSlot}
+            file={files[activeSlot.id]}
+            error={slotErrors[activeSlot.id]}
+            disabled={pending}
+            onSelectFile={(file) => setSelectedFile(activeSlot.id, file)}
+            onRemoveFile={() => removeSelectedFile(activeSlot.id)}
+          />
         </div>
       </section>
       <div className="mx-auto max-w-[720px] rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
