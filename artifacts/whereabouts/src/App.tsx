@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
   getGetInvestigationQueryKey,
@@ -70,15 +70,15 @@ const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
   },
   {
     id: 'fake-news',
-    label: 'Fake News',
-    description: 'An image associated with a news claim.',
+    label: 'Investigative journalism',
+    description: 'A reporting image or visual lead to investigate.',
   },
 ];
 const fieldDesks = [
-  { id: 'original', label: 'Investigations', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
-  { id: 'recreation', label: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Recreated and staged scenes' },
-  { id: 'fake-news', label: 'Fake News', icon: <ShieldCheck size={16} />, subtitle: 'Images associated with news claims' },
-] satisfies { id: PhotoUploadSlotId; label: string; icon: ReactNode; subtitle: string }[];
+  { id: 'original', label: 'Investigations', shortLabel: 'Investigations', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
+  { id: 'recreation', label: 'Recreation', shortLabel: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Recreated and staged scenes' },
+  { id: 'fake-news', label: 'Investigative journalism', shortLabel: 'Journalism', icon: <Newspaper size={16} />, subtitle: 'Reporting images and visual leads' },
+] satisfies { id: PhotoUploadSlotId; label: string; shortLabel: string; icon: ReactNode; subtitle: string }[];
 
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -504,6 +504,7 @@ function InvestigatePage() {
     (slot) => files[slot.id],
   ).length;
   const activeSlot = investigationPhotoSlots.find((slot) => slot.id === activeSlotId)!;
+  const activeDeskIndex = fieldDesks.findIndex((desk) => desk.id === activeSlotId);
   const pending = submitting || uploadUrl.isPending || create.isPending;
   const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
     setLocalError('');
@@ -602,16 +603,17 @@ function InvestigatePage() {
     }
   };
 
-  return <div className="fade-up mx-auto max-w-[960px]">
+  return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-    <div className="mb-8"><PageEyebrow>Open new case files / 01–03</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images, one field desk at a time. Each selected photo is analyzed separately and saved as its own investigation. Recreation and Fake News are labels only; this service estimates photo locations and does not fact-check claims.</p></div>
+    <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images, one field desk at a time. Each selected photo is analyzed separately and saved as its own investigation. The Investigative journalism desk is for filing only; this service estimates photo locations and does not verify claims.</p></div>
     <form onSubmit={submit} className="space-y-6">
-      <section className="rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 md:p-6">
+      <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
-          <PageEyebrow>Choose a field desk</PageEyebrow>
+          <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Choose a field desk</p>
           <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
-        <div className="mb-4 grid grid-cols-3 gap-2 rounded-2xl border border-[#ded8ca] bg-[#eeebdf] p-1.5" role="group" aria-label="Choose photo field desk">
+        <div className="desk-toggle mb-4 grid grid-cols-3 rounded-2xl border p-1.5" role="group" aria-label="Choose photo field desk" data-testid="toggle-group-photo-desk">
+          <span className="desk-toggle-thumb" aria-hidden="true" style={{ transform: `translateX(${activeDeskIndex * 100}%)` }} />
           {fieldDesks.map((desk) => {
             const isActive = activeSlotId === desk.id;
             const hasPhoto = Boolean(files[desk.id]);
@@ -624,12 +626,12 @@ function InvestigatePage() {
               disabled={pending}
               onClick={() => setActiveSlotId(desk.id)}
               data-testid={`toggle-photo-desk-${desk.id}`}
-              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[11px] font-semibold transition sm:gap-2 sm:px-3 sm:text-xs ${isActive ? 'bg-[#385e51] text-[#f4f0e6] shadow-sm' : 'text-[#64766a] hover:bg-white/60'} disabled:cursor-wait disabled:opacity-60`}
+              className="desk-choice relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[10px] font-semibold transition sm:gap-2 sm:px-3 sm:text-xs"
             >
               <span className="hidden sm:inline-flex">{desk.icon}</span>
-              <span className="truncate">{desk.label}</span>
-              {hasPhoto && <Check size={13} aria-hidden="true" className={isActive ? 'text-[#dfe9d8]' : 'text-[#58755f]'} />}
-              {hasError && <span className="h-1.5 w-1.5 rounded-full bg-[#b75d4d]" aria-hidden="true" />}
+              <span className="truncate">{desk.shortLabel}</span>
+              {hasPhoto && <Check size={13} aria-hidden="true" className={isActive ? 'text-white' : 'text-[#58755f]'} />}
+              {hasError && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b75d4d]" aria-hidden="true" />}
             </button>;
           })}
         </div>
@@ -645,8 +647,8 @@ function InvestigatePage() {
           />
         </div>
       </section>
-      <div className="mx-auto max-w-[720px] rounded-3xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
-        <PageEyebrow>Set the scene</PageEyebrow>
+      <div className="desk-theme-panel mx-auto max-w-[720px] rounded-3xl border p-6 transition-colors duration-300 md:p-7">
+        <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Set the scene</p>
         <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Shared case name <span className="font-normal text-[#97a095]">optional</span></label>
         <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-xs text-[#87938a]">Each title also includes its upload label; without a name, the photo filename is used.</p>

@@ -473,3 +473,153 @@
     inset: -1px;
   }
 }
+
+.investigation-theme {
+  --desk-accent: #385e51;
+  --desk-accent-strong: #2e5044;
+  --desk-accent-soft: #e8eee4;
+  --desk-accent-line: #bdcbbd;
+  --desk-accent-muted: #64766a;
+  --desk-drop-surface: #ecebdd;
+  --desk-icon-surface: #dfe5d9;
+  --desk-panel-surface: #f8f5ec;
+}
+
+.investigation-theme[data-desk-theme="recreation"] {
+  --desk-accent: #a96341;
+  --desk-accent-strong: #874d34;
+  --desk-accent-soft: #f5e8dc;
+  --desk-accent-line: #dfbfa9;
+  --desk-accent-muted: #865c47;
+  --desk-drop-surface: #f1e7db;
+  --desk-icon-surface: #ead6c5;
+  --desk-panel-surface: #fbf5ee;
+}
+
+.investigation-theme[data-desk-theme="fake-news"] {
+  --desk-accent: #536b83;
+  --desk-accent-strong: #3d5369;
+  --desk-accent-soft: #e8edf2;
+  --desk-accent-line: #bfccd7;
+  --desk-accent-muted: #61758a;
+  --desk-drop-surface: #e9eef2;
+  --desk-icon-surface: #dbe4eb;
+  --desk-panel-surface: #f3f6f7;
+}
+
+.desk-theme-eyebrow {
+  color: var(--desk-accent);
+  transition: color 240ms ease;
+}
+
+.desk-theme-panel {
+  background-color: var(--desk-panel-surface);
+  border-color: var(--desk-accent-line);
+}
+
+.desk-toggle {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--desk-accent-line);
+  background-color: var(--desk-accent-soft);
+  transition: background-color 240ms ease, border-color 240ms ease;
+}
+
+.desk-toggle-thumb {
+  position: absolute;
+  z-index: 0;
+  inset: 6px auto 6px 6px;
+  width: calc((100% - 12px) / 3);
+  border-radius: 12px;
+  background-color: var(--desk-accent);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--desk-accent) 22%, transparent);
+  transition: transform 280ms cubic-bezier(.2, .8, .2, 1), background-color 240ms ease;
+}
+
+.desk-choice {
+  color: var(--desk-accent-muted);
+}
+
+.desk-choice[aria-pressed="true"] {
+  color: #fffaf2;
+}
+
+.desk-choice:focus-visible {
+  outline: 2px solid var(--desk-accent);
+  outline-offset: -3px;
+}
+
+.photo-upload-card {
+  border-color: var(--desk-accent-line);
+  animation: desk-card-arrive 220ms ease both;
+}
+
+@keyframes desk-card-arrive {
+  from { opacity: 0.72; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.photo-upload-title {
+  color: var(--desk-accent-strong);
+  transition: color 240ms ease;
+}
+
+.photo-upload-optional {
+  border-color: var(--desk-accent-line);
+  color: var(--desk-accent-muted);
+}
+
+.photo-upload-dropzone {
+  border-color: var(--desk-accent-line);
+  background-color: var(--desk-drop-surface);
+}
+
+.photo-upload-dropzone:hover,
+.photo-upload-dropzone.is-dragging {
+  border-color: var(--desk-accent);
+  background-color: var(--desk-accent-soft);
+}
+
+.photo-upload-dropzone.is-dragging {
+  box-shadow: inset 0 0 0 1px var(--desk-accent);
+}
+
+.photo-upload-icon {
+  background-color: var(--desk-icon-surface);
+  color: var(--desk-accent);
+  transition: color 240ms ease, background-color 240ms ease, transform 240ms ease;
+}
+
+.photo-upload-dropzone:hover .photo-upload-icon {
+  transform: translateY(-2px);
+}
+
+.photo-upload-fallback {
+  background-color: var(--desk-accent-soft);
+  color: var(--desk-accent-muted);
+}
+
+.photo-upload-filename {
+  background-color: color-mix(in srgb, var(--desk-accent-strong) 92%, transparent);
+}
+
+.photo-upload-remove {
+  color: var(--desk-accent-muted);
+}
+
+.photo-upload-remove:hover {
+  color: var(--desk-accent-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desk-toggle-thumb,
+  .desk-toggle,
+  .desk-theme-eyebrow,
+  .photo-upload-title,
+  .photo-upload-icon,
+  .photo-upload-card {
+    transition: none;
+    animation: none;
+  }
+}
