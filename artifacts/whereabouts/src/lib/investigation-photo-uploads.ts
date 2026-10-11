@@ -12,6 +12,7 @@ import type {
 export type SelectedInvestigationPhoto = {
   slot: PhotoUploadSlotDefinition;
   file: File;
+  requestId: string;
 };
 
 export type SavedInvestigationPhoto = {
@@ -59,7 +60,7 @@ export async function processInvestigationPhotoUploads({
   const created: SavedInvestigationPhoto[] = [];
   const failed: Partial<Record<PhotoUploadSlotId, string>> = {};
 
-  for (const [index, { slot, file }] of selected.entries()) {
+  for (const [index, { slot, file, requestId }] of selected.entries()) {
     const contentType = getContentType(file);
     if (!contentType) {
       failed[slot.id] = "Choose a supported image format.";
@@ -85,6 +86,7 @@ export async function processInvestigationPhotoUploads({
       const result = await createInvestigation({
         data: {
           objectPath: upload.objectPath,
+          clientRequestId: requestId,
           desk: slot.id,
           originalName: file.name,
           contentType,

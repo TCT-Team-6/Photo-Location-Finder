@@ -27,6 +27,7 @@ function selectedPhotos(slotIds: PhotoUploadSlotId[]) {
     .map((slot) => ({
       slot,
       file: new File([slot.id], `${slot.id}.jpg`, { type: "image/jpeg" }),
+      requestId: `request-${slot.id}`,
     }));
 }
 
@@ -79,6 +80,10 @@ test("creates one distinct investigation with shared metadata for every non-empt
     assert.equal(uploadRequests.length, slotIds.length);
     assert.equal(investigationInputs.length, slotIds.length);
     assert.equal(new Set(investigationInputs.map((input) => input.objectPath)).size, slotIds.length);
+    assert.deepEqual(
+      investigationInputs.map((input) => input.clientRequestId),
+      slotIds.map((slotId) => `request-${slotId}`),
+    );
     assert.deepEqual(
       result.created.map((item) => item.slotLabel),
       slots.filter((slot) => slotIds.includes(slot.id)).map((slot) => slot.label),
@@ -137,6 +142,69 @@ test("keeps successful slots cleared and retries only a failed slot", async () =
   assert.deepEqual(retry.failed, {});
   assert.deepEqual([...remaining.keys()], []);
   assert.deepEqual(createCalls.sort(), ["fake-news.jpg", "original.jpg", "recreation.jpg"]);
+});
+
+test("reuses the selected photo request ID after a committed save response is lost", async () => {
+  const remaining = new Map(selectedPhotos(["original"]).map((item) => [item.slot.id, item]));
+  const savedByRequestId = new Map<
+    string,
+    { id: string; title: string }
+  >();
+  const requestInputs: InvestigationInput[] = [];
+  let nextUploadId = 0;
+  let loseFirstResponse = true;
+
+  const runBatch = () =>
+    processInvestigationPhotoUploads({
+      selected: [...remaining.values()],
+      title: "",
+      context: "",
+      shotAt: "",
+      getContentType: validContentType,
+      requestUploadUrl: async () => {
+        nextUploadId += 1;
+        return {
+          uploadURL: `https://upload.example/${nextUploadId}`,
+          objectPath: `/objects/uploads/${nextUploadId}`,
+        };
+      },
+      uploadFile: async () => {},
+      createInvestigation: async ({ data }) => {
+        requestInputs.push(data);
+        const existing = savedByRequestId.get(data.clientRequestId);
+        if (existing) return existing;
+
+        const committed = {
+          id: "saved-once",
+          title: data.title ?? "",
+        };
+        savedByRequestId.set(data.clientRequestId, committed);
+        if (loseFirstResponse) {
+          loseFirstResponse = false;
+          throw new Error("Connection lost after the server committed the save");
+        }
+        return committed;
+      },
+      onSaved: (slotId) => remaining.delete(slotId),
+    });
+
+  const firstAttempt = await runBatch();
+  assert.deepEqual(firstAttempt.failed, {
+    original: "Connection lost after the server committed the save",
+  });
+  assert.equal(savedByRequestId.size, 1);
+  assert.equal(remaining.size, 1);
+
+  const retry = await runBatch();
+  assert.deepEqual(retry.failed, {});
+  assert.deepEqual(retry.created, [
+    { id: "saved-once", title: "Investigations — original", slotLabel: "Investigations" },
+  ]);
+  assert.equal(savedByRequestId.size, 1);
+  assert.equal(requestInputs.length, 2);
+  assert.equal(requestInputs[0].clientRequestId, requestInputs[1].clientRequestId);
+  assert.notEqual(requestInputs[0].objectPath, requestInputs[1].objectPath);
+  assert.equal(remaining.size, 0);
 });
 
 test("keeps validation failures attached to their slot and preserves errors for untouched slots", async () => {

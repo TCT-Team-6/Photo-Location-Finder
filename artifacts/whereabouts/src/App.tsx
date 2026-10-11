@@ -484,6 +484,13 @@ function InvestigatePage() {
     recreation: null,
     'fake-news': null,
   });
+  const [requestIds, setRequestIds] = useState<
+    Record<PhotoUploadSlotId, string | null>
+  >({
+    original: null,
+    recreation: null,
+    'fake-news': null,
+  });
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [shotAt, setShotAt] = useState('');
@@ -512,6 +519,7 @@ function InvestigatePage() {
     setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
     if (!imageContentType(selected)) {
       setFiles((current) => ({ ...current, [slotId]: null }));
+      setRequestIds((current) => ({ ...current, [slotId]: null }));
       setSlotErrors((current) => ({
         ...current,
         [slotId]:
@@ -521,6 +529,7 @@ function InvestigatePage() {
     }
     if (selected.size > 25 * 1024 * 1024) {
       setFiles((current) => ({ ...current, [slotId]: null }));
+      setRequestIds((current) => ({ ...current, [slotId]: null }));
       setSlotErrors((current) => ({
         ...current,
         [slotId]: 'This image is larger than 25 MB. Choose a smaller file.',
@@ -528,9 +537,11 @@ function InvestigatePage() {
       return;
     }
     setFiles((current) => ({ ...current, [slotId]: selected }));
+    setRequestIds((current) => ({ ...current, [slotId]: crypto.randomUUID() }));
   };
   const removeSelectedFile = (slotId: PhotoUploadSlotId) => {
     setFiles((current) => ({ ...current, [slotId]: null }));
+    setRequestIds((current) => ({ ...current, [slotId]: null }));
     setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
     setBatchStatus('');
   };
@@ -541,7 +552,8 @@ function InvestigatePage() {
     setSavedInvestigations([]);
     const selected = investigationPhotoSlots.flatMap((slot) => {
       const file = files[slot.id];
-      return file ? [{ slot, file }] : [];
+      const requestId = requestIds[slot.id];
+      return file && requestId ? [{ slot, file, requestId }] : [];
     });
     setSlotErrors((current) =>
       clearErrorsForSelectedPhotoSlots(
@@ -575,8 +587,10 @@ function InvestigatePage() {
         },
         createInvestigation: (variables) => create.mutateAsync(variables),
         onProgress: setProgress,
-        onSaved: (slotId) =>
-          setFiles((current) => ({ ...current, [slotId]: null })),
+        onSaved: (slotId) => {
+          setFiles((current) => ({ ...current, [slotId]: null }));
+          setRequestIds((current) => ({ ...current, [slotId]: null }));
+        },
       });
 
       if (created.length) {

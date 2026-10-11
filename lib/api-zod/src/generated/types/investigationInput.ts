@@ -11,6 +11,7 @@ import type { InvestigationInputDesk } from './investigationInputDesk';
 export interface InvestigationInput {
   /** @minLength 1 */
   objectPath: string;
+  clientRequestId: string;
   /**
      * @minLength 1
      * @maxLength 255

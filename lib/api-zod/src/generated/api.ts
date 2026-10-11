@@ -115,6 +115,7 @@ export const createInvestigationBodyTitleMax = 120;
 
 export const CreateInvestigationBody = zod.object({
   "objectPath": zod.string().min(1),
+  "clientRequestId": zod.string().uuid(),
   "originalName": zod.string().min(1).max(createInvestigationBodyOriginalNameMax),
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif']),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),

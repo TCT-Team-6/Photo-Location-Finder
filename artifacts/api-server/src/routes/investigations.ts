@@ -157,6 +157,31 @@ router.post(
       return;
     }
 
+    const [existingInvestigation] = await db
+      .select()
+      .from(investigationsTable)
+      .where(
+        and(
+          eq(investigationsTable.userId, userId),
+          eq(investigationsTable.clientRequestId, parsed.data.clientRequestId),
+        ),
+      )
+      .limit(1);
+    if (existingInvestigation) {
+      await db
+        .delete(pendingPhotoUploadsTable)
+        .where(
+          and(
+            eq(pendingPhotoUploadsTable.objectPath, objectPath),
+            eq(pendingPhotoUploadsTable.userId, userId),
+          ),
+        );
+      res
+        .status(200)
+        .json(CreateInvestigationResponse.parse(existingInvestigation));
+      return;
+    }
+
     const [pendingUpload] = await db
       .select()
       .from(pendingPhotoUploadsTable)
@@ -240,7 +265,7 @@ router.post(
         owner: userId,
         visibility: "private",
       });
-      const [investigation] = await db
+      const [insertedInvestigation] = await db
         .insert(investigationsTable)
         .values({
           userId,
@@ -249,20 +274,51 @@ router.post(
           originalName,
           contentType,
           objectPath,
+          clientRequestId: parsed.data.clientRequestId,
           context,
           shotAt,
           summary: analysis.summary,
           candidates,
           clues: analysis.clues,
         })
+        .onConflictDoNothing({
+          target: [
+            investigationsTable.userId,
+            investigationsTable.clientRequestId,
+          ],
+        })
         .returning();
+
+      const [investigation] = insertedInvestigation
+        ? [insertedInvestigation]
+        : await db
+            .select()
+            .from(investigationsTable)
+            .where(
+              and(
+                eq(investigationsTable.userId, userId),
+                eq(
+                  investigationsTable.clientRequestId,
+                  parsed.data.clientRequestId,
+                ),
+              ),
+            )
+            .limit(1);
+      if (!investigation) {
+        throw new Error("Investigation idempotency conflict could not be resolved.");
+      }
 
       await db
         .delete(pendingPhotoUploadsTable)
-        .where(eq(pendingPhotoUploadsTable.objectPath, objectPath));
+        .where(
+          and(
+            eq(pendingPhotoUploadsTable.objectPath, objectPath),
+            eq(pendingPhotoUploadsTable.userId, userId),
+          ),
+        );
 
       res
-        .status(201)
+        .status(insertedInvestigation ? 201 : 200)
         .json(CreateInvestigationResponse.parse(investigation));
     } catch (error) {
       if (error instanceof ObjectNotFoundError) {

@@ -84,6 +84,12 @@ paths:
             schema:
               $ref: "#/components/schemas/InvestigationInput"
       responses:
+        "200":
+          description: Existing investigation returned for a replayed client request ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
         "201":
           description: Photo analyzed and investigation saved.
           content:
@@ -361,11 +367,14 @@ components:
           format: date-time
     InvestigationInput:
       type: object
-      required: [objectPath, originalName, contentType, desk]
+      required: [objectPath, originalName, contentType, desk, clientRequestId]
       properties:
         objectPath:
           type: string
           minLength: 1
+        clientRequestId:
+          type: string
+          format: uuid
         originalName:
           type: string
           minLength: 1

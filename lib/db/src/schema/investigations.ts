@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -47,6 +48,7 @@ export const investigationsTable = pgTable(
     originalName: text("original_name").notNull(),
     contentType: text("content_type").notNull(),
     objectPath: text("object_path").notNull(),
+    clientRequestId: uuid("client_request_id"),
     context: text("context"),
     shotAt: date("shot_at", { mode: "string" }),
     summary: text("summary").notNull(),
@@ -60,7 +62,13 @@ export const investigationsTable = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [index("investigations_user_created_idx").on(table.userId, table.createdAt)],
+  (table) => [
+    index("investigations_user_created_idx").on(table.userId, table.createdAt),
+    uniqueIndex("investigations_user_client_request_idx").on(
+      table.userId,
+      table.clientRequestId,
+    ),
+  ],
 );
 
 export const pendingPhotoUploadsTable = pgTable(
