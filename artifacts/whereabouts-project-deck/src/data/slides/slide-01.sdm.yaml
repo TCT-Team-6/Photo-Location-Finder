@@ -1,0 +1,158 @@
+{
+  "format": "replit.sdm",
+  "version": 1,
+  "size": {
+    "width": 1920,
+    "height": 1080
+  },
+  "background": {
+    "kind": "solid",
+    "color": {
+      "kind": "token",
+      "token": "background"
+    }
+  },
+  "theme": {
+    "colors": {
+      "background": "#F4F0E6",
+      "surface": "#FBF9F3",
+      "foreground": "#263D36",
+      "muted": "#718078",
+      "accent": "#D78B5A"
+    },
+    "fonts": {
+      "display": "Fraunces",
+      "body": "DM Sans"
+    }
+  },
+  "elements": [
+    {
+      "id": "coverImage",
+      "type": "image",
+      "frame": {
+        "x": 1040,
+        "y": 0,
+        "width": 880,
+        "height": 1080
+      },
+      "assetId": "cover",
+      "fit": "cover"
+    },
+    {
+      "id": "coverAccent",
+      "type": "shape",
+      "frame": {
+        "x": 120,
+        "y": 188,
+        "width": 96,
+        "height": 8
+      },
+      "geometry": {
+        "kind": "preset",
+        "preset": "rect"
+      },
+      "fill": {
+        "kind": "solid",
+        "color": {
+          "kind": "token",
+          "token": "accent"
+        }
+      }
+    },
+    {
+      "id": "coverTitle",
+      "type": "text",
+      "frame": {
+        "x": 120,
+        "y": 250,
+        "width": 820,
+        "height": 150
+      },
+      "body": {
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Whereabouts"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "display"
+              },
+              "sizePt": 36,
+              "weight": 700,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.12
+          }
+        ],
+        "verticalAlign": "middle"
+      }
+    },
+    {
+      "id": "coverSubtitle",
+      "type": "text",
+      "frame": {
+        "x": 120,
+        "y": 470,
+        "width": 800,
+        "height": 370
+      },
+      "body": {
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Photo-location research, organized for review"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "display"
+              },
+              "sizePt": 36,
+              "weight": 700,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.12
+          },
+          {
+            "runs": [
+              {
+                "text": "Project overview: current product and next direction"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 21,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24
+          }
+        ],
+        "verticalAlign": "top"
+      }
+    }
+  ],
+  "assets": {
+    "cover": {
+      "src": "images/cover.jpg"
+    }
+  }
+}

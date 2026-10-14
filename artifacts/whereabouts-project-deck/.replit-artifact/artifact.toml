@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/whereabouts-project-deck/"
+title = "Whereabouts — Project Overview"
+description = "A 15-slide overview of Whereabouts, its current photo-location investigation workflow, trust boundaries, and proposed direction for distinct field desks."
+version = "1.0.0"
+id = "artifacts/whereabouts-project-deck"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/whereabouts-project-deck/" ]
+localPort = 25554
+
+[services.development]
+run = "pnpm --filter @workspace/whereabouts-project-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/whereabouts-project-deck", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/whereabouts-project-deck/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25554"
+BASE_PATH = "/whereabouts-project-deck/"

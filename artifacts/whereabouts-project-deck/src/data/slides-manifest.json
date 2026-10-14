@@ -1,0 +1,137 @@
+[
+  {
+    "id": "slide-01",
+    "position": 1,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-01.sdm.yaml",
+    "title": "Whereabouts",
+    "description": "Photo-location research, organized for review",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-02",
+    "position": 2,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-02.sdm.yaml",
+    "title": "Whereabouts turns photographs into location leads—and keeps uncertainty visible.",
+    "description": "Whereabouts turns photographs into location leads—and keeps uncertainty visible.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-03",
+    "position": 3,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-03.sdm.yaml",
+    "title": "Three field desks organize one shared location-analysis flow.",
+    "description": "Three field desks organize one shared location-analysis flow.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-04",
+    "position": 4,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-04.sdm.yaml",
+    "title": "Each selected photograph becomes its own saved investigation.",
+    "description": "Each selected photograph becomes its own saved investigation.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-05",
+    "position": 5,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-05.sdm.yaml",
+    "title": "The processing path separates photo storage from investigation records.",
+    "description": "The processing path separates photo storage from investigation records.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-06",
+    "position": 6,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-06.sdm.yaml",
+    "title": "The detail view makes each candidate location inspectable.",
+    "description": "The detail view makes each candidate location inspectable.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-07",
+    "position": 7,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-07.sdm.yaml",
+    "title": "Public reference photos add context without receiving private uploads.",
+    "description": "Public reference photos add context without receiving private uploads.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-08",
+    "position": 8,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-08.sdm.yaml",
+    "title": "A confidence value is a lead, not an independently verified result.",
+    "description": "A confidence value is a lead, not an independently verified result.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-09",
+    "position": 9,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-09.sdm.yaml",
+    "title": "The library keeps saved investigations searchable and editable.",
+    "description": "The library keeps saved investigations searchable and editable.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-10",
+    "position": 10,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-10.sdm.yaml",
+    "title": "Authentication and ownership scope saved investigations to each user.",
+    "description": "Authentication and ownership scope saved investigations to each user.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-11",
+    "position": 11,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-11.sdm.yaml",
+    "title": "The field desks classify work; they do not change analysis behavior.",
+    "description": "The field desks classify work; they do not change analysis behavior.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-12",
+    "position": 12,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-12.sdm.yaml",
+    "title": "The current app does not manage missing-person cases or verify claims.",
+    "description": "The current app does not manage missing-person cases or verify claims.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-13",
+    "position": 13,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-13.sdm.yaml",
+    "title": "The redesign brief calls for three purpose-built experiences.",
+    "description": "The redesign brief calls for three purpose-built experiences.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-14",
+    "position": 14,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-14.sdm.yaml",
+    "title": "New case and journalism experiences need dedicated evidence workflows.",
+    "description": "New case and journalism experiences need dedicated evidence workflows.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "slide-15",
+    "position": 15,
+    "kind": "sdm",
+    "filepath": "src/data/slides/slide-15.sdm.yaml",
+    "title": "Grow from location leads to evidence workflows without overstating certainty.",
+    "description": "Grow from location leads to evidence workflows without overstating certainty.",
+    "speakerNotes": ""
+  }
+]

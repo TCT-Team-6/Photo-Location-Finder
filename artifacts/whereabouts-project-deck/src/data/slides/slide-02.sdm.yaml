@@ -1,0 +1,257 @@
+{
+  "format": "replit.sdm",
+  "version": 1,
+  "size": {
+    "width": 1920,
+    "height": 1080
+  },
+  "background": {
+    "kind": "solid",
+    "color": {
+      "kind": "token",
+      "token": "background"
+    }
+  },
+  "theme": {
+    "colors": {
+      "background": "#F4F0E6",
+      "surface": "#FBF9F3",
+      "foreground": "#263D36",
+      "muted": "#718078",
+      "accent": "#D78B5A"
+    },
+    "fonts": {
+      "display": "Fraunces",
+      "body": "DM Sans"
+    }
+  },
+  "elements": [
+    {
+      "id": "titleAccent",
+      "type": "shape",
+      "frame": {
+        "x": 120,
+        "y": 128,
+        "width": 8,
+        "height": 64
+      },
+      "geometry": {
+        "kind": "preset",
+        "preset": "rect"
+      },
+      "fill": {
+        "kind": "solid",
+        "color": {
+          "kind": "token",
+          "token": "accent"
+        }
+      }
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "frame": {
+        "x": 154,
+        "y": 108,
+        "width": 1640,
+        "height": 260
+      },
+      "body": {
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Whereabouts turns photographs into location leads—and keeps uncertainty visible."
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "display"
+              },
+              "sizePt": 36,
+              "weight": 700,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.12
+          }
+        ],
+        "verticalAlign": "middle"
+      }
+    },
+    {
+      "id": "body",
+      "type": "text",
+      "frame": {
+        "x": 150,
+        "y": 385,
+        "width": 1630,
+        "height": 565
+      },
+      "body": {
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Upload a photograph with optional context"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 21,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24,
+            "bullet": {
+              "kind": "character",
+              "character": "•"
+            },
+            "spaceAfterPt": 14
+          },
+          {
+            "runs": [
+              {
+                "text": "Review a scene summary, visual clues, and candidate places"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 21,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24,
+            "bullet": {
+              "kind": "character",
+              "character": "•"
+            },
+            "spaceAfterPt": 14
+          },
+          {
+            "runs": [
+              {
+                "text": "Use confidence and rationale as leads, not proof"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 21,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24,
+            "bullet": {
+              "kind": "character",
+              "character": "•"
+            },
+            "spaceAfterPt": 14
+          },
+          {
+            "runs": [
+              {
+                "text": "The current product does not verify claims or manage cases"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 21,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24,
+            "bullet": {
+              "kind": "character",
+              "character": "•"
+            },
+            "spaceAfterPt": 14
+          }
+        ],
+        "verticalAlign": "top"
+      }
+    },
+    {
+      "id": "footerRule",
+      "type": "shape",
+      "frame": {
+        "x": 120,
+        "y": 1000,
+        "width": 1680,
+        "height": 2
+      },
+      "geometry": {
+        "kind": "preset",
+        "preset": "rect"
+      },
+      "fill": {
+        "kind": "solid",
+        "color": {
+          "kind": "token",
+          "token": "surface"
+        }
+      }
+    },
+    {
+      "id": "pageNumber",
+      "type": "text",
+      "frame": {
+        "x": 1680,
+        "y": 1008,
+        "width": 120,
+        "height": 50
+      },
+      "body": {
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "02"
+              }
+            ],
+            "defaultRunStyle": {
+              "font": {
+                "kind": "token",
+                "token": "body"
+              },
+              "sizePt": 16,
+              "weight": 400,
+              "color": {
+                "kind": "token",
+                "token": "foreground"
+              }
+            },
+            "lineHeight": 1.24
+          }
+        ],
+        "verticalAlign": "middle"
+      }
+    }
+  ]
+}
