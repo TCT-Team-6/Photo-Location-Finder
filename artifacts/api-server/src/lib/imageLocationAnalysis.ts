@@ -117,7 +117,11 @@ function visualClues(vision: JsonRecord | null, body: JsonRecord): VisualClue[] 
   }
 
   const seen = new Set<string>();
-  return observations.flatMap((observation) => {
+  return observations.flatMap((rawObservation) => {
+    const observation = rawObservation
+      .replaceAll("_", " ")
+      .replace(/\s+/g, " ")
+      .trim();
     const normalized = observation.toLowerCase();
     if (seen.has(normalized)) return [];
     seen.add(normalized);
@@ -253,18 +257,30 @@ export function normalizeImageLocationResponse(
     if (normalizedCandidates.length >= 4) break;
   }
 
+  normalizedCandidates.sort((left, right) => right.confidence - left.confidence);
+
   const serviceSummary = text(body.summary);
+  const summaryConflictsWithRanking =
+    !!serviceSummary &&
+    !!normalizedCandidates[0] &&
+    (normalizedCandidates[0].place.toLocaleLowerCase() !==
+      primaryName?.toLocaleLowerCase() ||
+      normalizedCandidates.slice(1).some((candidate) =>
+        serviceSummary.toLocaleLowerCase().includes(candidate.place.toLocaleLowerCase()),
+      ));
   const warning = text(body.warning, 500);
   const summaryParts = [
-    serviceSummary,
-    warning && !serviceSummary?.includes(warning) ? warning : null,
+    summaryConflictsWithRanking ? null : serviceSummary,
+    warning && !(summaryConflictsWithRanking ? false : serviceSummary?.includes(warning))
+      ? warning
+      : null,
   ].filter((part): part is string => !!part);
 
   return {
     summary:
       summaryParts.join(" ") ||
       (normalizedCandidates.length
-        ? `The Image Locator service identified ${normalizedCandidates[0].place} as a possible location.`
+        ? `The Image Locator service ranked ${normalizedCandidates[0].place} as its strongest location lead.`
         : "The Image Locator service returned no likely location."),
     candidates: normalizedCandidates,
     clues: visualClues(vision, body),

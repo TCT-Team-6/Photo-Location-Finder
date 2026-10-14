@@ -4,6 +4,7 @@ import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/r
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
   getGetInvestigationQueryKey,
@@ -443,7 +444,7 @@ function EmptyState({ icon, eyebrow, title, text, action }: { icon: ReactNode; e
 }
 
 function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?: (item: Investigation) => void }) {
-  const place = item.candidates[0];
+  const place = rankCandidates(item.candidates)[0];
   return <article className="group relative overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(43,58,48,.09)]" data-testid={`card-investigation-${item.id}`}>
     <div className="relative h-[148px] overflow-hidden bg-[#d9ddcf]">
       <img src={`/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />
@@ -457,6 +458,22 @@ function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?:
       <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
   </article>;
+}
+
+function rankCandidates<T extends { confidence: number }>(candidates: T[]) {
+  return candidates
+    .map((candidate, index) => ({
+      candidate,
+      index,
+      score: candidate.confidence > 1 ? candidate.confidence / 100 : candidate.confidence,
+    }))
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map(({ candidate }) => candidate);
+}
+
+function candidateScore(confidence: number) {
+  const normalized = confidence > 1 ? confidence / 100 : confidence;
+  return Math.round(Math.max(0, Math.min(1, normalized)) * 100);
 }
 
 function FieldDeskPage() {
@@ -750,9 +767,11 @@ function InvestigationPage() {
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(0);
   const item = query.data;
+  const rankedLeads = useMemo(() => rankCandidates(item?.candidates ?? []), [item?.candidates]);
   useEffect(() => {
-    if (item) { setTitle(item.title); setContext(item.context ?? ''); }
+    if (item) { setTitle(item.title); setContext(item.context ?? ''); setSelectedCandidateIndex(0); }
   }, [item?.id]);
   const photoUrl = useMemo(() => photo.data instanceof Blob ? URL.createObjectURL(photo.data) : '', [photo.data]);
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
@@ -778,7 +797,7 @@ function InvestigationPage() {
   };
   if (query.isLoading) return <div className="grid gap-6 lg:grid-cols-[1fr_.8fr]"><SkeletonBlock className="h-[440px]" /><div className="space-y-4"><SkeletonBlock className="h-20" /><SkeletonBlock className="h-64" /><SkeletonBlock className="h-36" /></div></div>;
   if (query.isError || !item) return <QueryError retry={() => query.refetch()} text="This investigation could not be opened." />;
-  const mainCandidate = item.candidates[0];
+  const selectedLead = rankedLeads[selectedCandidateIndex] ?? rankedLeads[0];
   return <div className="fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -809,26 +828,32 @@ function InvestigationPage() {
       <div>
         <div className="mb-4 flex items-end justify-between"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.candidates.length} leads</span></div>
         <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
-        {item.candidates.length ? <div className="space-y-4">{item.candidates.map((candidate, index) => <article key={`${candidate.place}-${index}`} className={`relative overflow-hidden rounded-2xl border p-5 ${index === 0 ? 'border-[#b8c4b5] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec]'}`} data-testid={`card-candidate-${index}`}>
-          {index === 0 && <span className="absolute right-4 top-4 rounded-full bg-[#385e51] px-3 py-1 font-data text-[8px] uppercase tracking-[.12em] text-[#f4f0e6]">Strongest lead</span>}
-          <div className="flex items-start gap-3 pr-24"><span className={`map-pin mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full ${index === 0 ? 'bg-[#c8794d] text-white' : 'bg-[#e2e4d9] text-[#607a68]'}`}><MapPin size={17} /></span><div><h3 className="font-editorial text-2xl tracking-[-.02em]">{candidate.place}</h3><p className="mt-1 text-xs text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</p></div></div>
-          <div className="mt-5 flex items-center justify-between border-y border-[#c9d0c2] py-3"><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Confidence</span><span className="font-data text-sm text-[#385e51]">{Math.round(candidate.confidence * 100)}%</span></div>
-          <p className="mt-4 text-sm leading-6 text-[#596d61]">{candidate.rationale}</p>
-          {candidate.clues.length > 0 && <div className="mt-4 flex flex-wrap gap-2">{candidate.clues.map((clue) => <span key={clue} className="rounded-full border border-[#c7d0c1] px-3 py-1.5 text-[10px] text-[#627569]">{clue}</span>)}</div>}
-          {(candidate.photoReferences ?? []).length > 0 ? <div className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${index}`}>
-            <p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references</p>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {(candidate.photoReferences ?? []).map((reference, referenceIndex) => <a key={`${reference.imageUrl}-${referenceIndex}`} href={reference.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-photo-reference-${index}-${referenceIndex}`} className="group min-w-0 overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-0.5 hover:shadow-sm">
-                <div className="aspect-[4/3] overflow-hidden bg-[#e5e3d6]">
-                  <img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Public photo reference for ${candidate.place}`} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" />
-                </div>
-                <span className="block line-clamp-2 px-2 pt-2 text-[10px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${candidate.place}`}</span>
+        {rankedLeads.length ? <>
+          <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-xs leading-5 text-[#718078]">Model score ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
+          <LeadLocationMap candidates={rankedLeads.slice(0, 3)} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} />
+          <div className="mt-4 space-y-2" data-testid="list-ranked-location-leads">
+            {rankedLeads.map((candidate, index) => <button key={`${candidate.place}-${index}`} type="button" aria-pressed={selectedCandidateIndex === index} onClick={() => setSelectedCandidateIndex(index)} data-testid={`button-select-lead-${index}`} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${selectedCandidateIndex === index ? 'border-[#9eaf9f] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec] hover:border-[#b8c4b5]'}`}>
+              <span className="flex min-w-0 items-center gap-3"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${index === 0 ? 'bg-[#385e51] text-[#f4f0e6]' : 'bg-[#e2e4d9] text-[#607a68]'}`}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[11px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
+              <span className="shrink-0 text-right"><span className="block font-data text-[9px] uppercase tracking-[.12em] text-[#758477]">Model score</span><span className="font-data text-sm font-medium text-[#385e51]">{candidateScore(candidate.confidence)} / 100</span>{index === 0 && <span className="mt-1 block font-data text-[8px] uppercase tracking-[.1em] text-[#9c6d4e]">Strongest lead</span>}</span>
+            </button>)}
+          </div>
+          {selectedLead && <article className="mt-4 rounded-2xl border border-[#b8c4b5] bg-[#e9ede3] p-5" data-testid="panel-selected-location-lead">
+            <PageEyebrow>{selectedCandidateIndex === 0 ? 'Highest model score' : 'Selected location lead'}</PageEyebrow>
+            <h3 className="mt-2 font-editorial text-2xl text-[#263d36]">{selectedLead.place}</h3>
+            <p className="mt-1 text-xs text-[#718078]">{[selectedLead.region, selectedLead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
+            <div className="mt-4 border-t border-[#c9d0c2] pt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Why it was suggested</p><p className="mt-2 text-sm leading-6 text-[#596d61]">{selectedLead.rationale}</p></div>
+            {selectedLead.clues.length > 0 && <div className="mt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Related scene clues</p><div className="mt-2 flex flex-wrap gap-2">{selectedLead.clues.map((clue, clueIndex) => <span key={`${clue}-${clueIndex}`} className="rounded-full border border-[#c7d0c1] bg-[#f8f5ec] px-3 py-1.5 text-[10px] text-[#627569]">{clue.replaceAll('_', ' ')}</span>)}</div></div>}
+            {(selectedLead.photoReferences ?? []).length > 0 ? <div className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${selectedCandidateIndex}`}>
+              <p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">{(selectedLead.photoReferences ?? []).map((reference, referenceIndex) => <a key={`${reference.imageUrl}-${referenceIndex}`} href={reference.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-photo-reference-${selectedCandidateIndex}-${referenceIndex}`} className="group min-w-0 overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-0.5 hover:shadow-sm">
+                <div className="aspect-[4/3] overflow-hidden bg-[#e5e3d6]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Public photo reference for ${selectedLead.place}`} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" /></div>
+                <span className="block line-clamp-2 px-2 pt-2 text-[10px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${selectedLead.place}`}</span>
                 <span className="block truncate px-2 pb-2 pt-1 text-[8px] text-[#929b90]">{photoReferenceHost(reference.sourceUrl)} <ArrowUpRight size={10} className="ml-0.5 inline" /></span>
-              </a>)}
-            </div>
-          </div> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${index}`}>{candidate.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : candidate.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
-          <a href={candidate.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${index}`} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] hover:text-[#b36e48]">Explore on map <ArrowUpRight size={14} /></a>
-        </article>)}</div> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
+              </a>)}</div>
+            </div> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${selectedCandidateIndex}`}>{selectedLead.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : selectedLead.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
+            <a href={selectedLead.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${selectedCandidateIndex}`} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] hover:text-[#b36e48]">Explore this location <ArrowUpRight size={14} /></a>
+          </article>}
+        </> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
         <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[9px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-xs leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
       </div>
     </div>
