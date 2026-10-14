@@ -524,6 +524,7 @@ function InvestigatePage() {
   const uploadUrl = useRequestUploadUrl();
   const create = useCreateInvestigation();
   const client = useQueryClient();
+  const [, setLocation] = useLocation();
   const selectedCount = investigationPhotoSlots.filter(
     (slot) => files[slot.id],
   ).length;
@@ -584,6 +585,7 @@ function InvestigatePage() {
     }
 
     setSubmitting(true);
+    let reportIdToOpen: string | null = null;
     try {
       const { created, failed } = await processInvestigationPhotoUploads({
         selected,
@@ -620,11 +622,13 @@ function InvestigatePage() {
       setSlotErrors((current) => ({ ...current, ...failed }));
       if (created.length) {
         const failedCount = Object.keys(failed).length;
-        setBatchStatus(
-          failedCount
-            ? `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. ${failedCount} photo${failedCount === 1 ? '' : 's'} could not be processed; retry the remaining upload${failedCount === 1 ? '' : 's'} below.`
-            : `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. Open one below or find them in your library.`,
-        );
+        if (failedCount === 0) {
+          reportIdToOpen = created[0].id;
+        } else {
+          setBatchStatus(
+            `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. ${failedCount} photo${failedCount === 1 ? '' : 's'} could not be processed; retry the remaining upload${failedCount === 1 ? '' : 's'} below.`,
+          );
+        }
       } else {
         setLocalError('No investigations were saved. Review the highlighted upload and try again.');
       }
@@ -632,6 +636,7 @@ function InvestigatePage() {
       setSubmitting(false);
       setProgress('');
     }
+    if (reportIdToOpen) setLocation(`/investigation/${encodeURIComponent(reportIdToOpen)}`);
   };
 
   return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
