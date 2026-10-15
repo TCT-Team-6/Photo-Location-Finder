@@ -4,7 +4,7 @@ import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/r
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
-import { LeadLocationMap } from '@/components/lead-location-map';
+import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
   getGetInvestigationQueryKey,
@@ -19,6 +19,7 @@ import {
   useHealthCheck,
   useListInvestigations,
   useRequestUploadUrl,
+  useRefreshInvestigationCandidates,
   useUpdateInvestigation,
 } from '@workspace/api-client-react';
 import type { Investigation, InvestigationInputContentType } from '@workspace/api-client-react';
@@ -322,6 +323,7 @@ function ClerkProviderWithRoutes() {
       <Route path="/investigate" component={InvestigateRoute} />
       <Route path="/library" component={LibraryRoute} />
       <Route path="/desk/:deskId" component={FieldDeskRoute} />
+      <Route path="/investigation/:id/location/:index" component={LeadLocationRoute} />
       <Route path="/investigation/:id" component={DetailRoute} />
       <Route component={NotFound} />
     </Switch>
@@ -337,6 +339,7 @@ function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></A
 function LibraryRoute() { return <Protected><AppShell><LibraryPage /></AppShell></Protected>; }
 function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }
 function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppShell></Protected>; }
+function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
 
 function AppShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
@@ -773,6 +776,8 @@ function InvestigationPage() {
   const [context, setContext] = useState('');
   const [message, setMessage] = useState('');
   const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(0);
+  const [refreshMessage, setRefreshMessage] = useState('');
+  const refreshCandidates = useRefreshInvestigationCandidates();
   const item = query.data;
   const rankedLeads = useMemo(() => rankCandidates(item?.candidates ?? []), [item?.candidates]);
   useEffect(() => {
@@ -780,6 +785,21 @@ function InvestigationPage() {
   }, [item?.id]);
   const photoUrl = useMemo(() => photo.data instanceof Blob ? URL.createObjectURL(photo.data) : '', [photo.data]);
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
+  const refreshLocations = async () => {
+    if (!item) return;
+    setRefreshMessage('Looking for different location leads…');
+    try {
+      await refreshCandidates.mutateAsync({
+        id: item.id,
+        data: { excludePlaces: item.candidates.map((candidate) => candidate.place) },
+      });
+      await client.invalidateQueries({ queryKey: getGetInvestigationQueryKey(item.id) });
+      setSelectedCandidateIndex(0);
+      setRefreshMessage('New location leads are ready to review.');
+    } catch (error) {
+      setRefreshMessage(error instanceof Error ? error.message : 'Different location leads could not be found. Your current report is unchanged.');
+    }
+  };
   const saveDetails = async (event: FormEvent) => {
     event.preventDefault();
     if (!item) return;
@@ -803,6 +823,12 @@ function InvestigationPage() {
   if (query.isLoading) return <div className="grid gap-6 lg:grid-cols-[1fr_.8fr]"><SkeletonBlock className="h-[440px]" /><div className="space-y-4"><SkeletonBlock className="h-20" /><SkeletonBlock className="h-64" /><SkeletonBlock className="h-36" /></div></div>;
   if (query.isError || !item) return <QueryError retry={() => query.refetch()} text="This investigation could not be opened." />;
   const selectedLead = rankedLeads[selectedCandidateIndex] ?? rankedLeads[0];
+  const summaryMentionsLowerLead = rankedLeads.slice(1).some((lead) =>
+    item.summary.toLocaleLowerCase().includes(lead.place.toLocaleLowerCase()),
+  );
+  const sceneSummary = summaryMentionsLowerLead
+    ? `The Image Locator service ranked ${rankedLeads[0].place} as the strongest location lead.`
+    : humanizeClueText(item.summary);
   return <div className="fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -822,20 +848,23 @@ function InvestigationPage() {
           <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[9px] uppercase tracking-[.13em] text-[#52695d]">Original photograph</span>
         </div>
         <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
-          <PageEyebrow>Scene notes</PageEyebrow><p className="mt-4 font-editorial text-2xl leading-[1.25] text-[#344b42]" data-testid="text-investigation-summary">{item.summary}</p>
-          {item.context && <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">What you knew</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context}</p></div>}
+          <PageEyebrow>Scene notes</PageEyebrow>
+          {rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
+          <p className="mt-2 font-editorial text-2xl leading-[1.25] text-[#344b42]" data-testid="text-investigation-summary">{sceneSummary}</p>
+          <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Your notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context?.trim() || 'No notes added yet.'}</p></div>
         </section>
-        <section className="mt-7">
-          <div className="mb-4 flex items-end justify-between"><div><PageEyebrow>Visual evidence</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Details in the frame</h2></div><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.clues.length} clues</span></div>
-          {item.clues.length ? <div className="space-y-3">{item.clues.map((clue, index) => <article key={`${clue.label}-${index}`} data-testid={`card-clue-${index}`} className="relative rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 pl-[68px]"><span className="absolute left-5 top-5 font-data text-[10px] text-[#c8794d]">0{index + 1}</span><h3 className="font-editorial text-xl">{clue.label}</h3><p className="mt-2 text-sm leading-6 text-[#66796e]">{clue.observation}</p><p className="mt-3 border-t border-[#e4dfd2] pt-3 text-xs leading-5 text-[#89948a]">{clue.significance}</p></article>)}</div> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-clues">No visual clues were returned for this investigation.</div>}
-        </section>
+        <details className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+          <summary className="cursor-pointer list-none"><PageEyebrow>Visual evidence</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Details in the frame</h2><span className="mt-2 block font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.clues.length} clues · expand</span></summary>
+          {item.clues.length ? <div className="mt-5 space-y-3">{item.clues.map((clue, index) => <article key={`${clue.label}-${index}`} data-testid={`card-clue-${index}`} className="relative rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 pl-[68px]"><span className="absolute left-5 top-5 font-data text-[10px] text-[#c8794d]">0{index + 1}</span><h3 className="font-editorial text-xl">{humanizeClueText(clue.label)}</h3><p className="mt-2 text-sm leading-6 text-[#66796e]">{humanizeClueText(clue.observation)}</p><p className="mt-3 border-t border-[#e4dfd2] pt-3 text-xs leading-5 text-[#89948a]">{humanizeClueText(clue.significance)}</p></article>)}</div> : <div className="mt-5 rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-clues">No visual clues were returned for this investigation.</div>}
+        </details>
       </div>
       <div>
-        <div className="mb-4 flex items-end justify-between"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><span className="font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.candidates.length} leads</span></div>
+        <div className="mb-4 flex items-end justify-between gap-3"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-refresh-location-leads" className="shrink-0 rounded-full border border-[#c9c7b7] px-3 py-2 text-[10px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Searching…' : 'Try different leads'}</button></div>
+        {refreshMessage && <p role="status" className="mb-3 text-xs leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
         <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
         {rankedLeads.length ? <>
           <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-xs leading-5 text-[#718078]">Model score ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
-          <LeadLocationMap candidates={rankedLeads.slice(0, 3)} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} />
+          <LeadLocationMap candidates={rankedLeads.slice(0, 3)} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} onOpenLead={(index) => setLocation(`/investigation/${encodeURIComponent(item.id)}/location/${index}`)} />
           <div className="mt-4 space-y-2" data-testid="list-ranked-location-leads">
             {rankedLeads.map((candidate, index) => <button key={`${candidate.place}-${index}`} type="button" aria-pressed={selectedCandidateIndex === index} onClick={() => setSelectedCandidateIndex(index)} data-testid={`button-select-lead-${index}`} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${selectedCandidateIndex === index ? 'border-[#9eaf9f] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec] hover:border-[#b8c4b5]'}`}>
               <span className="flex min-w-0 items-center gap-3"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${index === 0 ? 'bg-[#385e51] text-[#f4f0e6]' : 'bg-[#e2e4d9] text-[#607a68]'}`}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[11px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
@@ -847,22 +876,56 @@ function InvestigationPage() {
             <h3 className="mt-2 font-editorial text-2xl text-[#263d36]">{selectedLead.place}</h3>
             <p className="mt-1 text-xs text-[#718078]">{[selectedLead.region, selectedLead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
             <div className="mt-4 border-t border-[#c9d0c2] pt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Why it was suggested</p><p className="mt-2 text-sm leading-6 text-[#596d61]">{selectedLead.rationale}</p></div>
-            {selectedLead.clues.length > 0 && <div className="mt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Related scene clues</p><div className="mt-2 flex flex-wrap gap-2">{selectedLead.clues.map((clue, clueIndex) => <span key={`${clue}-${clueIndex}`} className="rounded-full border border-[#c7d0c1] bg-[#f8f5ec] px-3 py-1.5 text-[10px] text-[#627569]">{clue.replaceAll('_', ' ')}</span>)}</div></div>}
-            {(selectedLead.photoReferences ?? []).length > 0 ? <div className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${selectedCandidateIndex}`}>
-              <p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references</p>
+             {selectedLead.clues.length > 0 && <div className="mt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Related scene clues</p><div className="mt-2 flex flex-wrap gap-2">{selectedLead.clues.map((clue, clueIndex) => <span key={`${clue}-${clueIndex}`} className="rounded-full border border-[#c7d0c1] bg-[#f8f5ec] px-3 py-1.5 text-[10px] text-[#627569]">{humanizeClueText(clue)}</span>)}</div></div>}
+            {(selectedLead.photoReferences ?? []).length > 0 ? <details className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${selectedCandidateIndex}`}>
+              <summary className="cursor-pointer font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references ({selectedLead.photoReferences!.length})</summary>
               <div className="mt-3 grid grid-cols-3 gap-2">{(selectedLead.photoReferences ?? []).map((reference, referenceIndex) => <a key={`${reference.imageUrl}-${referenceIndex}`} href={reference.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-photo-reference-${selectedCandidateIndex}-${referenceIndex}`} className="group min-w-0 overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-0.5 hover:shadow-sm">
                 <div className="aspect-[4/3] overflow-hidden bg-[#e5e3d6]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Public photo reference for ${selectedLead.place}`} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" /></div>
                 <span className="block line-clamp-2 px-2 pt-2 text-[10px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${selectedLead.place}`}</span>
                 <span className="block truncate px-2 pb-2 pt-1 text-[8px] text-[#929b90]">{photoReferenceHost(reference.sourceUrl)} <ArrowUpRight size={10} className="ml-0.5 inline" /></span>
               </a>)}</div>
-            </div> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${selectedCandidateIndex}`}>{selectedLead.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : selectedLead.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
+            </details> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${selectedCandidateIndex}`}>{selectedLead.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : selectedLead.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
             <a href={selectedLead.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${selectedCandidateIndex}`} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] hover:text-[#b36e48]">Explore this location <ArrowUpRight size={14} /></a>
+            <Link href={`/investigation/${encodeURIComponent(item.id)}/location/${selectedCandidateIndex}`} data-testid={`link-location-report-${selectedCandidateIndex}`} className="mt-3 block text-xs font-semibold text-[#385e51] underline underline-offset-4">Open full in-app location report</Link>
           </article>}
         </> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
         <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[9px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-xs leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
       </div>
     </div>
   </div>;
+}
+
+function LeadLocationPage() {
+  const [, params] = useRoute('/investigation/:id/location/:index');
+  const id = params?.id ?? '';
+  const query = useGetInvestigation(id, { query: { enabled: Boolean(id), queryKey: getGetInvestigationQueryKey(id) } });
+  if (query.isLoading) return <SkeletonBlock className="h-96" />;
+  if (query.isError || !query.data) return <QueryError retry={() => query.refetch()} text="This location report could not be opened." />;
+  const leads = rankCandidates(query.data.candidates);
+  const index = Number(params?.index);
+  const lead = Number.isInteger(index) ? leads[index] : undefined;
+  if (!lead) return <QueryError retry={() => query.refetch()} text="This location lead is no longer available." />;
+  const coordinates = coordinatesFromMapsUrl(lead.mapsUrl);
+  return <article className="fade-up mx-auto max-w-3xl">
+    <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
+    <PageEyebrow>Location report / Lead {index + 1}</PageEyebrow>
+    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">{lead.place}</h1>
+    <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
+    <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Why this location was suggested</p>
+      <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>
+      <p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
+      <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
+      {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}
+      {lead.clues.length > 0 && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Matching visual clues</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></>}
+    </section>
+    {lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
+  </article>;
+}
+
+function humanizeClueText(value: string) {
+  const readable = value.replaceAll('_', ' ').replace(/\s+/g, ' ').trim();
+  return readable ? readable[0].toLocaleUpperCase() + readable.slice(1) : readable;
 }
 
 function formatDate(value: string) {

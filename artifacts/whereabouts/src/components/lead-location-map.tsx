@@ -11,7 +11,7 @@ function modelScore(confidence: number) {
   return Math.round(Math.max(0, Math.min(1, normalized)) * 100);
 }
 
-function coordinatesFromMapsUrl(value: string): [number, number] | null {
+export function coordinatesFromMapsUrl(value: string): [number, number] | null {
   try {
     const url = new URL(value);
     const query = url.searchParams.get('query') ?? url.searchParams.get('q') ?? '';
@@ -50,10 +50,11 @@ function MapViewController({ points, selectedIndex, mapKey }: {
   return null;
 }
 
-export function LeadLocationMap({ candidates, selectedIndex, onSelect }: {
+export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLead }: {
   candidates: Lead[];
   selectedIndex: number;
   onSelect: (index: number) => void;
+  onOpenLead: (index: number) => void;
 }) {
   const points = useMemo(
     () => candidates.flatMap((lead, index) => {
@@ -78,15 +79,16 @@ export function LeadLocationMap({ candidates, selectedIndex, onSelect }: {
       <MapViewController points={points} selectedIndex={selectedIndex} mapKey={mapKey} />
       {points.map(({ lead, index, position }) => {
         const selected = index === selectedIndex;
+        const color = index === 0 ? '#20804f' : index === 1 ? '#d3a726' : '#c94f49';
         return <CircleMarker
           key={`${lead.place}-${index}`}
           center={position}
-          radius={selected ? 11 : 8}
-          pathOptions={{ color: '#263d36', weight: 2, fillColor: selected ? '#d78b5a' : '#668675', fillOpacity: 0.95 }}
-          eventHandlers={{ click: () => onSelect(index) }}
+          radius={index === 0 ? 13 : selected ? 10 : 8}
+          pathOptions={{ color, weight: selected ? 3 : 2, fillColor: color, fillOpacity: 0.96 }}
+          eventHandlers={{ click: () => { onSelect(index); onOpenLead(index); } }}
         >
-          <Tooltip direction="top" offset={[0, -8]} permanent>{index + 1}. {lead.place}</Tooltip>
-          <Popup><strong>{lead.place}</strong><br />Model score: {modelScore(lead.confidence)} / 100</Popup>
+          <Tooltip direction="top" offset={[0, -8]}>{index + 1}. {lead.place}<br />Lat {position[0].toFixed(5)} · Lon {position[1].toFixed(5)}</Tooltip>
+          <Popup><strong>{lead.place}</strong><br />Model score: {modelScore(lead.confidence)} / 100<br />Click marker to open location report</Popup>
         </CircleMarker>;
       })}
     </MapContainer> : <div className="grid h-[210px] place-items-center px-6 text-center text-sm leading-6 text-[#718078]" data-testid="map-no-coordinates">The analyzer did not return map coordinates for these leads. Open a lead’s map link to explore its location.</div>}

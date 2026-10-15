@@ -327,6 +327,63 @@ export const DeleteInvestigationResponse = zod.void()
 
 
 /**
+ * @summary Find new location leads for a saved investigation
+ */
+export const RefreshInvestigationCandidatesParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const refreshInvestigationCandidatesBodyExcludePlacesItemMax = 180;
+
+export const refreshInvestigationCandidatesBodyExcludePlacesMax = 30;
+
+
+
+export const RefreshInvestigationCandidatesBody = zod.object({
+  "excludePlaces": zod.array(zod.string().min(1).max(refreshInvestigationCandidatesBodyExcludePlacesItemMax)).max(refreshInvestigationCandidatesBodyExcludePlacesMax)
+})
+
+export const refreshInvestigationCandidatesResponseCandidatesItemConfidenceMin = 0;
+export const refreshInvestigationCandidatesResponseCandidatesItemConfidenceMax = 1;
+
+
+
+export const RefreshInvestigationCandidatesResponse = zod.object({
+  "id": zod.string().uuid(),
+  "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "context": zod.string().nullable(),
+  "shotAt": zod.coerce.date().nullable(),
+  "summary": zod.string(),
+  "candidates": zod.array(zod.object({
+  "place": zod.string(),
+  "region": zod.string().nullable(),
+  "country": zod.string().nullable(),
+  "confidence": zod.number().min(refreshInvestigationCandidatesResponseCandidatesItemConfidenceMin).max(refreshInvestigationCandidatesResponseCandidatesItemConfidenceMax),
+  "rationale": zod.string(),
+  "clues": zod.array(zod.string()),
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
+})),
+  "clues": zod.array(zod.object({
+  "label": zod.string(),
+  "observation": zod.string(),
+  "significance": zod.string()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Serve the private photo attached to an investigation
  */
 export const GetInvestigationPhotoParams = zod.object({

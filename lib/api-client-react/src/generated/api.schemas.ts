@@ -176,6 +176,15 @@ export interface InvestigationUpdate {
   context?: string | null;
 }
 
+export interface RefreshInvestigationCandidatesInput {
+  /**
+     * @maxItems 30
+     * @items.minLength 1
+     * @items.maxLength 180
+     */
+  excludePlaces: string[];
+}
+
 export interface InvestigationSummary {
   total: number;
   thisMonth: number;

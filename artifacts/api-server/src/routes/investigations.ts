@@ -8,6 +8,9 @@ import {
   GetInvestigationSummaryResponse,
   ListInvestigationsQueryParams,
   ListInvestigationsResponse,
+  RefreshInvestigationCandidatesBody,
+  RefreshInvestigationCandidatesParams,
+  RefreshInvestigationCandidatesResponse,
   UpdateInvestigationBody,
   UpdateInvestigationParams,
   UpdateInvestigationResponse,
@@ -363,6 +366,70 @@ router.get(
       return;
     }
     res.json(GetInvestigationResponse.parse(investigation));
+  },
+);
+
+router.post(
+  "/investigations/:id/refresh-candidates",
+  async (req: Request, res: Response): Promise<void> => {
+    const params = RefreshInvestigationCandidatesParams.safeParse(req.params);
+    const body = RefreshInvestigationCandidatesBody.safeParse(req.body);
+    if (!params.success || !body.success) {
+      res.status(400).json({ error: "Invalid lead refresh request." });
+      return;
+    }
+    const userId = getAuth(req).userId;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    const [investigation] = await db.select().from(investigationsTable).where(
+      and(eq(investigationsTable.id, params.data.id), eq(investigationsTable.userId, userId)),
+    ).limit(1);
+    if (!investigation) {
+      res.status(404).json({ error: "Investigation not found." });
+      return;
+    }
+    try {
+      const file = await objectStorageService.getObjectEntityFile(investigation.objectPath);
+      const [buffer] = await file.download();
+      const analysis = await analyzeImageLocation(buffer, investigation.contentType, investigation.originalName);
+      const excluded = new Set([
+        ...investigation.candidates.map((candidate) => candidate.place.toLocaleLowerCase()),
+        ...body.data.excludePlaces.map((place) => place.toLocaleLowerCase()),
+      ]);
+      const newLeads = analysis.candidates.filter(
+        (candidate) => !excluded.has(candidate.place.toLocaleLowerCase()),
+      );
+      if (!newLeads.length) {
+        res.status(409).json({ error: "The analyzer did not return different locations. Try again later." });
+        return;
+      }
+      const apiKey = process.env.OPENAI_API_KEY;
+      const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
+      const candidates = await Promise.all(newLeads.map(async (candidate): Promise<LocationCandidate> => {
+        if (!openAIClient) return { ...candidate, photoReferences: [], photoSearchStatus: "unavailable" };
+        try {
+          const photoReferences = await searchLocationPhotoReferences(openAIClient, candidate);
+          return { ...candidate, photoReferences, photoSearchStatus: photoReferences.length ? "found" : "no_results" };
+        } catch {
+          return { ...candidate, photoReferences: [], photoSearchStatus: "unavailable" };
+        }
+      }));
+      const summary = `The Image Locator service refreshed the leads. ${candidates[0].place} is the strongest new location lead.`;
+      const [updated] = await db.update(investigationsTable)
+        .set({ candidates, summary, updatedAt: new Date() })
+        .where(and(eq(investigationsTable.id, investigation.id), eq(investigationsTable.userId, userId)))
+        .returning();
+      if (!updated) {
+        res.status(404).json({ error: "Investigation not found." });
+        return;
+      }
+      res.json(RefreshInvestigationCandidatesResponse.parse(updated));
+    } catch (error) {
+      req.log.error({ message: error instanceof Error ? error.message : "Unknown error" }, "Could not refresh investigation leads");
+      res.status(502).json({ error: "New location leads could not be generated. Your existing report is unchanged." });
+    }
   },
 );
 

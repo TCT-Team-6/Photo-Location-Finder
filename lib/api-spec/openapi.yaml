@@ -180,6 +180,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /investigations/{id}/refresh-candidates:
+    post:
+      operationId: refreshInvestigationCandidates
+      tags: [Investigations]
+      summary: Find new location leads for a saved investigation
+      parameters:
+        - $ref: "#/components/parameters/InvestigationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInvestigationCandidatesInput"
+      responses:
+        "200":
+          description: Investigation updated with new location leads.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+        "404":
+          description: Investigation not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: The analyzer did not return any new location leads.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "502":
+          description: The image analyzer is unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
   /investigations/{id}/photo:
     get:
       operationId: getInvestigationPhoto
@@ -416,6 +454,17 @@ components:
         context:
           type: ["string", "null"]
           maxLength: 3000
+    RefreshInvestigationCandidatesInput:
+      type: object
+      required: [excludePlaces]
+      properties:
+        excludePlaces:
+          type: array
+          maxItems: 30
+          items:
+            type: string
+            minLength: 1
+            maxLength: 180
     InvestigationSummary:
       type: object
       required: [total, thisMonth, latest]
