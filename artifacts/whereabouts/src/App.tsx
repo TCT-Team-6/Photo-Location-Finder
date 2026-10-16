@@ -917,7 +917,24 @@ function LeadLocationPage() {
       <p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
       <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
       {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}
-      {lead.clues.length > 0 && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Matching visual clues</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></>}
+    </section>
+    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">How the photograph informed this lead</p>
+      <p className="mt-3 text-sm leading-7 text-[#596d61]">The suggestion combines the analyzer’s location rationale with the visible scene details below. These details explain what can be compared in the image; they are clues, not confirmation that this is the photographed place.</p>
+      {query.data.clues.length > 0
+        ? <div className="mt-5 space-y-4">{query.data.clues.map((clue, clueIndex) => {
+          const linkedLeadClues = lead.clues.filter((candidateClue) => visualCluesOverlap(clue, candidateClue));
+          return <article key={`${clue.label}-${clueIndex}`} className="rounded-xl border border-[#e1dbce] bg-[#fbf9f3] p-4">
+            <p className="font-editorial text-xl text-[#344b42]">{humanizeClueText(clue.label)}</p>
+            <p className="mt-2 text-sm leading-6 text-[#596d61]"><strong>Seen in the frame:</strong> {humanizeClueText(clue.observation)}</p>
+            <p className="mt-2 text-sm leading-6 text-[#718078]"><strong>Why it may help:</strong> {humanizeClueText(clue.significance)}</p>
+            <p className="mt-3 border-t border-[#e4dfd2] pt-3 text-xs leading-5 text-[#718078]">{linkedLeadClues.length
+              ? <>The analyzer also named <strong>{linkedLeadClues.map(humanizeClueText).join('; ')}</strong> for {lead.place}, connecting this visual detail to the suggested location.</>
+              : <>The analyzer did not explicitly link this scene detail to {lead.place}; treat it as comparison context, not direct support for this lead.</>}</p>
+          </article>;
+        })}</div>
+        : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-4 text-sm leading-6 text-[#718078]">No structured visual details were saved for this photograph, so the report cannot connect specific features in the frame to this lead.</p>}
+      {lead.clues.length > 0 && <div className="mt-5 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Location-specific clues named by the analyzer</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></div>}
     </section>
     {lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
   </article>;
@@ -926,6 +943,14 @@ function LeadLocationPage() {
 function humanizeClueText(value: string) {
   const readable = value.replaceAll('_', ' ').replace(/\s+/g, ' ').trim();
   return readable ? readable[0].toLocaleUpperCase() + readable.slice(1) : readable;
+}
+
+function visualCluesOverlap(clue: { label: string; observation: string; significance: string }, candidateClue: string) {
+  const normalize = (value: string) => value.toLocaleLowerCase().replaceAll('_', ' ').replace(/[^a-z0-9\s]/g, ' ');
+  const candidate = normalize(candidateClue).trim();
+  if (!candidate) return false;
+  const text = normalize(`${clue.label} ${clue.observation} ${clue.significance}`);
+  return text.includes(candidate) || candidate.split(/\s+/).filter((word) => word.length > 3 && text.includes(word)).length >= Math.max(1, Math.ceil(candidate.split(/\s+/).filter((word) => word.length > 3).length * 0.6));
 }
 
 function formatDate(value: string) {
