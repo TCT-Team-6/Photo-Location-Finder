@@ -35,7 +35,7 @@ import NotFound from '@/pages/not-found';
 import './index.css';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
 });
 type AppPreferences = { theme: 'field' | 'ocean' | 'sunset'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
 const defaultPreferences: AppPreferences = { theme: 'field', highContrast: false, font: 'default' };
@@ -364,13 +364,12 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/user-portal', label: 'Overview', icon: <Compass size={17} /> },
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
-    { href: '/settings', label: 'Settings', icon: <SettingsIcon size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
     <aside className="hidden w-[252px] shrink-0 flex-col bg-[#263d36] px-5 pb-5 pt-6 text-[#f4f0e6] md:flex">
       <Mark inverse />
-      <p className="mb-3 mt-12 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Your field desk</p>
+      <div className="mt-12" />
       <nav className="space-y-1">
         {navLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}{item.href === '/investigate' && <span className="ml-auto text-[#d78b5a]">+</span>}</Link>)}
       </nav>
@@ -378,6 +377,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <nav className="space-y-1">
         {deskLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}</Link>)}
       </nav>
+      <Link href="/settings" data-testid="nav-settings" className={`mt-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}><SettingsIcon size={17} />Settings</Link>
       <div className="mt-auto">
         <div className="mb-4 flex items-center gap-3 border-t border-[#52695d] pt-5">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]" data-testid="avatar-initials">{initials}</span>
@@ -390,14 +390,14 @@ function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-[#d8d1c2] bg-[#f4f0e6]/95 px-5 backdrop-blur md:px-10">
         <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" data-testid="button-toggle-navigation" className="grid h-10 w-10 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
         <div className="hidden items-center gap-2 font-data text-[9px] uppercase tracking-[.16em] text-[#829087] md:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#c8794d]" />Personal field notes <span className="text-[#b2b7a9]">/</span> Anywhere, remembered</div>
-        <Link href="/investigate" data-testid="header-new-investigation" className="inline-flex items-center gap-2 rounded-full bg-[#385e51] px-4 py-2.5 text-xs font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044]"><ImagePlus size={15} /><span className="hidden sm:inline">New investigation</span><span className="sm:hidden">New</span></Link>
       </header>
       {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)}>
         <nav className="w-[min(84vw,320px)] bg-[#263d36] p-5 text-[#f4f0e6]" onClick={(event) => event.stopPropagation()}>
           <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-9 w-9 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
-          {navLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#d0d9ce] hover:bg-white/10">{item.icon}{item.label}</Link>)}
+          {navLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
           <p className="mb-2 mt-6 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
-          {deskLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-desk-${item.id}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs text-[#d0d9ce] hover:bg-white/10">{item.icon}{item.label}</Link>)}
+          {deskLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
+          <Link href="/settings" onClick={() => setMobileNav(false)} data-testid="mobile-nav-settings" className={`mt-4 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}><SettingsIcon size={17} />Settings</Link>
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
         </nav>
       </div>}
@@ -834,7 +834,6 @@ function LibraryPage() {
   return <div className="fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your library.</h1><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
-      <Link href="/investigate" data-testid="button-library-new-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6]"><ImagePlus size={15} />New investigation</Link>
     </div>
     <div className="mb-7 flex flex-col gap-3 sm:flex-row">
       <label className="relative block max-w-[560px] flex-1"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8d998d]" /><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full rounded-full border border-[#d8d1c2] bg-[#f8f5ec] pl-11 pr-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></label>

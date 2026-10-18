@@ -149,6 +149,34 @@ test("keeps successful slots cleared and retries only a failed slot", async () =
   assert.deepEqual(createCalls.sort(), ["fake-news.jpg", "original.jpg", "recreation.jpg"]);
 });
 
+test("does not retry analysis failures caused by exhausted provider credits", async () => {
+  let createCalls = 0;
+  const result = await processInvestigationPhotoUploads({
+    selected: selectedPhotos(["original"]),
+    title: "",
+    context: "",
+    shotAt: "",
+    getContentType: validContentType,
+    requestUploadUrl: async ({ data }) => ({
+      uploadURL: "https://upload.example/one",
+      objectPath: "/objects/uploads/photo-one",
+      metadata: data,
+    }),
+    uploadFile: async () => {},
+    createInvestigation: async () => {
+      createCalls += 1;
+      const error = new Error(
+        "HTTP 429: Image analysis is unavailable because the analysis provider has no remaining credits.",
+      ) as Error & { status: number };
+      error.status = 429;
+      throw error;
+    },
+  });
+  assert.equal(createCalls, 1);
+  assert.equal(result.created.length, 0);
+  assert.match(result.failed.original ?? "", /no remaining credits/);
+});
+
 test("reuses the selected photo request ID after a committed save response is lost", async () => {
   const remaining = new Map(selectedPhotos(["original"]).map((item) => [item.slot.id, item]));
   const savedByRequestId = new Map<

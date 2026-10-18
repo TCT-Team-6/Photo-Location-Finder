@@ -49,12 +49,17 @@ export type InvestigationPhotoUploadResult = {
 function isTransientUploadFailure(error: unknown) {
   if (error instanceof TypeError) return true;
   if (!error || typeof error !== "object") return false;
-  const value = error as { status?: unknown; response?: { status?: unknown } };
+  const value = error as { status?: unknown; message?: unknown; response?: { status?: unknown } };
   const status = typeof value.status === "number"
     ? value.status
     : typeof value.response?.status === "number"
       ? value.response.status
       : undefined;
+  if (
+    status === 429 &&
+    typeof value.message === "string" &&
+    /analysis provider has no remaining credits/i.test(value.message)
+  ) return false;
   return status !== undefined && (status === 408 || status === 429 || status >= 500);
 }
 

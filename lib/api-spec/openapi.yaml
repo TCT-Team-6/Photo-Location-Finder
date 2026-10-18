@@ -102,6 +102,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Image-analysis provider quota is exhausted; the uploaded photo is retained for retry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
         "502":
           description: Photo analysis failed.
           content:

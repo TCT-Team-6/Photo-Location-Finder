@@ -69,6 +69,14 @@ function defaultTitle(originalName: string): string {
   return (readable || "Untitled investigation").slice(0, 120);
 }
 
+function isProviderQuotaError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const value = error as { status?: unknown; code?: unknown; message?: unknown };
+  const message = typeof value.message === "string" ? value.message : "";
+  return value.status === 429 &&
+    (value.code === "insufficient_quota" || /no credits remaining|insufficient quota/i.test(message));
+}
+
 router.get(
   "/investigations",
   async (req: Request, res: Response): Promise<void> => {
@@ -378,11 +386,13 @@ router.post(
         res.status(404).json({ error: "The uploaded photo could not be found." });
         return;
       }
-      const message =
-        error instanceof Error ? error.message : "Unknown analysis error";
-      req.log.error({ message }, "Photo location analysis failed");
-      res.status(502).json({
-        error: "We couldn't analyze this photo. Your upload is still available to retry.",
+      const message = error instanceof Error ? error.message : "Unknown analysis error";
+      const quotaExhausted = isProviderQuotaError(error);
+      req.log.error({ message, quotaExhausted }, "Photo location analysis failed");
+      res.status(quotaExhausted ? 429 : 502).json({
+        error: quotaExhausted
+          ? "Image analysis is unavailable because the analysis provider has no remaining credits. Your uploaded photo is retained; restore provider credits before retrying."
+          : "We couldn't analyze this photo. Your upload is still available to retry.",
       });
     }
   },
