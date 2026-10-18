@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -332,6 +332,48 @@
 
 .font-editorial { font-family: var(--app-font-serif); }
 .font-data { font-family: var(--app-font-mono); }
+[data-app-font="sans"] * { font-family: "DM Sans", Arial, sans-serif !important; }
+[data-app-font="dyslexic"] * { font-family: "Atkinson Hyperlegible", Arial, sans-serif !important; }
+
+[data-app-theme="ocean"] [class~="bg-[#f4f0e6]"] { background-color: #e8f1f4 !important; }
+[data-app-theme="ocean"] [class~="bg-[#f8f5ec]"] { background-color: #f4f8fa !important; }
+[data-app-theme="ocean"] [class~="bg-[#fbf9f3]"] { background-color: #f9fcfd !important; }
+[data-app-theme="ocean"] [class~="bg-[#263d36]"] { background-color: #183c4a !important; }
+[data-app-theme="ocean"] [class~="bg-[#385e51]"] { background-color: #23617a !important; }
+[data-app-theme="ocean"] [class~="text-[#263d36]"],
+[data-app-theme="ocean"] [class~="text-[#344b42]"] { color: #183c4a !important; }
+[data-app-theme="ocean"] [class~="text-[#385e51]"] { color: #23617a !important; }
+[data-app-theme="ocean"] [class~="border-[#d8d1c2]"] { border-color: #bfd3db !important; }
+
+[data-app-theme="sunset"] [class~="bg-[#f4f0e6]"] { background-color: #f4e9e2 !important; }
+[data-app-theme="sunset"] [class~="bg-[#f8f5ec]"] { background-color: #fbf3ee !important; }
+[data-app-theme="sunset"] [class~="bg-[#fbf9f3]"] { background-color: #fffaf6 !important; }
+[data-app-theme="sunset"] [class~="bg-[#263d36]"] { background-color: #57392f !important; }
+[data-app-theme="sunset"] [class~="bg-[#385e51]"] { background-color: #8b4939 !important; }
+[data-app-theme="sunset"] [class~="text-[#263d36]"],
+[data-app-theme="sunset"] [class~="text-[#344b42]"] { color: #57392f !important; }
+[data-app-theme="sunset"] [class~="text-[#385e51]"] { color: #8b4939 !important; }
+[data-app-theme="sunset"] [class~="border-[#d8d1c2]"] { border-color: #dfc4b5 !important; }
+
+[data-high-contrast="true"] [class~="text-[#718078]"],
+[data-high-contrast="true"] [class~="text-[#596d61]"],
+[data-high-contrast="true"] [class~="text-[#66796e]"],
+[data-high-contrast="true"] [class~="text-[#738078]"],
+[data-high-contrast="true"] [class~="text-[#859187]"],
+[data-high-contrast="true"] [class~="text-[#89948a]"],
+[data-high-contrast="true"] [class~="text-[#929b90]"],
+[data-high-contrast="true"] [class~="text-[#758477]"],
+[data-high-contrast="true"] [class~="text-[#76857a]"],
+[data-high-contrast="true"] [class~="text-[#627569]"] { color: #14211c !important; }
+[data-high-contrast="true"] [class*="border-[#"] { border-color: #34443d !important; }
+[data-high-contrast="true"] [class~="bg-[#f4f0e6]"],
+[data-high-contrast="true"] [class~="bg-[#f8f5ec]"],
+[data-high-contrast="true"] [class~="bg-[#fbf9f3]"] { background-color: #fff !important; }
+[data-high-contrast="true"] button:focus-visible,
+[data-high-contrast="true"] a:focus-visible,
+[data-high-contrast="true"] input:focus-visible,
+[data-high-contrast="true"] select:focus-visible,
+[data-high-contrast="true"] textarea:focus-visible { outline: 3px solid #102b44 !important; outline-offset: 2px; }
 .paper-grid {
   background-color: var(--paper);
   background-image: linear-gradient(rgba(56,94,81,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(56,94,81,.035) 1px, transparent 1px);

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, Crosshair, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -37,6 +37,13 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: false } },
 });
+type AppPreferences = { theme: 'field' | 'ocean' | 'sunset'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
+const defaultPreferences: AppPreferences = { theme: 'field', highContrast: false, font: 'default' };
+const PreferencesContext = createContext<{ preferences: AppPreferences; setPreferences: (next: AppPreferences) => void }>({
+  preferences: defaultPreferences,
+  setPreferences: () => {},
+});
+function usePreferences() { return useContext(PreferencesContext); }
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
@@ -325,6 +332,7 @@ function ClerkProviderWithRoutes() {
       <Route path="/user-portal" component={PortalRoute} />
       <Route path="/investigate" component={InvestigateRoute} />
       <Route path="/library" component={LibraryRoute} />
+      <Route path="/settings" component={SettingsRoute} />
       <Route path="/desk/:deskId" component={FieldDeskRoute} />
       <Route path="/investigation/:id/location/:index" component={LeadLocationRoute} />
       <Route path="/investigation/:id" component={DetailRoute} />
@@ -340,6 +348,7 @@ function Protected({ children }: { children: ReactNode }) {
 function PortalRoute() { return <Protected><AppShell><DashboardPage /></AppShell></Protected>; }
 function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></AppShell></Protected>; }
 function LibraryRoute() { return <Protected><AppShell><LibraryPage /></AppShell></Protected>; }
+function SettingsRoute() { return <Protected><AppShell><SettingsPage /></AppShell></Protected>; }
 function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }
 function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppShell></Protected>; }
 function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
@@ -355,6 +364,7 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/user-portal', label: 'Overview', icon: <Compass size={17} /> },
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
+    { href: '/settings', label: 'Settings', icon: <SettingsIcon size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
@@ -449,17 +459,32 @@ function EmptyState({ icon, eyebrow, title, text, action }: { icon: ReactNode; e
   </div>;
 }
 
-function InvestigationCard({ item, onDelete }: { item: Investigation; onDelete?: (item: Investigation) => void }) {
+function InvestigationCard({
+  item,
+  onDelete,
+  onRename,
+  selectable = false,
+  selected = false,
+  onToggleSelect,
+}: {
+  item: Investigation;
+  onDelete?: (item: Investigation) => void;
+  onRename?: (item: Investigation) => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (item: Investigation) => void;
+}) {
   const place = rankCandidates(item.candidates)[0];
   return <article className="group relative overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(43,58,48,.09)]" data-testid={`card-investigation-${item.id}`}>
-    <div className="relative h-[148px] overflow-hidden bg-[#d9ddcf]">
+    <div className={`relative h-[148px] overflow-hidden bg-[#d9ddcf] ${selectable ? 'cursor-pointer' : ''}`} onClick={() => selectable && onToggleSelect?.(item)}>
       <img src={`/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c3028]/55 to-transparent" />
+      {selectable && <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelect?.(item); }} aria-label={`${selected ? 'Deselect' : 'Select'} ${item.title}`} aria-pressed={selected} data-testid={`button-select-investigation-${item.id}`} className={`absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full border-2 shadow-sm transition ${selected ? 'border-[#2e7047] bg-[#2e7047] text-white' : 'border-white bg-black/20 text-transparent hover:bg-black/40'}`}>{selected ? <Check size={18} strokeWidth={3} /> : <Circle size={20} className="text-white" />}</button>}
       <span className="absolute bottom-3 left-4 font-data text-[9px] uppercase tracking-[.14em] text-white">{place ? `${place.place}${place.country ? ` · ${place.country}` : ''}` : 'Place still unfolding'}</span>
       <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[9px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
     </div>
     <div className="p-5">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{item.title}</h3></div>{onDelete && <button type="button" onClick={() => onDelete(item)} aria-label={`Delete ${item.title}`} data-testid={`button-delete-investigation-${item.id}`} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#9b7d68] transition hover:bg-[#f4e6df] hover:text-[#a64e43]"><Trash2 size={15} /></button>}</div>
+      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{item.title}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
       <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.summary || 'A collection of clues is ready to explore.'}</p>
       <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
@@ -753,8 +778,19 @@ function LibraryPage() {
   const [search, setSearch] = useState('');
   const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined);
   const remove = useDeleteInvestigation();
+  const update = useUpdateInvestigation();
   const client = useQueryClient();
   const [deleteError, setDeleteError] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [actionMessage, setActionMessage] = useState('');
+  const rows = query.data ?? [];
+  const selectedRows = rows.filter((item) => selectedIds.has(item.id));
+  const toggleSelect = (item: Investigation) => setSelectedIds((current) => {
+    const next = new Set(current);
+    next.has(item.id) ? next.delete(item.id) : next.add(item.id);
+    return next;
+  });
   const deleteItem = async (item: Investigation) => {
     if (!window.confirm(`Remove “${item.title}” and its saved investigation from your library?`)) return;
     setDeleteError('');
@@ -763,20 +799,55 @@ function LibraryPage() {
       await Promise.all([client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() }), client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() })]);
     } catch { setDeleteError('That investigation could not be removed. Please try again.'); }
   };
+  const renameItem = async (item: Investigation) => {
+    const nextTitle = window.prompt('Rename this investigation', item.title)?.trim();
+    if (!nextTitle || nextTitle === item.title) return;
+    if (nextTitle.length > 120) {
+      setDeleteError('Investigation names can be at most 120 characters.');
+      return;
+    }
+    try {
+      await update.mutateAsync({ id: item.id, data: { title: nextTitle } });
+      await Promise.all([
+        client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() }),
+        client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() }),
+      ]);
+      setActionMessage('Investigation renamed.');
+    } catch {
+      setDeleteError('That investigation could not be renamed. Please try again.');
+    }
+  };
+  const deleteSelected = async () => {
+    if (!selectedRows.length) return;
+    if (!window.confirm(`Permanently delete ${selectedRows.length} selected investigation${selectedRows.length === 1 ? '' : 's'} and their saved photos?`)) return;
+    const results = await Promise.allSettled(selectedRows.map((item) => remove.mutateAsync({ id: item.id })));
+    const deletedIds = selectedRows.filter((_, index) => results[index].status === 'fulfilled').map((item) => item.id);
+    setSelectedIds((current) => new Set([...current].filter((id) => !deletedIds.includes(id))));
+    await Promise.all([
+      client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() }),
+      client.invalidateQueries({ queryKey: getGetInvestigationSummaryQueryKey() }),
+    ]);
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
+    setDeleteError(failedCount ? `${deletedIds.length} deleted; ${failedCount} could not be deleted. Try those again.` : '');
+    setActionMessage(failedCount ? '' : `${deletedIds.length} investigation${deletedIds.length === 1 ? '' : 's'} deleted.`);
+  };
   return <div className="fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your library.</h1><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
       <Link href="/investigate" data-testid="button-library-new-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6]"><ImagePlus size={15} />New investigation</Link>
     </div>
     <div className="mb-7 flex flex-col gap-3 sm:flex-row">
-      <label className="relative block max-w-[560px] flex-1"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8d998d]" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full rounded-full border border-[#d8d1c2] bg-[#f8f5ec] pl-11 pr-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></label>
+      <label className="relative block max-w-[560px] flex-1"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8d998d]" /><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full rounded-full border border-[#d8d1c2] bg-[#f8f5ec] pl-11 pr-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></label>
       <div className="flex items-center gap-2 self-start rounded-full border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] text-[#76857a] sm:self-auto"><BookOpen size={14} className="text-[#a56e4b]" />{query.data?.length ?? '—'} saved</div>
+      <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>
+      {selectMode && <button type="button" onClick={deleteSelected} disabled={!selectedRows.length || remove.isPending} data-testid="button-delete-selected-investigations" className="rounded-full bg-[#a65044] px-5 py-3 text-xs font-semibold text-white disabled:opacity-45">Delete selected ({selectedRows.length})</button>}
     </div>
     {deleteError && <p role="alert" className="mb-5 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-sm text-[#875545]" data-testid="status-delete-error">{deleteError}</p>}
+    {actionMessage && <p role="status" className="mb-5 text-sm text-[#476450]" data-testid="status-library-action">{actionMessage}</p>}
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." />
       : (query.data ?? []).length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search ? 'No matching notes' : 'The index is open'} title={search ? 'Nothing found here.' : 'Your library is still empty.'} text={search ? 'Try another place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search ? <button type="button" onClick={() => setSearch('')} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear search</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
-      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{query.data?.map((item) => <InvestigationCard key={item.id} item={item} onDelete={deleteItem} />)}</div>}
+      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((item) => <InvestigationCard key={item.id} item={item} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</div>}
   </div>;
 }
 
@@ -997,6 +1068,38 @@ function visualCluesOverlap(clue: { label: string; observation: string; signific
   return text.includes(candidate) || candidate.split(/\s+/).filter((word) => word.length > 3 && text.includes(word)).length >= Math.max(1, Math.ceil(candidate.split(/\s+/).filter((word) => word.length > 3).length * 0.6));
 }
 
+function SettingsPage() {
+  const { preferences, setPreferences } = usePreferences();
+  const update = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) =>
+    setPreferences({ ...preferences, [key]: value });
+  return <div className="fade-up mx-auto max-w-3xl">
+    <PageEyebrow>Personal archive / preferences</PageEyebrow>
+    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Settings.</h1>
+    <p className="mt-3 text-sm text-[#718078]">Adjust how Whereabouts looks and reads on this device.</p>
+    <section className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+      <h2 className="font-editorial text-2xl">Color theme</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {([
+          ['field', 'Field notebook', '#385e51', '#f4f0e6'],
+          ['ocean', 'Coastal blue', '#23617a', '#edf5f7'],
+          ['sunset', 'Warm clay', '#8b4939', '#f8eee8'],
+        ] as const).map(([value, label, accent, paper]) => <button key={value} type="button" onClick={() => update('theme', value)} aria-pressed={preferences.theme === value} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm ${preferences.theme === value ? 'border-[#385e51] ring-2 ring-[#385e51]/20' : 'border-[#d8d1c2]'}`}><span className="h-9 w-9 rounded-full border" style={{ background: `linear-gradient(135deg, ${paper} 45%, ${accent} 45%)` }} />{label}{preferences.theme === value && <Check size={15} className="ml-auto" />}</button>)}
+      </div>
+      <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 border-t border-[#e1dbce] pt-5 text-sm"><span><strong className="block">High contrast</strong><span className="mt-1 block text-xs text-[#718078]">Strengthen text and border contrast throughout the app.</span></span><input type="checkbox" checked={preferences.highContrast} onChange={(event) => update('highContrast', event.target.checked)} data-testid="toggle-high-contrast" className="h-5 w-5 accent-[#385e51]" /></label>
+    </section>
+    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+      <h2 className="font-editorial text-2xl">Text font</h2>
+      <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="setting-font">Choose a font</label>
+      <select id="setting-font" value={preferences.font} onChange={(event) => update('font', event.target.value as AppPreferences['font'])} data-testid="select-text-font" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm">
+        <option value="default">Default (Newsreader and DM Sans)</option>
+        <option value="sans">Simple sans-serif</option>
+        <option value="dyslexic">Dyslexia-friendly (Atkinson Hyperlegible)</option>
+      </select>
+      <p className="mt-3 text-xs leading-5 text-[#718078]">Your choices are saved in this browser and apply across the app.</p>
+    </section>
+  </div>;
+}
+
 function formatDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
@@ -1016,14 +1119,27 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 }
 
 function App() {
-  return <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <WouterRouter base={basePath}>
-        <RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary>
-      </WouterRouter>
-      <Toaster />
-    </TooltipProvider>
-  </QueryClientProvider>;
+  const [preferences, setPreferences] = useState<AppPreferences>(() => {
+    try {
+      const stored = localStorage.getItem('whereabouts-preferences');
+      return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : defaultPreferences;
+    } catch { return defaultPreferences; }
+  });
+  useEffect(() => {
+    localStorage.setItem('whereabouts-preferences', JSON.stringify(preferences));
+  }, [preferences]);
+  return <PreferencesContext.Provider value={{ preferences, setPreferences }}>
+    <div data-app-theme={preferences.theme} data-high-contrast={preferences.highContrast} data-app-font={preferences.font}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <WouterRouter base={basePath}>
+            <RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary>
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </div>
+  </PreferencesContext.Provider>;
 }
 
 export default App;
