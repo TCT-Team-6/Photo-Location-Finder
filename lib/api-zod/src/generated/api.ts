@@ -109,6 +109,8 @@ export const createInvestigationBodyOriginalNameMax = 255;
 
 export const createInvestigationBodyContextMax = 3000;
 
+export const createInvestigationBodyJournalismQuestionMax = 1000;
+
 export const createInvestigationBodyTitleMax = 120;
 
 
@@ -120,6 +122,7 @@ export const CreateInvestigationBody = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif']),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "context": zod.string().max(createInvestigationBodyContextMax).optional(),
+  "journalismQuestion": zod.string().max(createInvestigationBodyJournalismQuestionMax).optional(),
   "shotAt": zod.coerce.date().nullish(),
   "title": zod.string().max(createInvestigationBodyTitleMax).optional()
 })

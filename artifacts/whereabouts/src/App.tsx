@@ -46,6 +46,9 @@ const supportedImageTypes = new Set<InvestigationInputContentType>([
   'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif',
   'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif',
 ]);
+const visualModelImageTypes = new Set<InvestigationInputContentType>([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+]);
 const imageTypeByExtension: Record<string, InvestigationInputContentType> = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
   avif: 'image/avif', gif: 'image/gif', bmp: 'image/bmp', tif: 'image/tiff',
@@ -513,6 +516,7 @@ function InvestigatePage() {
   });
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
+  const [journalismQuestion, setJournalismQuestion] = useState('');
   const [shotAt, setShotAt] = useState('');
   const [localError, setLocalError] = useState('');
   const [batchStatus, setBatchStatus] = useState('');
@@ -538,13 +542,23 @@ function InvestigatePage() {
     setLocalError('');
     setBatchStatus('');
     setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
-    if (!imageContentType(selected)) {
+    const contentType = imageContentType(selected);
+    if (!contentType) {
       setFiles((current) => ({ ...current, [slotId]: null }));
       setRequestIds((current) => ({ ...current, [slotId]: null }));
       setSlotErrors((current) => ({
         ...current,
         [slotId]:
           'Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.',
+      }));
+      return;
+    }
+    if (slotId !== 'original' && !visualModelImageTypes.has(contentType)) {
+      setFiles((current) => ({ ...current, [slotId]: null }));
+      setRequestIds((current) => ({ ...current, [slotId]: null }));
+      setSlotErrors((current) => ({
+        ...current,
+        [slotId]: 'For this desk, use a JPEG, PNG, WebP, or non-animated GIF image.',
       }));
       return;
     }
@@ -594,6 +608,7 @@ function InvestigatePage() {
         selected,
         title,
         context,
+        journalismQuestion,
         shotAt,
         getContentType: imageContentType,
         requestUploadUrl: (variables) => uploadUrl.mutateAsync(variables),
@@ -604,7 +619,9 @@ function InvestigatePage() {
             body: file,
           });
           if (!response.ok) {
-            throw new Error('The photograph could not be stored. Please try again.');
+            const error = new Error('The photograph could not be stored. Please try again.') as Error & { status: number };
+            error.status = response.status;
+            throw error;
           }
         },
         createInvestigation: (variables) => create.mutateAsync(variables),
@@ -644,7 +661,7 @@ function InvestigatePage() {
 
   return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-    <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Choose one or more images, one field desk at a time. Each selected photo is analyzed separately and saved as its own investigation. The Investigative journalism desk is for filing only; this service estimates photo locations and does not verify claims.</p></div>
+     <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation searches public image pages for possible source images. It does not estimate the scene’s real-world location.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
     <form onSubmit={submit} className="space-y-6">
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
@@ -694,13 +711,14 @@ function InvestigatePage() {
         <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know?</label>
         <textarea id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-right font-data text-[9px] text-[#a1a79d]">{context.length} / 3000</p>
+        {activeSlotId === 'fake-news' && <><label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="journalism-question">Ask the image analyst a question <span className="font-normal text-[#97a095]">optional</span></label><textarea id="journalism-question" value={journalismQuestion} maxLength={1000} onChange={(event) => setJournalismQuestion(event.target.value)} rows={3} placeholder="What detail in this photo could reveal when it was taken?" data-testid="input-journalism-question" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></>}
         <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span></label>
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => setShotAt(event.target.value)} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         <button type="submit" disabled={pending} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
         </button>
-        <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">Only the selected images are sent to Image Locator. Your shared name, notes, and date stay in each private record.</p>
+         <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId === 'original' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
         {batchStatus && (
           <div
             role="status"
@@ -826,7 +844,9 @@ function InvestigationPage() {
   const summaryMentionsLowerLead = rankedLeads.slice(1).some((lead) =>
     item.summary.toLocaleLowerCase().includes(lead.place.toLocaleLowerCase()),
   );
-  const sceneSummary = summaryMentionsLowerLead
+  const sceneSummary = item.desk === 'fake-news'
+    ? item.summary
+    : summaryMentionsLowerLead
     ? `The Image Locator service ranked ${rankedLeads[0].place} as the strongest location lead.`
     : humanizeClueText(item.summary);
   return <div className="fade-up">
@@ -848,9 +868,9 @@ function InvestigationPage() {
           <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[9px] uppercase tracking-[.13em] text-[#52695d]">Original photograph</span>
         </div>
         <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
-          <PageEyebrow>Scene notes</PageEyebrow>
-          {rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
-          <p className="mt-2 font-editorial text-2xl leading-[1.25] text-[#344b42]" data-testid="text-investigation-summary">{sceneSummary}</p>
+          <PageEyebrow>{item.desk === 'fake-news' ? 'Image integrity review' : item.desk === 'recreation' ? 'Source image search' : 'Scene notes'}</PageEyebrow>
+          {item.desk === 'original' && rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
+          <p className={`mt-2 ${item.desk === 'fake-news' ? 'whitespace-pre-wrap text-sm leading-7' : 'font-editorial text-2xl leading-[1.25]'} text-[#344b42]`} data-testid="text-investigation-summary">{sceneSummary}</p>
           <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Your notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context?.trim() || 'No notes added yet.'}</p></div>
         </section>
         <details className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
@@ -859,6 +879,22 @@ function InvestigationPage() {
         </details>
       </div>
       <div>
+        {item.desk === 'recreation' ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+          <PageEyebrow>Look for the source</PageEyebrow>
+          <h2 className="mt-2 font-editorial text-3xl">Possible original images</h2>
+          <p className="mt-3 text-xs leading-5 text-[#859187]">The image analyst searched public image pages for possible source matches. These are leads, not confirmed originals.</p>
+          {rankedLeads.length ? <div className="mt-4 space-y-3">{rankedLeads.map((candidate, index) => {
+            const reference = candidate.photoReferences?.[0];
+            return <article key={`${candidate.mapsUrl}-${index}`} className="overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#fbf9f3]">
+              {reference && <img src={reference.thumbnailUrl ?? reference.imageUrl} alt={candidate.place} loading="lazy" referrerPolicy="no-referrer" className="max-h-56 w-full object-contain" />}
+              <div className="p-4"><p className="font-editorial text-lg">{candidate.place}</p>{candidate.rationale && <p className="mt-2 text-xs leading-5 text-[#718078]">{candidate.rationale}</p>}<a href={candidate.mapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]">Open source page <ArrowUpRight size={13} /></a></div>
+            </article>;
+          })}</div> : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-5 text-sm leading-6 text-[#718078]" data-testid="content-no-source-images">No plausible original source image was found in the public search. Private, removed, or unindexed images may not appear.</p>}
+        </section> : item.desk === 'fake-news' ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+          <PageEyebrow>What this review can tell you</PageEyebrow>
+          <h2 className="mt-2 font-editorial text-3xl">Visual assessment, not proof</h2>
+          <p className="mt-3 text-sm leading-6 text-[#596d61]">The model assesses visible signs of editing, CGI, or AI generation. It cannot authenticate a photograph from pixels alone; check the original file, provenance, and independent sources.</p>
+        </section> : <>
         <div className="mb-4 flex items-end justify-between gap-3"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-refresh-location-leads" className="shrink-0 rounded-full border border-[#c9c7b7] px-3 py-2 text-[10px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Searching…' : 'Try different leads'}</button></div>
         {refreshMessage && <p role="status" className="mb-3 text-xs leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
         <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
@@ -890,6 +926,7 @@ function InvestigationPage() {
           </article>}
         </> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
         <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[9px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-xs leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
+        </>}
       </div>
     </div>
   </div>;
@@ -908,17 +945,24 @@ function LeadLocationPage() {
   const coordinates = coordinatesFromMapsUrl(lead.mapsUrl);
   return <article className="fade-up mx-auto max-w-3xl">
     <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
-    <PageEyebrow>Location report / Lead {index + 1}</PageEyebrow>
+    <PageEyebrow>{query.data.desk === 'recreation' ? `Source image search / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
     <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">{lead.place}</h1>
-    <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
+    {query.data.desk !== 'recreation' && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
-      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Why this location was suggested</p>
+      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{query.data.desk === 'recreation' ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>
-      <p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
+      {query.data.desk !== 'recreation' && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
       <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
-      {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}
+      {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}</>}
     </section>
-    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+    {query.data.desk === 'recreation' ? <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Possible source match</p>
+      <p className="mt-3 text-sm leading-7 text-[#596d61]">Compare this public image with the uploaded recreation. A similar result does not establish that it is the source.</p>
+      {lead.photoReferences?.[0] && <a href={lead.photoReferences[0].sourceUrl} target="_blank" rel="noreferrer" className="mt-4 block overflow-hidden rounded-xl border border-[#d8d1c2]">
+        <img src={lead.photoReferences[0].thumbnailUrl ?? lead.photoReferences[0].imageUrl} alt={lead.photoReferences[0].caption ?? lead.place} referrerPolicy="no-referrer" className="max-h-[480px] w-full object-contain" />
+        <span className="block p-3 text-xs text-[#385e51]">Open image source: {photoReferenceHost(lead.photoReferences[0].sourceUrl)} <ArrowUpRight size={13} className="inline" /></span>
+      </a>}
+    </section> : <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">How the photograph informed this lead</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">The suggestion combines the analyzer’s location rationale with the visible scene details below. These details explain what can be compared in the image; they are clues, not confirmation that this is the photographed place.</p>
       {query.data.clues.length > 0
@@ -935,8 +979,8 @@ function LeadLocationPage() {
         })}</div>
         : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-4 text-sm leading-6 text-[#718078]">No structured visual details were saved for this photograph, so the report cannot connect specific features in the frame to this lead.</p>}
       {lead.clues.length > 0 && <div className="mt-5 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Location-specific clues named by the analyzer</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></div>}
-    </section>
-    {lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
+    </section>}
+    {query.data.desk !== 'recreation' && lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
   </article>;
 }
 

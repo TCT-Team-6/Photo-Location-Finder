@@ -70,15 +70,30 @@ export function PhotoUploadSlot({
       </div>
 
       <div
+        onDragEnter={(event) => {
+          event.preventDefault();
+          if (!disabled && Array.from(event.dataTransfer.items).some((item) => item.kind === "file")) {
+            setDragging(true);
+          }
+        }}
         onDragOver={(event) => {
           event.preventDefault();
-          setDragging(true);
+          event.dataTransfer.dropEffect = disabled ? "none" : "copy";
+          if (!disabled) setDragging(true);
         }}
-        onDragLeave={() => setDragging(false)}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+        }}
         onDrop={(event) => {
           event.preventDefault();
+          event.stopPropagation();
           setDragging(false);
-          const droppedFile = event.dataTransfer.files[0];
+          if (disabled) return;
+          const droppedFile = event.dataTransfer.files?.[0]
+            ?? Array.from(event.dataTransfer.items)
+              .find((item) => item.kind === "file")
+              ?.getAsFile()
+            ?? null;
           if (droppedFile) onSelectFile(droppedFile);
         }}
         className={`photo-upload-dropzone relative h-[210px] overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${disabled ? "cursor-wait opacity-70" : "cursor-pointer"}`}

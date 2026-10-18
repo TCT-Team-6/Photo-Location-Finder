@@ -55,6 +55,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
       selected: selectedPhotos(slotIds),
       title: "  Mountain trip  ",
       context: "  Light came from the west.  ",
+      journalismQuestion: "  Is the shadow direction consistent?  ",
       shotAt: "2024-03-05",
       getContentType: validContentType,
       requestUploadUrl: async ({ data }) => {
@@ -92,6 +93,10 @@ test("creates one distinct investigation with shared metadata for every non-empt
     for (const input of investigationInputs) {
       assert.match(input.title ?? "", /^((Investigations)|(Recreation)|(Investigative journalism)) — Mountain trip$/);
       assert.equal(input.context, "Light came from the west.");
+      assert.equal(
+        input.journalismQuestion,
+        input.desk === "fake-news" ? "Is the shadow direction consistent?" : undefined,
+      );
       assert.equal(input.shotAt, "2024-03-05T00:00:00.000Z");
     }
   }

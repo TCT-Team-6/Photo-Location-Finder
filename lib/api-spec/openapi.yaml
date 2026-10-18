@@ -437,6 +437,9 @@ components:
         context:
           type: string
           maxLength: 3000
+        journalismQuestion:
+          type: string
+          maxLength: 1000
         shotAt:
           type: ["string", "null"]
           format: date

@@ -157,6 +157,8 @@ export interface InvestigationInput {
   desk: InvestigationInputDesk;
   /** @maxLength 3000 */
   context?: string;
+  /** @maxLength 1000 */
+  journalismQuestion?: string;
   /** @nullable */
   shotAt?: string | null;
   /** @maxLength 120 */

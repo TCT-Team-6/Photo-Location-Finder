@@ -25,6 +25,7 @@ export type InvestigationPhotoUploadOptions = {
   selected: SelectedInvestigationPhoto[];
   title: string;
   context: string;
+  journalismQuestion?: string;
   shotAt: string;
   getContentType: (file: File) => InvestigationInputContentType | null;
   requestUploadUrl: (variables: { data: UploadUrlRequest }) => Promise<UploadUrlResponse>;
@@ -45,10 +46,33 @@ export type InvestigationPhotoUploadResult = {
   failed: Partial<Record<PhotoUploadSlotId, string>>;
 };
 
+function isTransientUploadFailure(error: unknown) {
+  if (error instanceof TypeError) return true;
+  if (!error || typeof error !== "object") return false;
+  const value = error as { status?: unknown; response?: { status?: unknown } };
+  const status = typeof value.status === "number"
+    ? value.status
+    : typeof value.response?.status === "number"
+      ? value.response.status
+      : undefined;
+  return status !== undefined && (status === 408 || status === 429 || status >= 500);
+}
+
+async function retryOnce<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isTransientUploadFailure(error)) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    return operation();
+  }
+}
+
 export async function processInvestigationPhotoUploads({
   selected,
   title,
   context,
+  journalismQuestion = "",
   shotAt,
   getContentType,
   requestUploadUrl,
@@ -72,7 +96,7 @@ export async function processInvestigationPhotoUploads({
       const upload = await requestUploadUrl({
         data: { name: file.name, size: file.size, contentType },
       });
-      await uploadFile(upload.uploadURL, file, contentType);
+      await retryOnce(() => uploadFile(upload.uploadURL, file, contentType));
 
       onProgress?.(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`);
       const fileTitle = file.name
@@ -83,7 +107,7 @@ export async function processInvestigationPhotoUploads({
         0,
         120,
       );
-      const result = await createInvestigation({
+      const result = await retryOnce(() => createInvestigation({
         data: {
           objectPath: upload.objectPath,
           clientRequestId: requestId,
@@ -91,10 +115,13 @@ export async function processInvestigationPhotoUploads({
           originalName: file.name,
           contentType,
           ...(context.trim() ? { context: context.trim() } : {}),
+          ...(slot.id === "fake-news" && journalismQuestion.trim()
+            ? { journalismQuestion: journalismQuestion.trim() }
+            : {}),
           ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
           title: caseTitle,
         },
-      });
+      }));
 
       created.push({ id: result.id, title: result.title, slotLabel: slot.label });
       onSaved?.(slot.id);

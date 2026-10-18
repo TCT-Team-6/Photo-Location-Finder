@@ -20,12 +20,17 @@ import {
   investigationsTable,
   pendingPhotoUploadsTable,
   type LocationCandidate,
+  type VisualClue,
 } from "@workspace/db";
 import { and, count, desc, eq, gte, ilike, or } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectPermission } from "../lib/objectAcl";
 import { analyzeImageLocation } from "../lib/imageLocationAnalysis";
+import {
+  analyzeJournalismImage,
+  analyzeRecreationImage,
+} from "../lib/deskImageAnalysis";
 import { searchLocationPhotoReferences } from "../lib/locationPhotoSearch";
 import {
   ObjectNotFoundError,
@@ -48,6 +53,12 @@ const SUPPORTED_IMAGE_TYPES = new Set([
   "image/x-tiff",
   "image/heic",
   "image/heif",
+]);
+const VISUAL_MODEL_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
 ]);
 
 router.use(requireUser);
@@ -159,6 +170,16 @@ router.post(
       res.status(400).json({ error: "Unsupported photo upload." });
       return;
     }
+    if (
+      parsed.data.desk !== "original" &&
+      !VISUAL_MODEL_IMAGE_TYPES.has(contentType)
+    ) {
+      res.status(400).json({
+        error:
+          "Recreation and Journalism image analysis currently supports JPEG, PNG, WebP, or non-animated GIF files.",
+      });
+      return;
+    }
 
     const [existingInvestigation] = await db
       .select()
@@ -220,11 +241,39 @@ router.post(
       const shotAt = parsed.data.shotAt
         ? parsed.data.shotAt.toISOString().slice(0, 10)
         : null;
-      const analysis = await analyzeImageLocation(buffer, contentType, originalName);
       const apiKey = process.env.OPENAI_API_KEY;
+      let summary: string;
+      let clues: VisualClue[];
+      let analysisCandidates: LocationCandidate[];
+      if (parsed.data.desk === "original") {
+        const analysis = await analyzeImageLocation(buffer, contentType, originalName);
+        summary = analysis.summary;
+        clues = analysis.clues;
+        analysisCandidates = analysis.candidates;
+      } else {
+        if (!apiKey) throw new Error("Image source search and journalism review require an OpenAI connection.");
+        const openAIClient = new OpenAI({ apiKey });
+        if (parsed.data.desk === "recreation") {
+          const analysis = await analyzeRecreationImage(openAIClient, buffer, contentType);
+          summary = analysis.summary;
+          clues = analysis.clues;
+          analysisCandidates = analysis.candidates;
+        } else {
+          const review = await analyzeJournalismImage(
+            openAIClient,
+            buffer,
+            contentType,
+            parsed.data.journalismQuestion,
+          );
+          summary = review.summary;
+          clues = review.clues;
+          analysisCandidates = [];
+        }
+      }
       const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
-      const candidates = await Promise.all(
-        analysis.candidates.map(
+      const candidates = parsed.data.desk === "original"
+        ? await Promise.all(
+        analysisCandidates.map(
           async (candidate): Promise<LocationCandidate> => {
             if (!openAIClient) {
               return {
@@ -262,7 +311,8 @@ router.post(
             }
           },
         ),
-      );
+      )
+        : analysisCandidates;
 
       await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
         owner: userId,
@@ -280,9 +330,9 @@ router.post(
           clientRequestId: parsed.data.clientRequestId,
           context,
           shotAt,
-          summary: analysis.summary,
+          summary,
           candidates,
-          clues: analysis.clues,
+          clues,
         })
         .onConflictDoNothing({
           target: [
