@@ -240,6 +240,65 @@ test("reuses the selected photo request ID after a committed save response is lo
   assert.equal(remaining.size, 0);
 });
 
+test("retries transient upload and save errors without storing a duplicate investigation", async () => {
+  const photos = selectedPhotos(["original"]);
+  const requestInputs: InvestigationInput[] = [];
+  const savedByRequestId = new Map<string, { id: string; title: string }>();
+  let uploadAttempts = 0;
+  let saveAttempts = 0;
+
+  const result = await processInvestigationPhotoUploads({
+    selected: photos,
+    title: "",
+    context: "",
+    shotAt: "",
+    getContentType: validContentType,
+    requestUploadUrl: async () => ({
+      uploadURL: "https://upload.example/retry",
+      objectPath: "/objects/uploads/retry",
+    }),
+    uploadFile: async () => {
+      uploadAttempts += 1;
+      if (uploadAttempts === 1) {
+        const error = new Error("Upload service temporarily unavailable") as Error & {
+          status: number;
+        };
+        error.status = 503;
+        throw error;
+      }
+    },
+    createInvestigation: async ({ data }) => {
+      saveAttempts += 1;
+      requestInputs.push(data);
+      const existing = savedByRequestId.get(data.clientRequestId);
+      if (existing) return existing;
+
+      const saved = { id: "saved-once", title: data.title ?? "" };
+      savedByRequestId.set(data.clientRequestId, saved);
+      if (saveAttempts === 1) {
+        const error = new Error("Save service temporarily unavailable") as Error & {
+          status: number;
+        };
+        error.status = 503;
+        throw error;
+      }
+      return saved;
+    },
+  });
+
+  assert.deepEqual(result.failed, {});
+  assert.deepEqual(result.created, [{
+    id: "saved-once",
+    title: "Investigations — original",
+    slotLabel: "Investigations",
+  }]);
+  assert.equal(uploadAttempts, 2);
+  assert.equal(saveAttempts, 2);
+  assert.equal(savedByRequestId.size, 1);
+  assert.equal(requestInputs[0]?.clientRequestId, requestInputs[1]?.clientRequestId);
+  assert.equal(requestInputs[0]?.objectPath, requestInputs[1]?.objectPath);
+});
+
 test("keeps validation failures attached to their slot and preserves errors for untouched slots", async () => {
   const photos = selectedPhotos(["original", "recreation"]);
   const result = await processInvestigationPhotoUploads({

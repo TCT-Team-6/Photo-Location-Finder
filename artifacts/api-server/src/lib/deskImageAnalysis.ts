@@ -8,6 +8,26 @@ export type DeskImageAnalysis = {
   clues: VisualClue[];
 };
 
+export async function analyzeDeskImage(
+  client: OpenAI,
+  image: Buffer,
+  contentType: string,
+  desk: "recreation" | "fake-news",
+  question?: string,
+): Promise<DeskImageAnalysis> {
+  if (desk === "recreation") {
+    return analyzeRecreationImage(client, image, contentType);
+  }
+
+  const review = await analyzeJournalismImage(
+    client,
+    image,
+    contentType,
+    question,
+  );
+  return { ...review, candidates: [] };
+}
+
 const sourceImageSearchTool = {
   type: "web_search" as const,
   external_web_access: true,

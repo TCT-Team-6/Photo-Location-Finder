@@ -27,10 +27,7 @@ import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectPermission } from "../lib/objectAcl";
 import { analyzeImageLocation } from "../lib/imageLocationAnalysis";
-import {
-  analyzeJournalismImage,
-  analyzeRecreationImage,
-} from "../lib/deskImageAnalysis";
+import { analyzeDeskImage } from "../lib/deskImageAnalysis";
 import { searchLocationPhotoReferences } from "../lib/locationPhotoSearch";
 import {
   ObjectNotFoundError,
@@ -261,22 +258,16 @@ router.post(
       } else {
         if (!apiKey) throw new Error("Image source search and journalism review require an OpenAI connection.");
         const openAIClient = new OpenAI({ apiKey });
-        if (parsed.data.desk === "recreation") {
-          const analysis = await analyzeRecreationImage(openAIClient, buffer, contentType);
-          summary = analysis.summary;
-          clues = analysis.clues;
-          analysisCandidates = analysis.candidates;
-        } else {
-          const review = await analyzeJournalismImage(
-            openAIClient,
-            buffer,
-            contentType,
-            parsed.data.journalismQuestion,
-          );
-          summary = review.summary;
-          clues = review.clues;
-          analysisCandidates = [];
-        }
+        const analysis = await analyzeDeskImage(
+          openAIClient,
+          buffer,
+          contentType,
+          parsed.data.desk,
+          parsed.data.journalismQuestion,
+        );
+        summary = analysis.summary;
+        clues = analysis.clues;
+        analysisCandidates = analysis.candidates;
       }
       const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
       const candidates = parsed.data.desk === "original"
