@@ -446,6 +446,10 @@ components:
         journalismQuestion:
           type: string
           maxLength: 1000
+        apiKey:
+          type: string
+          maxLength: 512
+          description: Optional user-provided provider key. Never persist or log this value.
         shotAt:
           type: ["string", "null"]
           format: date

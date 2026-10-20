@@ -357,6 +357,25 @@
 [data-app-theme="sunset"] [class~="text-[#385e51]"] { color: #8b4939 !important; }
 [data-app-theme="sunset"] [class~="border-[#d8d1c2]"] { border-color: #dfc4b5 !important; }
 
+[data-app-theme="mono"] [class~="bg-[#f4f0e6]"],
+[data-app-theme="mono"] [class~="bg-[#f8f5ec]"],
+[data-app-theme="mono"] [class~="bg-[#fbf9f3]"] { background-color: #fff !important; }
+[data-app-theme="mono"] [class~="bg-[#263d36]"] { background-color: #111 !important; }
+[data-app-theme="mono"] [class~="bg-[#385e51]"],
+[data-app-theme="mono"] [class~="bg-[#3b5d50]"] { background-color: #222 !important; }
+[data-app-theme="mono"] [class~="text-[#263d36]"],
+[data-app-theme="mono"] [class~="text-[#344b42]"],
+[data-app-theme="mono"] [class~="text-[#385e51]"] { color: #111 !important; }
+[data-app-theme="mono"] [class~="border-[#d8d1c2]"] { border-color: #888 !important; }
+
+[data-app-theme="ocean"] [class~="bg-[#3b5d50]"] { background-color: #164454 !important; }
+[data-app-theme="sunset"] [class~="bg-[#3b5d50]"] { background-color: #60352c !important; }
+
+[data-app-font] .cl-socialButtonsBlockButtonText,
+[data-app-font] .cl-alternativeMethodsBlockButtonText,
+[data-app-font] .cl-formFieldHintText,
+[data-app-font] .cl-identityPreviewText { color: #000 !important; }
+
 [data-high-contrast="true"] [class~="text-[#718078]"],
 [data-high-contrast="true"] [class~="text-[#596d61]"],
 [data-high-contrast="true"] [class~="text-[#66796e]"],

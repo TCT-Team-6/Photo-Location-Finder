@@ -37,8 +37,10 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
 });
-type AppPreferences = { theme: 'field' | 'ocean' | 'sunset'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
+type AppPreferences = { theme: 'field' | 'ocean' | 'sunset' | 'mono'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
 const defaultPreferences: AppPreferences = { theme: 'field', highContrast: false, font: 'default' };
+const ApiKeyContext = createContext<{ apiKey: string; setApiKey: (value: string) => void }>({ apiKey: '', setApiKey: () => {} });
+function useApiKey() { return useContext(ApiKeyContext); }
 const PreferencesContext = createContext<{ preferences: AppPreferences; setPreferences: (next: AppPreferences) => void }>({
   preferences: defaultPreferences,
   setPreferences: () => {},
@@ -176,7 +178,7 @@ function LandingPage() {
         <Mark />
         <nav className="flex items-center gap-3">
           <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
-          <ActionLink href="/sign-up" testId="link-get-started"><span className="hidden sm:inline">Start an investigation</span><span className="sm:hidden">Investigate</span><ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/demo" testId="link-get-started"><span className="hidden sm:inline">Start an investigation</span><span className="sm:hidden">Investigate</span><ArrowRight size={16} /></ActionLink>
         </nav>
       </header>
       <section className="relative mx-auto grid max-w-[1440px] items-center gap-10 px-6 pb-20 pt-10 md:grid-cols-[1.02fr_.98fr] md:px-12 md:pb-28 md:pt-16">
@@ -184,10 +186,6 @@ function LandingPage() {
           <p className="mb-7 inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.2em] text-[#657d6f]"><span className="h-2 w-2 rounded-full bg-[#c8794d]" />A field notebook for image sleuths</p>
           <h1 className="font-editorial text-[clamp(3.65rem,8.5vw,7.6rem)] leading-[.88] tracking-[-.065em]">Every image<br />has a <em className="font-normal text-[#c8794d]">somewhere.</em></h1>
           <p className="mt-8 max-w-[520px] text-lg leading-8 text-[#62756c] md:text-xl">Follow the details hiding in a photograph. Gather the clues, compare likely places, and keep the trail somewhere private.</p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <ActionLink href="/sign-up" testId="link-create-private-notebook">Open your notebook <ArrowRight size={16} /></ActionLink>
-            <ActionLink href="/sign-in" secondary testId="link-returning-sleuth">I have an account</ActionLink>
-          </div>
           <div className="mt-12 flex items-center gap-4 border-t border-[#d8d1c2] pt-5">
             <ShieldCheck size={18} className="text-[#627d6d]" />
             <p className="text-sm text-[#6f7f76]">Private by default. Your photos and findings stay yours.</p>
@@ -301,11 +299,15 @@ function SignUpPage() {
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const client = useQueryClient();
+  const { setApiKey } = useApiKey();
   useEffect(() => {
     let prior: string | null | undefined;
     return addListener(({ user }) => {
       const current = user?.id ?? null;
-      if (prior !== undefined && prior !== current) client.clear();
+      if (prior !== undefined && prior !== current) {
+        client.clear();
+        setApiKey('');
+      }
       prior = current;
     });
   }, [addListener, client]);
@@ -327,6 +329,7 @@ function ClerkProviderWithRoutes() {
     <ClerkQueryClientCacheInvalidator />
     <Switch>
       <Route path="/" component={HomeRedirect} />
+      <Route path="/demo" component={DemoRoute} />
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/user-portal" component={PortalRoute} />
@@ -353,12 +356,48 @@ function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppSh
 function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppShell></Protected>; }
 function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
 
+function DemoRoute() { return <DemoExperience />; }
+
+function DemoExperience() {
+  const [view, setView] = useState<'overview' | 'investigate' | 'library'>('overview');
+  const navigation = [
+    ['overview', 'Overview', <Compass size={17} />],
+    ['investigate', 'New investigation', <ImagePlus size={17} />],
+    ['library', 'My library', <BookOpen size={17} />],
+  ] as const;
+  return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
+    <aside className="hidden w-[252px] shrink-0 flex-col bg-[#263d36] p-5 text-[#f4f0e6] md:flex">
+      <Mark inverse />
+      <nav className="mt-12 space-y-1">{navigation.map(([id, label, icon]) => <button key={id} onClick={() => setView(id)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm ${view === id ? 'bg-[#3b5d50]' : 'text-[#c1cdbf] hover:bg-white/5'}`}>{icon}{label}</button>)}</nav>
+      <div className="mt-auto border-t border-[#52695d] pt-5"><p className="text-xs text-[#c1cdbf]">Demo mode · nothing is saved</p></div>
+    </aside>
+    <main className="min-w-0 flex-1 px-5 py-8 md:px-10">
+      <div className="mb-8 flex items-center justify-between"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#829087]">Personal field notes / Demo</p><Link href="/" className="text-xs text-[#62756c]">Back to home</Link></div>
+      <nav className="mb-6 flex gap-2 overflow-x-auto md:hidden">{navigation.map(([id,label])=><button key={id} onClick={()=>setView(id)} className={`shrink-0 rounded-full px-4 py-2 text-xs ${view===id?'bg-[#3b5d50] text-white':'border border-[#d8d1c2]'}`}>{label}</button>)}</nav>
+      {view === 'overview' && <><PageEyebrow>Personal archive / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Your field desk.</h1><p className="mt-3 text-sm text-[#718078]">Explore a sample archive. Demo changes are not saved.</p><div className="my-8 grid gap-4 sm:grid-cols-3">{[['Saved investigations','3'],['This month','2'],['Most recent','Harbor walk']].map(([label,value])=><div key={label} className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><p className="text-xs text-[#738078]">{label}</p><p className="mt-4 font-editorial text-3xl">{value}</p></div>)}</div><DemoCards /></>}
+      {view === 'library' && <><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Your library.</h1><p className="my-6 text-sm text-[#718078]">Sample investigations in the demo archive.</p><DemoCards /></>}
+      {view === 'investigate' && <><PageEyebrow>New investigation / demo</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Try the workflow.</h1><div className="mt-8 max-w-2xl rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-8"><div className="grid h-48 place-items-center rounded-xl border border-dashed border-[#b5c1b1] bg-[#e8e9df] text-sm text-[#557363]"><ImagePlus size={28} />Photo analysis is disabled in the demo</div><button disabled className="mt-5 w-full rounded-full bg-[#385e51] py-3 text-sm text-white opacity-60">Demo only — no projects are saved</button></div></>}
+    </main>
+    <Link href="/sign-in" className="fixed bottom-5 right-5 z-30 rounded-full border border-[#d8d1c2] bg-white px-4 py-3 text-xs font-semibold text-[#263d36] shadow-lg">← Log in to save your progress</Link>
+  </div>;
+}
+
+function DemoCards() {
+  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[['Harbor walk','Coastal village'],['Mountain pass','Alpine road'],['Old town square','Historic district']].map(([title,place],i)=><article key={title} className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]"><div className={`h-36 ${i===0?'bg-gradient-to-br from-[#b5c9c1] to-[#456c69]':i===1?'bg-gradient-to-br from-[#c6c5af] to-[#66766c]':'bg-gradient-to-br from-[#d6b89d] to-[#805d4c]'}`} /><div className="p-5"><p className="font-data text-[9px] uppercase tracking-widest text-[#9c6d4e]">Sample location</p><h3 className="mt-2 font-editorial text-2xl">{title}</h3><p className="mt-2 text-xs text-[#718078]">{place} · example clues and location leads</p></div></article>)}</div>;
+}
+
 function AppShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const { user } = useUser();
   const { signOut } = useClerk();
   const [location] = useLocation();
-  const firstName = user?.firstName || 'Field researcher';
+  const [profileName, setProfileName] = useState('');
+  const [profileStatus, setProfileStatus] = useState('');
+  useEffect(() => {
+    const value = user?.unsafeMetadata?.whereaboutsDisplayName;
+    setProfileName(typeof value === 'string' ? value : user?.firstName || '');
+  }, [user?.id, user?.unsafeMetadata?.whereaboutsDisplayName, user?.firstName]);
+  const firstName = profileName || user?.firstName || 'Field researcher';
   const initials = `${user?.firstName?.[0] || 'F'}${user?.lastName?.[0] || ''}`;
   const navLinks = [
     { href: '/user-portal', label: 'Overview', icon: <Compass size={17} /> },
@@ -379,10 +418,19 @@ function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <Link href="/settings" data-testid="nav-settings" className={`mt-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}><SettingsIcon size={17} />Settings</Link>
       <div className="mt-auto">
-        <div className="mb-4 flex items-center gap-3 border-t border-[#52695d] pt-5">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]" data-testid="avatar-initials">{initials}</span>
-          <div className="min-w-0"><p className="truncate text-sm font-medium">{firstName}</p><p className="font-data text-[9px] uppercase tracking-[.1em] text-[#a9b8aa]">Private archive</p></div>
-        </div>
+        <details className="relative mb-4 border-t border-[#52695d] pt-4">
+          <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
+            {user?.imageUrl ? <img src={user.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]">{initials}</span>}
+            <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em] text-[#a9b8aa]">Account</span></span>
+          </summary>
+          <form className="absolute bottom-14 left-0 z-30 w-[220px] rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 text-[#263d36] shadow-xl" onSubmit={async (event) => { event.preventDefault(); try { await user?.update({ unsafeMetadata: { ...user.unsafeMetadata, whereaboutsDisplayName: profileName.trim() } }); setProfileStatus('Profile saved.'); } catch { setProfileStatus('Could not save your profile.'); } }}>
+            <label className="block text-[11px] font-semibold" htmlFor="in-app-username">In-app username</label>
+            <input id="in-app-username" value={profileName} onChange={(event) => setProfileName(event.target.value)} maxLength={40} className="mt-1 h-9 w-full rounded-lg border border-[#d8d1c2] bg-white px-2 text-sm" />
+            <label className="mt-3 block cursor-pointer rounded-lg border border-[#d8d1c2] px-3 py-2 text-center text-xs hover:bg-[#f0ece2]">Change profile picture<input type="file" accept="image/*" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; try { await user?.setProfileImage({ file }); setProfileStatus('Profile picture updated.'); } catch { setProfileStatus('Could not update the profile picture.'); } }} /></label>
+            <button type="submit" className="mt-2 w-full rounded-lg bg-[#385e51] py-2 text-xs font-semibold text-white">Save username</button>
+            {profileStatus && <p role="status" className="mt-2 text-[10px]">{profileStatus}</p>}
+          </form>
+        </details>
         <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-sign-out" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#c1cdbf] transition hover:bg-white/5 hover:text-white"><LogOut size={16} />Sign out</button>
       </div>
     </aside>
@@ -556,6 +604,7 @@ function InvestigatePage() {
   const uploadUrl = useRequestUploadUrl();
   const create = useCreateInvestigation();
   const client = useQueryClient();
+  const { apiKey } = useApiKey();
   const [, setLocation] = useLocation();
   const selectedCount = investigationPhotoSlots.filter(
     (slot) => files[slot.id],
@@ -634,6 +683,7 @@ function InvestigatePage() {
         title,
         context,
         journalismQuestion,
+        apiKey,
         shotAt,
         getContentType: imageContentType,
         requestUploadUrl: (variables) => uploadUrl.mutateAsync(variables),
@@ -1069,11 +1119,14 @@ function visualCluesOverlap(clue: { label: string; observation: string; signific
 
 function SettingsPage() {
   const { preferences, setPreferences } = usePreferences();
+  const { apiKey, setApiKey } = useApiKey();
+  const [draftKey, setDraftKey] = useState(apiKey);
+  const [keyStatus, setKeyStatus] = useState('');
   const update = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) =>
     setPreferences({ ...preferences, [key]: value });
   return <div className="fade-up mx-auto max-w-3xl">
     <PageEyebrow>Personal archive / preferences</PageEyebrow>
-    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Settings.</h1>
+    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Settings</h1>
     <p className="mt-3 text-sm text-[#718078]">Adjust how Whereabouts looks and reads on this device.</p>
     <section className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <h2 className="font-editorial text-2xl">Color theme</h2>
@@ -1082,6 +1135,7 @@ function SettingsPage() {
           ['field', 'Field notebook', '#385e51', '#f4f0e6'],
           ['ocean', 'Coastal blue', '#23617a', '#edf5f7'],
           ['sunset', 'Warm clay', '#8b4939', '#f8eee8'],
+          ['mono', 'Black & white', '#111111', '#ffffff'],
         ] as const).map(([value, label, accent, paper]) => <button key={value} type="button" onClick={() => update('theme', value)} aria-pressed={preferences.theme === value} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm ${preferences.theme === value ? 'border-[#385e51] ring-2 ring-[#385e51]/20' : 'border-[#d8d1c2]'}`}><span className="h-9 w-9 rounded-full border" style={{ background: `linear-gradient(135deg, ${paper} 45%, ${accent} 45%)` }} />{label}{preferences.theme === value && <Check size={15} className="ml-auto" />}</button>)}
       </div>
       <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 border-t border-[#e1dbce] pt-5 text-sm"><span><strong className="block">High contrast</strong><span className="mt-1 block text-xs text-[#718078]">Strengthen text and border contrast throughout the app.</span></span><input type="checkbox" checked={preferences.highContrast} onChange={(event) => update('highContrast', event.target.checked)} data-testid="toggle-high-contrast" className="h-5 w-5 accent-[#385e51]" /></label>
@@ -1095,6 +1149,15 @@ function SettingsPage() {
         <option value="dyslexic">Dyslexia-friendly (Atkinson Hyperlegible)</option>
       </select>
       <p className="mt-3 text-xs leading-5 text-[#718078]">Your choices are saved in this browser and apply across the app.</p>
+    </section>
+    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+      <h2 className="font-editorial text-xl">Your analysis API key</h2>
+      <p className="mt-1 text-xs text-[#718078]">Optional. Kept in memory for this session only; never saved in browser storage.</p>
+      <div className="mt-3 flex gap-2">
+        <input type="password" autoComplete="off" value={draftKey} onChange={(event) => setDraftKey(event.target.value)} placeholder="Paste your API key" aria-label="Your analysis API key" data-testid="input-personal-api-key" className="h-10 min-w-0 flex-1 rounded-lg border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm" />
+        <button type="button" onClick={() => { setApiKey(draftKey.trim()); setKeyStatus(draftKey.trim() ? 'Key set for this session.' : 'Session key cleared.'); }} data-testid="button-save-personal-api-key" className="rounded-lg bg-[#385e51] px-3 text-xs font-semibold text-white">Use key</button>
+      </div>
+      {keyStatus && <p role="status" className="mt-2 text-xs text-[#476450]">{keyStatus}</p>}
     </section>
   </div>;
 }
@@ -1124,10 +1187,11 @@ function App() {
       return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : defaultPreferences;
     } catch { return defaultPreferences; }
   });
+  const [apiKey, setApiKey] = useState('');
   useEffect(() => {
     localStorage.setItem('whereabouts-preferences', JSON.stringify(preferences));
   }, [preferences]);
-  return <PreferencesContext.Provider value={{ preferences, setPreferences }}>
+  return <ApiKeyContext.Provider value={{ apiKey, setApiKey }}><PreferencesContext.Provider value={{ preferences, setPreferences }}>
     <div data-app-theme={preferences.theme} data-high-contrast={preferences.highContrast} data-app-font={preferences.font}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -1138,7 +1202,7 @@ function App() {
         </TooltipProvider>
       </QueryClientProvider>
     </div>
-  </PreferencesContext.Provider>;
+  </PreferencesContext.Provider></ApiKeyContext.Provider>;
 }
 
 export default App;

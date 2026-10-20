@@ -246,7 +246,7 @@ router.post(
       const shotAt = parsed.data.shotAt
         ? parsed.data.shotAt.toISOString().slice(0, 10)
         : null;
-      const apiKey = process.env.OPENAI_API_KEY;
+      const apiKey = parsed.data.apiKey?.trim() || process.env.OPENAI_API_KEY;
       let summary: string;
       let clues: VisualClue[];
       let analysisCandidates: LocationCandidate[];

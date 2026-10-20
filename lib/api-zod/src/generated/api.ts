@@ -111,6 +111,8 @@ export const createInvestigationBodyContextMax = 3000;
 
 export const createInvestigationBodyJournalismQuestionMax = 1000;
 
+export const createInvestigationBodyApiKeyMax = 512;
+
 export const createInvestigationBodyTitleMax = 120;
 
 
@@ -123,6 +125,7 @@ export const CreateInvestigationBody = zod.object({
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "context": zod.string().max(createInvestigationBodyContextMax).optional(),
   "journalismQuestion": zod.string().max(createInvestigationBodyJournalismQuestionMax).optional(),
+  "apiKey": zod.string().max(createInvestigationBodyApiKeyMax).optional().describe('Optional user-provided provider key. Never persist or log this value.'),
   "shotAt": zod.coerce.date().nullish(),
   "title": zod.string().max(createInvestigationBodyTitleMax).optional()
 })

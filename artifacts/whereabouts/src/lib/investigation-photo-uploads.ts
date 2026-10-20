@@ -26,6 +26,7 @@ export type InvestigationPhotoUploadOptions = {
   title: string;
   context: string;
   journalismQuestion?: string;
+  apiKey?: string;
   shotAt: string;
   getContentType: (file: File) => InvestigationInputContentType | null;
   requestUploadUrl: (variables: { data: UploadUrlRequest }) => Promise<UploadUrlResponse>;
@@ -78,6 +79,7 @@ export async function processInvestigationPhotoUploads({
   title,
   context,
   journalismQuestion = "",
+  apiKey = "",
   shotAt,
   getContentType,
   requestUploadUrl,
@@ -123,6 +125,7 @@ export async function processInvestigationPhotoUploads({
           ...(slot.id === "fake-news" && journalismQuestion.trim()
             ? { journalismQuestion: journalismQuestion.trim() }
             : {}),
+          ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
           ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
           title: caseTitle,
         },

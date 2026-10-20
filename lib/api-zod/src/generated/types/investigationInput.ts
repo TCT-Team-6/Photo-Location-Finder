@@ -23,6 +23,11 @@ export interface InvestigationInput {
   context?: string;
   /** @maxLength 1000 */
   journalismQuestion?: string;
+  /**
+     * Optional user-provided provider key. Never persist or log this value.
+     * @maxLength 512
+     */
+  apiKey?: string;
   /** @nullable */
   shotAt?: Date | null;
   /** @maxLength 120 */
