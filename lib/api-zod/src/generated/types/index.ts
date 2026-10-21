@@ -14,6 +14,8 @@ export * from './caseLeadReviewInputReviewStatus';
 export * from './caseLeadReviewStatus';
 export * from './casePhoto';
 export * from './casePhotoContentType';
+export * from './caseReview';
+export * from './caseReviewInput';
 export * from './errorEnvelope';
 export * from './healthStatus';
 export * from './investigation';

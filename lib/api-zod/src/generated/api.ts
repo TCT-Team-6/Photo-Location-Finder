@@ -29,6 +29,11 @@ export const listMissingPersonCasesResponseOneHeadshotOneObjectPathMax = 200;
 export const listMissingPersonCasesResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const listMissingPersonCasesResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const listMissingPersonCasesResponseTwoReviewObservationsMax = 10000;
+
+export const listMissingPersonCasesResponseTwoReviewNextStepsMax = 10000;
+
+
 export const listMissingPersonCasesResponseTwoLeadsItemOneTitleMax = 160;
 
 export const listMissingPersonCasesResponseTwoLeadsItemOneSourceMax = 200;
@@ -68,6 +73,12 @@ export const ListMissingPersonCasesResponseItem = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(listMissingPersonCasesResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(listMissingPersonCasesResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
@@ -155,6 +166,11 @@ export const createMissingPersonCaseResponseOneHeadshotOneObjectPathMax = 200;
 export const createMissingPersonCaseResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const createMissingPersonCaseResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const createMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
+
+export const createMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
+
+
 export const createMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const createMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -194,6 +210,12 @@ export const CreateMissingPersonCaseResponse = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(createMissingPersonCaseResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(createMissingPersonCaseResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
@@ -242,6 +264,11 @@ export const getMissingPersonCaseResponseOneHeadshotOneObjectPathMax = 200;
 export const getMissingPersonCaseResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const getMissingPersonCaseResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const getMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
+
+export const getMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
+
+
 export const getMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const getMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -281,6 +308,12 @@ export const GetMissingPersonCaseResponse = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(getMissingPersonCaseResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(getMissingPersonCaseResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
@@ -371,6 +404,11 @@ export const updateMissingPersonCaseResponseOneHeadshotOneObjectPathMax = 200;
 export const updateMissingPersonCaseResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const updateMissingPersonCaseResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const updateMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
+
+export const updateMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
+
+
 export const updateMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const updateMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -410,6 +448,12 @@ export const UpdateMissingPersonCaseResponse = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(updateMissingPersonCaseResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(updateMissingPersonCaseResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
@@ -438,6 +482,118 @@ export const DeleteMissingPersonCaseParams = zod.object({
 })
 
 export const DeleteMissingPersonCaseResponse = zod.void()
+
+
+export const SaveCaseReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const saveCaseReviewBodyObservationsMax = 10000;
+
+export const saveCaseReviewBodyNextStepsMax = 10000;
+
+export const saveCaseReviewBodyExpectedRevisionMin = 0;
+
+
+
+export const SaveCaseReviewBody = zod.object({
+  "observations": zod.string().max(saveCaseReviewBodyObservationsMax),
+  "nextSteps": zod.string().max(saveCaseReviewBodyNextStepsMax),
+  "expectedRevision": zod.number().int().min(saveCaseReviewBodyExpectedRevisionMin)
+})
+
+export const saveCaseReviewResponseOneFirstNameMax = 80;
+
+export const saveCaseReviewResponseOneLastNameMax = 80;
+
+export const saveCaseReviewResponseOneNicknameMax = 80;
+
+export const saveCaseReviewResponseOneAgeDescriptionMax = 40;
+
+export const saveCaseReviewResponseOneLastKnownDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveCaseReviewResponseOneLastKnownAreaMax = 160;
+
+export const saveCaseReviewResponseOneOfficialReferenceMax = 120;
+
+export const saveCaseReviewResponseOneNotesMax = 3000;
+
+export const saveCaseReviewResponseOneHeadshotOneObjectPathMax = 200;
+
+
+export const saveCaseReviewResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
+export const saveCaseReviewResponseOneHeadshotOneOriginalNameMax = 255;
+
+export const saveCaseReviewResponseTwoReviewObservationsMax = 10000;
+
+export const saveCaseReviewResponseTwoReviewNextStepsMax = 10000;
+
+
+export const saveCaseReviewResponseTwoLeadsItemOneTitleMax = 160;
+
+export const saveCaseReviewResponseTwoLeadsItemOneSourceMax = 200;
+
+export const saveCaseReviewResponseTwoLeadsItemOneSourceUrlMax = 2000;
+
+export const saveCaseReviewResponseTwoLeadsItemOneNotesMax = 3000;
+
+export const saveCaseReviewResponseTwoLeadsItemOneReportedTakenOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveCaseReviewResponseTwoLeadsItemOnePostedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveCaseReviewResponseTwoLeadsItemOnePhotoOneObjectPathMax = 200;
+
+
+export const saveCaseReviewResponseTwoLeadsItemOnePhotoOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
+export const saveCaseReviewResponseTwoLeadsItemOnePhotoOneOriginalNameMax = 255;
+
+
+
+export const SaveCaseReviewResponse = zod.object({
+  "clientRequestId": zod.string().uuid(),
+  "firstName": zod.string().min(1).max(saveCaseReviewResponseOneFirstNameMax),
+  "lastName": zod.string().max(saveCaseReviewResponseOneLastNameMax).optional(),
+  "nickname": zod.string().max(saveCaseReviewResponseOneNicknameMax).optional(),
+  "ageDescription": zod.string().max(saveCaseReviewResponseOneAgeDescriptionMax).optional(),
+  "lastKnownDate": zod.string().regex(saveCaseReviewResponseOneLastKnownDateRegExp).nullish(),
+  "lastKnownArea": zod.string().max(saveCaseReviewResponseOneLastKnownAreaMax).optional(),
+  "responderRole": zod.enum(['family-or-guardian', 'authorized-responder', 'other']),
+  "officialReference": zod.string().max(saveCaseReviewResponseOneOfficialReferenceMax).optional(),
+  "notes": zod.string().max(saveCaseReviewResponseOneNotesMax).optional(),
+  "privacyAcknowledged": zod.literal(true),
+  "headshot": zod.union([zod.object({
+  "objectPath": zod.string().max(saveCaseReviewResponseOneHeadshotOneObjectPathMax).regex(saveCaseReviewResponseOneHeadshotOneObjectPathRegExp),
+  "originalName": zod.string().min(1).max(saveCaseReviewResponseOneHeadshotOneOriginalNameMax),
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
+}),zod.null()]).optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(saveCaseReviewResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(saveCaseReviewResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
+  "leads": zod.array(zod.object({
+  "clientRequestId": zod.string().uuid(),
+  "kind": zod.enum(['photo', 'link', 'tip']),
+  "title": zod.string().min(1).max(saveCaseReviewResponseTwoLeadsItemOneTitleMax),
+  "source": zod.string().min(1).max(saveCaseReviewResponseTwoLeadsItemOneSourceMax),
+  "sourceUrl": zod.string().max(saveCaseReviewResponseTwoLeadsItemOneSourceUrlMax).optional(),
+  "notes": zod.string().max(saveCaseReviewResponseTwoLeadsItemOneNotesMax).optional(),
+  "reportedTakenOn": zod.string().regex(saveCaseReviewResponseTwoLeadsItemOneReportedTakenOnRegExp).nullish(),
+  "postedOn": zod.string().regex(saveCaseReviewResponseTwoLeadsItemOnePostedOnRegExp).nullish(),
+  "permissionGranted": zod.literal(true),
+  "photo": zod.union([zod.object({
+  "objectPath": zod.string().max(saveCaseReviewResponseTwoLeadsItemOnePhotoOneObjectPathMax).regex(saveCaseReviewResponseTwoLeadsItemOnePhotoOneObjectPathRegExp),
+  "originalName": zod.string().min(1).max(saveCaseReviewResponseTwoLeadsItemOnePhotoOneOriginalNameMax),
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
+}),zod.null()]).optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
+  "createdAt": zod.coerce.date()
+})))
+}))
 
 
 export const CreateCaseLeadParams = zod.object({
@@ -500,6 +656,11 @@ export const createCaseLeadResponseOneHeadshotOneObjectPathMax = 200;
 export const createCaseLeadResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const createCaseLeadResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const createCaseLeadResponseTwoReviewObservationsMax = 10000;
+
+export const createCaseLeadResponseTwoReviewNextStepsMax = 10000;
+
+
 export const createCaseLeadResponseTwoLeadsItemOneTitleMax = 160;
 
 export const createCaseLeadResponseTwoLeadsItemOneSourceMax = 200;
@@ -539,6 +700,12 @@ export const CreateCaseLeadResponse = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(createCaseLeadResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(createCaseLeadResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
@@ -592,6 +759,11 @@ export const reviewCaseLeadResponseOneHeadshotOneObjectPathMax = 200;
 export const reviewCaseLeadResponseOneHeadshotOneObjectPathRegExp = new RegExp('^/objects/uploads/[a-f0-9-]+$');
 export const reviewCaseLeadResponseOneHeadshotOneOriginalNameMax = 255;
 
+export const reviewCaseLeadResponseTwoReviewObservationsMax = 10000;
+
+export const reviewCaseLeadResponseTwoReviewNextStepsMax = 10000;
+
+
 export const reviewCaseLeadResponseTwoLeadsItemOneTitleMax = 160;
 
 export const reviewCaseLeadResponseTwoLeadsItemOneSourceMax = 200;
@@ -631,6 +803,12 @@ export const ReviewCaseLeadResponse = zod.object({
   "id": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
+  "review": zod.object({
+  "observations": zod.string().max(reviewCaseLeadResponseTwoReviewObservationsMax),
+  "nextSteps": zod.string().max(reviewCaseLeadResponseTwoReviewNextStepsMax),
+  "revision": zod.number().int().min(1),
+  "updatedAt": zod.coerce.date()
+}).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.string().uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),

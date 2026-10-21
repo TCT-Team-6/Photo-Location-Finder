@@ -72,6 +72,25 @@ paths:
       tags: [Cases]
       responses:
         "204": { description: Case and leads deleted. }
+  /cases/{id}/review:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    patch:
+      operationId: saveCaseReview
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseReviewInput" }
+      responses:
+        "200":
+          description: Private manual review saved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+        "409":
+          description: A newer review exists. Keep the draft and reload the saved version before merging.
   /cases/{id}/leads:
     parameters:
       - $ref: "#/components/parameters/InvestigationId"
@@ -355,6 +374,21 @@ components:
         type: string
         format: uuid
   schemas:
+    CaseReviewInput:
+      type: object
+      required: [observations, nextSteps, expectedRevision]
+      properties:
+        observations: { type: string, maxLength: 10000 }
+        nextSteps: { type: string, maxLength: 10000 }
+        expectedRevision: { type: integer, minimum: 0 }
+    CaseReview:
+      type: object
+      required: [observations, nextSteps, revision, updatedAt]
+      properties:
+        observations: { type: string, maxLength: 10000 }
+        nextSteps: { type: string, maxLength: 10000 }
+        revision: { type: integer, minimum: 1 }
+        updatedAt: { type: string, format: date-time }
     CaseLeadReviewInput:
       type: object
       required: [reviewStatus]
@@ -421,6 +455,7 @@ components:
             id: { type: string, format: uuid }
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
+            review: { $ref: "#/components/schemas/CaseReview" }
             leads:
               type: array
               items: { $ref: "#/components/schemas/CaseLead" }

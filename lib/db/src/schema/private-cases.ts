@@ -16,6 +16,12 @@ export type PrivateCaseData = {
   notes?: string;
   privacyAcknowledged: true;
   headshot?: CasePhotoData | null;
+  review?: {
+    observations: string;
+    nextSteps: string;
+    revision: number;
+    updatedAt: string;
+  };
 };
 export type CaseLeadData = {
   clientRequestId: string;

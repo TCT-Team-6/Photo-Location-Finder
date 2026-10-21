@@ -6,11 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CaseLead } from './caseLead';
+import type { CaseReview } from './caseReview';
 import type { MissingPersonCaseInput } from './missingPersonCaseInput';
 
 export type MissingPersonCase = MissingPersonCaseInput & {
   id: string;
   createdAt: Date;
   updatedAt: Date;
+  review?: CaseReview;
   leads: CaseLead[];
 };

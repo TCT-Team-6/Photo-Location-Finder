@@ -5,6 +5,25 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface CaseReviewInput {
+  /** @maxLength 10000 */
+  observations: string;
+  /** @maxLength 10000 */
+  nextSteps: string;
+  /** @minimum 0 */
+  expectedRevision: number;
+}
+
+export interface CaseReview {
+  /** @maxLength 10000 */
+  observations: string;
+  /** @maxLength 10000 */
+  nextSteps: string;
+  /** @minimum 1 */
+  revision: number;
+  updatedAt: string;
+}
+
 export type CaseLeadReviewInputReviewStatus = typeof CaseLeadReviewInputReviewStatus[keyof typeof CaseLeadReviewInputReviewStatus];
 
 
@@ -138,6 +157,7 @@ export type MissingPersonCase = MissingPersonCaseInput & {
   id: string;
   createdAt: string;
   updatedAt: string;
+  review?: CaseReview;
   leads: CaseLead[];
 };
 

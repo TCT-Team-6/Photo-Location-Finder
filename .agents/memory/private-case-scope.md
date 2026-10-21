@@ -14,3 +14,9 @@ Case data and attachments must stay owner-only, with no public demo persistence 
 **Why:** The agreed product is a private evidence workspace containing sensitive information, not a public missing-person directory.
 
 **How to apply:** Enforce ownership on the server, maintain source attribution, distinguish reported dates from file metadata, and keep any future sharing or analysis explicitly scoped and separately approved.
+
+The user approved an explicit guided manual case-review step after intake: full-size submitted photos, a timeline of reported dates, observations, and follow-up notes.
+
+**Why:** Saving a case without a clear next action felt incomplete; the user accepted guided review rather than connecting these cases to automated location analysis.
+
+**How to apply:** Make review discoverable on existing as well as newly created cases. Keep reported-taken, posted, and added-to-case dates distinct; missing dates must remain unknown. Review notes are the responder's assessment, not verified findings.

@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq, gte } from "drizzle-orm";
-import { GetMissingPersonCaseParams, GetMissingPersonCaseResponse, ListMissingPersonCasesResponse, ReviewCaseLeadBody } from "@workspace/api-zod";
+import { GetMissingPersonCaseParams, GetMissingPersonCaseResponse, ListMissingPersonCasesResponse, ReviewCaseLeadBody, SaveCaseReviewBody } from "@workspace/api-zod";
 import { caseLeadsTable, casePhotosTable, db, pendingPhotoUploadsTable, privateCasesTable, type CasePhotoData } from "@workspace/db";
 import { requireUser } from "../middlewares/requireUser";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { privateCaseInput, caseLeadInput } from "../lib/case-validation";
 import { cleanupDeletedCasePhotos } from "../lib/case-photo-cleanup";
+import { buildCaseReview } from "../lib/case-review";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -136,10 +137,26 @@ router.put("/cases/:id", action(async (req, res) => {
     if (previousPath && nextPath !== previousPath) {
       await tx.update(casePhotosTable).set({ active: false }).where(eq(casePhotosTable.objectPath, previousPath));
     }
-    await tx.update(privateCasesTable).set({ data: { ...data, clientRequestId: old.clientRequestId }, updatedAt: new Date() }).where(eq(privateCasesTable.id, id));
+    await tx.update(privateCasesTable).set({ data: { ...data, clientRequestId: old.clientRequestId, review: old.data.review }, updatedAt: new Date() }).where(eq(privateCasesTable.id, id));
   });
   res.json(await caseResponse(id, userId));
   void cleanupDeletedCasePhotos();
+}));
+
+router.patch("/cases/:id/review", action(async (req, res) => {
+  const parsed = SaveCaseReviewBody.safeParse(req.body);
+  if (!parsed.success) throw new InputError(400, "Enter observations and follow-up notes of at most 10,000 characters each, with a valid review revision.");
+  const id = String(req.params.id);
+  const userId: string = res.locals.userId;
+  await db.transaction(async (tx) => {
+    const old = await lockCase(tx, id, userId);
+    const review = buildCaseReview(old.data.review, parsed.data);
+    if (!review) throw new InputError(409, "A newer review was saved in another tab or session. Your draft is unchanged. Load the latest saved review before merging your changes.");
+    await tx.update(privateCasesTable).set({
+      data: { ...old.data, review }, updatedAt: new Date(),
+    }).where(eq(privateCasesTable.id, id));
+  });
+  res.json(await caseResponse(id, userId));
 }));
 
 router.delete("/cases/:id", action(async (req, res) => {

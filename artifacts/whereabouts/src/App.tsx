@@ -39,6 +39,7 @@ import { readPhotoTakenDate } from '@/lib/photo-date';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
 import CaseDetailPage from '@/features/cases/case-detail-page';
+import CaseReviewPage from '@/features/cases/case-review-page';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -346,6 +347,7 @@ function ClerkProviderWithRoutes() {
       <Route path="/library" component={LibraryRoute} />
       <Route path="/cases" component={CasesRoute} />
       <Route path="/cases/new" component={NewCaseRoute} />
+      <Route path="/cases/:id/review" component={CaseReviewRoute} />
       <Route path="/cases/:id" component={CaseDetailRoute} />
       <Route path="/settings" component={SettingsRoute} />
       <Route path="/desk/:deskId" component={FieldDeskRoute} />
@@ -365,6 +367,7 @@ function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></A
 function CasesRoute() { return <Protected><AppShell><CasesPage /></AppShell></Protected>; }
 function NewCaseRoute() { return <Protected><AppShell><NewCasePage /></AppShell></Protected>; }
 function CaseDetailRoute() { return <Protected><AppShell><CaseDetailPage /></AppShell></Protected>; }
+function CaseReviewRoute() { return <Protected><AppShell><CaseReviewPage /></AppShell></Protected>; }
 function LibraryRoute() { return <Protected><AppShell><LibraryPage /></AppShell></Protected>; }
 function SettingsRoute() { return <Protected><AppShell><SettingsPage /></AppShell></Protected>; }
 function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }

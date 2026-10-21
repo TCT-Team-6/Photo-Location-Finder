@@ -22,6 +22,7 @@ import type {
 import type {
   CaseLeadInput,
   CaseLeadReviewInput,
+  CaseReviewInput,
   ErrorEnvelope,
   HealthStatus,
   Investigation,
@@ -436,6 +437,89 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteMissingPersonCaseMutationOptions(options));
+    }
+
+export const getSaveCaseReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/cases/${id}/review`
+}
+
+export const saveCaseReview = async (id: string,
+    caseReviewInput: CaseReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MissingPersonCase>(getSaveCaseReviewUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseReviewInput)
+  }
+);}
+
+
+
+
+
+export const getSaveCaseReviewMutationKey = () => ['saveCaseReview'] as const;
+
+export const getSaveCaseReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCaseReview>>, TError,SaveCaseReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCaseReview>>, TError,SaveCaseReviewMutationVariables, TContext> => {
+
+const mutationKey = getSaveCaseReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCaseReview>>, SaveCaseReviewMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveCaseReview(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCaseReviewMutationResult = NonNullable<Awaited<ReturnType<typeof saveCaseReview>>>
+    export type SaveCaseReviewMutationBody = BodyType<CaseReviewInput>
+    export type SaveCaseReviewMutationError = ErrorType<void>
+    export type SaveCaseReviewMutationVariables = {id: string;data: BodyType<CaseReviewInput>}
+
+    export const useSaveCaseReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCaseReview>>, TError,SaveCaseReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCaseReview>>,
+        TError,
+        SaveCaseReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveCaseReviewMutationOptions(options));
     }
 
 export const getCreateCaseLeadUrl = (id: string,) => {
