@@ -36,6 +36,9 @@ import { AnalysisFailed, AnalysisProgress, type AnalysisStage } from '@/componen
 import { BestGuessCard } from '@/components/best-guess-card';
 import { buildLeadSummary } from '@/lib/lead-summary';
 import { readPhotoTakenDate } from '@/lib/photo-date';
+import CasesPage from '@/features/cases/cases-page';
+import NewCasePage from '@/features/cases/new-case-page';
+import CaseDetailPage from '@/features/cases/case-detail-page';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -341,6 +344,9 @@ function ClerkProviderWithRoutes() {
       <Route path="/user-portal" component={PortalRoute} />
       <Route path="/investigate" component={InvestigateRoute} />
       <Route path="/library" component={LibraryRoute} />
+      <Route path="/cases" component={CasesRoute} />
+      <Route path="/cases/new" component={NewCaseRoute} />
+      <Route path="/cases/:id" component={CaseDetailRoute} />
       <Route path="/settings" component={SettingsRoute} />
       <Route path="/desk/:deskId" component={FieldDeskRoute} />
       <Route path="/investigation/:id/location/:index" component={LeadLocationRoute} />
@@ -356,6 +362,9 @@ function Protected({ children }: { children: ReactNode }) {
 
 function PortalRoute() { return <Protected><AppShell><DashboardPage /></AppShell></Protected>; }
 function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></AppShell></Protected>; }
+function CasesRoute() { return <Protected><AppShell><CasesPage /></AppShell></Protected>; }
+function NewCaseRoute() { return <Protected><AppShell><NewCasePage /></AppShell></Protected>; }
+function CaseDetailRoute() { return <Protected><AppShell><CaseDetailPage /></AppShell></Protected>; }
 function LibraryRoute() { return <Protected><AppShell><LibraryPage /></AppShell></Protected>; }
 function SettingsRoute() { return <Protected><AppShell><SettingsPage /></AppShell></Protected>; }
 function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }
@@ -409,6 +418,7 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/user-portal', label: 'Overview', icon: <Compass size={17} /> },
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
+    { href: '/cases', label: 'Cases', icon: <ShieldCheck size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
@@ -479,7 +489,8 @@ function DashboardPage() {
   return <div className="fade-up">
     <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your field desk.</h1><p className="mt-3 text-sm text-[#718078]">A little further along the trail.</p></div>
-      <Link href="/investigate" data-testid="button-start-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:-translate-y-0.5 hover:bg-[#2e5044]"><ImagePlus size={16} />Start an investigation <ArrowRight size={16} /></Link>
+      <div className="flex flex-wrap gap-3"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
+      <Link href="/investigate" data-testid="button-start-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:-translate-y-0.5 hover:bg-[#2e5044]"><ImagePlus size={16} />Start an investigation <ArrowRight size={16} /></Link></div>
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
       : summary.isError ? <div className="mb-8"><QueryError retry={() => summary.refetch()} text="Your archive summary is taking a moment." /></div>

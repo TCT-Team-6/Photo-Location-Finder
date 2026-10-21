@@ -15,6 +15,106 @@ tags:
   - name: Investigations
     description: Photo location investigations and the user's saved library.
 paths:
+  /cases:
+    get:
+      operationId: listMissingPersonCases
+      tags: [Cases]
+      responses:
+        "200":
+          description: Private cases owned by the signed-in user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MissingPersonCase" }
+    post:
+      operationId: createMissingPersonCase
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MissingPersonCaseInput" }
+      responses:
+        "201":
+          description: Private case saved, or previously saved request returned.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+  /cases/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    get:
+      operationId: getMissingPersonCase
+      tags: [Cases]
+      responses:
+        "200":
+          description: Private case and its submitted leads.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    put:
+      operationId: updateMissingPersonCase
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MissingPersonCaseInput" }
+      responses:
+        "200":
+          description: Case details updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    delete:
+      operationId: deleteMissingPersonCase
+      tags: [Cases]
+      responses:
+        "204": { description: Case and leads deleted. }
+  /cases/{id}/leads:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    post:
+      operationId: createCaseLead
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseLeadInput" }
+      responses:
+        "201":
+          description: Lead saved without external fetching or analysis.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+  /cases/{id}/leads/{leadId}:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+      - name: leadId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: reviewCaseLead
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseLeadReviewInput" }
+      responses:
+        "200":
+          description: Responder's relevance assessment saved; not an independent verification.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    delete:
+      operationId: deleteCaseLead
+      tags: [Cases]
+      responses:
+        "204": { description: Lead deleted. }
   /healthz:
     get:
       operationId: healthCheck
@@ -255,6 +355,75 @@ components:
         type: string
         format: uuid
   schemas:
+    CaseLeadReviewInput:
+      type: object
+      required: [reviewStatus]
+      properties:
+        reviewStatus: { type: string, enum: [needs-verification, relevant, unrelated] }
+    CasePhoto:
+      type: object
+      required: [objectPath, originalName, contentType]
+      properties:
+        objectPath: { type: string, pattern: "^/objects/uploads/[a-f0-9-]+$", maxLength: 200 }
+        originalName: { type: string, minLength: 1, maxLength: 255 }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+    MissingPersonCaseInput:
+      type: object
+      required: [clientRequestId, firstName, responderRole, privacyAcknowledged]
+      properties:
+        clientRequestId: { type: string, format: uuid }
+        firstName: { type: string, minLength: 1, maxLength: 80 }
+        lastName: { type: string, maxLength: 80 }
+        nickname: { type: string, maxLength: 80 }
+        ageDescription: { type: string, maxLength: 40 }
+        lastKnownDate: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        lastKnownArea: { type: string, maxLength: 160 }
+        responderRole: { type: string, enum: [family-or-guardian, authorized-responder, other] }
+        officialReference: { type: string, maxLength: 120 }
+        notes: { type: string, maxLength: 3000 }
+        privacyAcknowledged: { type: boolean, enum: [true] }
+        headshot:
+          anyOf:
+            - $ref: "#/components/schemas/CasePhoto"
+            - { type: "null" }
+    CaseLeadInput:
+      type: object
+      required: [clientRequestId, kind, title, source, permissionGranted]
+      properties:
+        clientRequestId: { type: string, format: uuid }
+        kind: { type: string, enum: [photo, link, tip] }
+        title: { type: string, minLength: 1, maxLength: 160 }
+        source: { type: string, minLength: 1, maxLength: 200 }
+        sourceUrl: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 3000 }
+        reportedTakenOn: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        postedOn: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        permissionGranted: { type: boolean, enum: [true] }
+        photo:
+          anyOf:
+            - $ref: "#/components/schemas/CasePhoto"
+            - { type: "null" }
+    CaseLead:
+      allOf:
+        - $ref: "#/components/schemas/CaseLeadInput"
+        - type: object
+          required: [id, reviewStatus, createdAt]
+          properties:
+            id: { type: string, format: uuid }
+            reviewStatus: { type: string, enum: [needs-verification, relevant, unrelated] }
+            createdAt: { type: string, format: date-time }
+    MissingPersonCase:
+      allOf:
+        - $ref: "#/components/schemas/MissingPersonCaseInput"
+        - type: object
+          required: [id, createdAt, updatedAt, leads]
+          properties:
+            id: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            leads:
+              type: array
+              items: { $ref: "#/components/schemas/CaseLead" }
     HealthStatus:
       type: object
       properties:

@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "python-base-3.13"]
 
 [deployment]
 router = "application"
@@ -20,4 +20,4 @@ path = "scripts/post-merge.sh"
 timeoutMs = 20000
 
 [objectStorage]
-defaultBucketID = "replit-objstore-ec4e8bcb-b068-4804-9a79-ce1793a1477b"
+defaultBucketID = "replit-objstore-6d1046b7-220e-4a57-af7a-85e88eab12e7"

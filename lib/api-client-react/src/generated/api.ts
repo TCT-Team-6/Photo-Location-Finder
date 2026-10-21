@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CaseLeadInput,
+  CaseLeadReviewInput,
   ErrorEnvelope,
   HealthStatus,
   Investigation,
@@ -27,6 +29,8 @@ import type {
   InvestigationSummary,
   InvestigationUpdate,
   ListInvestigationsParams,
+  MissingPersonCase,
+  MissingPersonCaseInput,
   RefreshInvestigationCandidatesInput,
   UploadUrlRequest,
   UploadUrlResponse
@@ -58,6 +62,619 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListMissingPersonCasesUrl = () => {
+
+
+
+
+  return `/api/cases`
+}
+
+export const listMissingPersonCases = async ( options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase[]> => {
+
+  return customFetch<MissingPersonCase[]>(getListMissingPersonCasesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMissingPersonCasesQueryKey = () => {
+    return [
+    `/api/cases`
+    ] as const;
+    }
+
+
+export const getListMissingPersonCasesQueryOptions = <TData = Awaited<ReturnType<typeof listMissingPersonCases>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMissingPersonCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMissingPersonCasesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMissingPersonCases>>> = ({ signal }) => listMissingPersonCases({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMissingPersonCases>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMissingPersonCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listMissingPersonCases>>>
+export type ListMissingPersonCasesQueryError = ErrorType<unknown>
+
+
+
+export function useListMissingPersonCases<TData = Awaited<ReturnType<typeof listMissingPersonCases>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMissingPersonCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMissingPersonCasesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateMissingPersonCaseUrl = () => {
+
+
+
+
+  return `/api/cases`
+}
+
+export const createMissingPersonCase = async (missingPersonCaseInput: MissingPersonCaseInput, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MissingPersonCase>(getCreateMissingPersonCaseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(missingPersonCaseInput)
+  }
+);}
+
+
+
+
+
+export const getCreateMissingPersonCaseMutationKey = () => ['createMissingPersonCase'] as const;
+
+export const getCreateMissingPersonCaseMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMissingPersonCase>>, TError,CreateMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMissingPersonCase>>, TError,CreateMissingPersonCaseMutationVariables, TContext> => {
+
+const mutationKey = getCreateMissingPersonCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMissingPersonCase>>, CreateMissingPersonCaseMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMissingPersonCase(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMissingPersonCaseMutationResult = NonNullable<Awaited<ReturnType<typeof createMissingPersonCase>>>
+    export type CreateMissingPersonCaseMutationBody = BodyType<MissingPersonCaseInput>
+    export type CreateMissingPersonCaseMutationError = ErrorType<unknown>
+    export type CreateMissingPersonCaseMutationVariables = {data: BodyType<MissingPersonCaseInput>}
+
+    export const useCreateMissingPersonCase = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMissingPersonCase>>, TError,CreateMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMissingPersonCase>>,
+        TError,
+        CreateMissingPersonCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateMissingPersonCaseMutationOptions(options));
+    }
+
+export const getGetMissingPersonCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/cases/${id}`
+}
+
+export const getMissingPersonCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+  return customFetch<MissingPersonCase>(getGetMissingPersonCaseUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMissingPersonCaseQueryKey = (id: string,) => {
+    return [
+    `/api/cases/${id}`
+    ] as const;
+    }
+
+
+export const getGetMissingPersonCaseQueryOptions = <TData = Awaited<ReturnType<typeof getMissingPersonCase>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMissingPersonCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMissingPersonCaseQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMissingPersonCase>>> = ({ signal }) => getMissingPersonCase(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMissingPersonCase>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMissingPersonCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getMissingPersonCase>>>
+export type GetMissingPersonCaseQueryError = ErrorType<unknown>
+
+
+
+export function useGetMissingPersonCase<TData = Awaited<ReturnType<typeof getMissingPersonCase>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMissingPersonCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMissingPersonCaseQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateMissingPersonCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/cases/${id}`
+}
+
+export const updateMissingPersonCase = async (id: string,
+    missingPersonCaseInput: MissingPersonCaseInput, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MissingPersonCase>(getUpdateMissingPersonCaseUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(missingPersonCaseInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateMissingPersonCaseMutationKey = () => ['updateMissingPersonCase'] as const;
+
+export const getUpdateMissingPersonCaseMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMissingPersonCase>>, TError,UpdateMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMissingPersonCase>>, TError,UpdateMissingPersonCaseMutationVariables, TContext> => {
+
+const mutationKey = getUpdateMissingPersonCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMissingPersonCase>>, UpdateMissingPersonCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateMissingPersonCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMissingPersonCaseMutationResult = NonNullable<Awaited<ReturnType<typeof updateMissingPersonCase>>>
+    export type UpdateMissingPersonCaseMutationBody = BodyType<MissingPersonCaseInput>
+    export type UpdateMissingPersonCaseMutationError = ErrorType<unknown>
+    export type UpdateMissingPersonCaseMutationVariables = {id: string;data: BodyType<MissingPersonCaseInput>}
+
+    export const useUpdateMissingPersonCase = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMissingPersonCase>>, TError,UpdateMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMissingPersonCase>>,
+        TError,
+        UpdateMissingPersonCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateMissingPersonCaseMutationOptions(options));
+    }
+
+export const getDeleteMissingPersonCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/cases/${id}`
+}
+
+export const deleteMissingPersonCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteMissingPersonCaseUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMissingPersonCaseMutationKey = () => ['deleteMissingPersonCase'] as const;
+
+export const getDeleteMissingPersonCaseMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMissingPersonCase>>, TError,DeleteMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMissingPersonCase>>, TError,DeleteMissingPersonCaseMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMissingPersonCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMissingPersonCase>>, DeleteMissingPersonCaseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMissingPersonCase(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMissingPersonCaseMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMissingPersonCase>>>
+
+    export type DeleteMissingPersonCaseMutationError = ErrorType<unknown>
+    export type DeleteMissingPersonCaseMutationVariables = {id: string}
+
+    export const useDeleteMissingPersonCase = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMissingPersonCase>>, TError,DeleteMissingPersonCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMissingPersonCase>>,
+        TError,
+        DeleteMissingPersonCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMissingPersonCaseMutationOptions(options));
+    }
+
+export const getCreateCaseLeadUrl = (id: string,) => {
+
+
+
+
+  return `/api/cases/${id}/leads`
+}
+
+export const createCaseLead = async (id: string,
+    caseLeadInput: CaseLeadInput, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MissingPersonCase>(getCreateCaseLeadUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseLeadInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCaseLeadMutationKey = () => ['createCaseLead'] as const;
+
+export const getCreateCaseLeadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCaseLead>>, TError,CreateCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCaseLead>>, TError,CreateCaseLeadMutationVariables, TContext> => {
+
+const mutationKey = getCreateCaseLeadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCaseLead>>, CreateCaseLeadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createCaseLead(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCaseLeadMutationResult = NonNullable<Awaited<ReturnType<typeof createCaseLead>>>
+    export type CreateCaseLeadMutationBody = BodyType<CaseLeadInput>
+    export type CreateCaseLeadMutationError = ErrorType<unknown>
+    export type CreateCaseLeadMutationVariables = {id: string;data: BodyType<CaseLeadInput>}
+
+    export const useCreateCaseLead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCaseLead>>, TError,CreateCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCaseLead>>,
+        TError,
+        CreateCaseLeadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCaseLeadMutationOptions(options));
+    }
+
+export const getReviewCaseLeadUrl = (id: string,
+    leadId: string,) => {
+
+
+
+
+  return `/api/cases/${id}/leads/${leadId}`
+}
+
+export const reviewCaseLead = async (id: string,
+    leadId: string,
+    caseLeadReviewInput: CaseLeadReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<MissingPersonCase> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MissingPersonCase>(getReviewCaseLeadUrl(id,leadId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(caseLeadReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewCaseLeadMutationKey = () => ['reviewCaseLead'] as const;
+
+export const getReviewCaseLeadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewCaseLead>>, TError,ReviewCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewCaseLead>>, TError,ReviewCaseLeadMutationVariables, TContext> => {
+
+const mutationKey = getReviewCaseLeadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewCaseLead>>, ReviewCaseLeadMutationVariables> = (props) => {
+          const {id,leadId,data} = props ?? {};
+
+          return  reviewCaseLead(id,leadId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewCaseLeadMutationResult = NonNullable<Awaited<ReturnType<typeof reviewCaseLead>>>
+    export type ReviewCaseLeadMutationBody = BodyType<CaseLeadReviewInput>
+    export type ReviewCaseLeadMutationError = ErrorType<unknown>
+    export type ReviewCaseLeadMutationVariables = {id: string;leadId: string;data: BodyType<CaseLeadReviewInput>}
+
+    export const useReviewCaseLead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewCaseLead>>, TError,ReviewCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewCaseLead>>,
+        TError,
+        ReviewCaseLeadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewCaseLeadMutationOptions(options));
+    }
+
+export const getDeleteCaseLeadUrl = (id: string,
+    leadId: string,) => {
+
+
+
+
+  return `/api/cases/${id}/leads/${leadId}`
+}
+
+export const deleteCaseLead = async (id: string,
+    leadId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteCaseLeadUrl(id,leadId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCaseLeadMutationKey = () => ['deleteCaseLead'] as const;
+
+export const getDeleteCaseLeadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCaseLead>>, TError,DeleteCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCaseLead>>, TError,DeleteCaseLeadMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCaseLeadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCaseLead>>, DeleteCaseLeadMutationVariables> = (props) => {
+          const {id,leadId} = props ?? {};
+
+          return  deleteCaseLead(id,leadId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCaseLeadMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCaseLead>>>
+
+    export type DeleteCaseLeadMutationError = ErrorType<unknown>
+    export type DeleteCaseLeadMutationVariables = {id: string;leadId: string}
+
+    export const useDeleteCaseLead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCaseLead>>, TError,DeleteCaseLeadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCaseLead>>,
+        TError,
+        DeleteCaseLeadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCaseLeadMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

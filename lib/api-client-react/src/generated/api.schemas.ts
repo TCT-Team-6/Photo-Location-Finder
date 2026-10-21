@@ -5,6 +5,142 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type CaseLeadReviewInputReviewStatus = typeof CaseLeadReviewInputReviewStatus[keyof typeof CaseLeadReviewInputReviewStatus];
+
+
+export const CaseLeadReviewInputReviewStatus = {
+  'needs-verification': 'needs-verification',
+  relevant: 'relevant',
+  unrelated: 'unrelated',
+} as const;
+
+export interface CaseLeadReviewInput {
+  reviewStatus: CaseLeadReviewInputReviewStatus;
+}
+
+export type CasePhotoContentType = typeof CasePhotoContentType[keyof typeof CasePhotoContentType];
+
+
+export const CasePhotoContentType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+} as const;
+
+export interface CasePhoto {
+  /**
+     * @maxLength 200
+     * @pattern ^/objects/uploads/[a-f0-9-]+$
+     */
+  objectPath: string;
+  /**
+     * @minLength 1
+     * @maxLength 255
+     */
+  originalName: string;
+  contentType: CasePhotoContentType;
+}
+
+export type MissingPersonCaseInputResponderRole = typeof MissingPersonCaseInputResponderRole[keyof typeof MissingPersonCaseInputResponderRole];
+
+
+export const MissingPersonCaseInputResponderRole = {
+  'family-or-guardian': 'family-or-guardian',
+  'authorized-responder': 'authorized-responder',
+  other: 'other',
+} as const;
+
+export interface MissingPersonCaseInput {
+  clientRequestId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  firstName: string;
+  /** @maxLength 80 */
+  lastName?: string;
+  /** @maxLength 80 */
+  nickname?: string;
+  /** @maxLength 40 */
+  ageDescription?: string;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  lastKnownDate?: string | null;
+  /** @maxLength 160 */
+  lastKnownArea?: string;
+  responderRole: MissingPersonCaseInputResponderRole;
+  /** @maxLength 120 */
+  officialReference?: string;
+  /** @maxLength 3000 */
+  notes?: string;
+  privacyAcknowledged: true;
+  headshot?: CasePhoto | null;
+}
+
+export type CaseLeadInputKind = typeof CaseLeadInputKind[keyof typeof CaseLeadInputKind];
+
+
+export const CaseLeadInputKind = {
+  photo: 'photo',
+  link: 'link',
+  tip: 'tip',
+} as const;
+
+export interface CaseLeadInput {
+  clientRequestId: string;
+  kind: CaseLeadInputKind;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  source: string;
+  /** @maxLength 2000 */
+  sourceUrl?: string;
+  /** @maxLength 3000 */
+  notes?: string;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  reportedTakenOn?: string | null;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  postedOn?: string | null;
+  permissionGranted: true;
+  photo?: CasePhoto | null;
+}
+
+export type CaseLeadReviewStatus = typeof CaseLeadReviewStatus[keyof typeof CaseLeadReviewStatus];
+
+
+export const CaseLeadReviewStatus = {
+  'needs-verification': 'needs-verification',
+  relevant: 'relevant',
+  unrelated: 'unrelated',
+} as const;
+
+export type CaseLead = CaseLeadInput & {
+  id: string;
+  reviewStatus: CaseLeadReviewStatus;
+  createdAt: string;
+};
+
+export type MissingPersonCase = MissingPersonCaseInput & {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  leads: CaseLead[];
+};
+
 export interface HealthStatus {
   status: string;
 }

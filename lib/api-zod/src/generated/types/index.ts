@@ -6,6 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './caseLead';
+export * from './caseLeadInput';
+export * from './caseLeadInputKind';
+export * from './caseLeadReviewInput';
+export * from './caseLeadReviewInputReviewStatus';
+export * from './caseLeadReviewStatus';
+export * from './casePhoto';
+export * from './casePhotoContentType';
 export * from './errorEnvelope';
 export * from './healthStatus';
 export * from './investigation';
@@ -19,6 +27,9 @@ export * from './listInvestigationsParams';
 export * from './locationCandidate';
 export * from './locationCandidatePhotoSearchStatus';
 export * from './locationPhotoReference';
+export * from './missingPersonCase';
+export * from './missingPersonCaseInput';
+export * from './missingPersonCaseInputResponderRole';
 export * from './refreshInvestigationCandidatesInput';
 export * from './uploadUrlRequest';
 export * from './uploadUrlRequestContentType';
