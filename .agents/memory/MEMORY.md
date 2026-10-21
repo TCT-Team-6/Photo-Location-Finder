@@ -1,3 +1,4 @@
 - [OpenAI access](openai-access.md) — Do not retry the declined Replit AI setup; collect the user's provider key only through secure secrets, never chat.
+- [Demo and account privacy](product-experience.md) — Demo projects are not saved; display names differ from login identity; personal key overrides are temporary.
 - [React and Vite cache](react-vite-cache.md) — If React versions match but the browser reports a mismatch, check Vite's cached prebundle before changing packages again.
 - [pnpm workspace manifest](pnpm-workspace-install.md) — Review shared workspace config after package adds; the installed pnpm version may rewrite unrelated formatting and comments.

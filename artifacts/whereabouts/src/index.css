@@ -371,11 +371,6 @@
 [data-app-theme="ocean"] [class~="bg-[#3b5d50]"] { background-color: #164454 !important; }
 [data-app-theme="sunset"] [class~="bg-[#3b5d50]"] { background-color: #60352c !important; }
 
-[data-app-font] .cl-socialButtonsBlockButtonText,
-[data-app-font] .cl-alternativeMethodsBlockButtonText,
-[data-app-font] .cl-formFieldHintText,
-[data-app-font] .cl-identityPreviewText { color: #000 !important; }
-
 [data-high-contrast="true"] [class~="text-[#718078]"],
 [data-high-contrast="true"] [class~="text-[#596d61]"],
 [data-high-contrast="true"] [class~="text-[#66796e]"],
