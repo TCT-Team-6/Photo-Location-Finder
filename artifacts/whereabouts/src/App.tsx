@@ -32,13 +32,17 @@ import {
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
+import { AnalysisFailed, AnalysisProgress, type AnalysisStage } from '@/components/analysis-status';
+import { BestGuessCard } from '@/components/best-guess-card';
+import { buildLeadSummary } from '@/lib/lead-summary';
+import { readPhotoTakenDate } from '@/lib/photo-date';
 import './index.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
 });
-type AppPreferences = { theme: 'field' | 'ocean' | 'sunset' | 'mono'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
-const defaultPreferences: AppPreferences = { theme: 'field', highContrast: false, font: 'default' };
+type AppPreferences = { theme: 'rescue' | 'field' | 'ocean' | 'sunset' | 'mono'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
+const defaultPreferences: AppPreferences = { theme: 'rescue', highContrast: false, font: 'default' };
 const ApiKeyContext = createContext<{ apiKey: string; setApiKey: (value: string) => void }>({ apiKey: '', setApiKey: () => {} });
 function useApiKey() { return useContext(ApiKeyContext); }
 const PreferencesContext = createContext<{ preferences: AppPreferences; setPreferences: (next: AppPreferences) => void }>({
@@ -482,7 +486,7 @@ function DashboardPage() {
       : <div className="mb-9 grid gap-4 sm:grid-cols-3">
         <Stat label="Saved investigations" value={summary.data?.total ?? 0} caption="Places worth remembering" icon={<Layers3 size={18} />} />
         <Stat label="This month" value={summary.data?.thisMonth ?? 0} caption="New trails opened" icon={<Crosshair size={18} />} />
-        <div className="relative overflow-hidden rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="contour absolute inset-0 opacity-35" /><div className="relative"><p className="font-data text-[9px] uppercase tracking-[.17em] text-[#d78b5a]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest?.title ?? 'Your first clue is waiting'}</p><p className="mt-1 text-xs text-[#c1cdbf]">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#e3a274]">Open trail <ArrowRight size={14} /></Link>}</div></div>
+        <div className="relative overflow-hidden rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="contour absolute inset-0 opacity-35" /><div className="relative"><p className="font-data text-[9px] uppercase tracking-[.17em] text-[#d78b5a]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs text-[#c1cdbf]">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#e3a274]">Open trail <ArrowRight size={14} /></Link>}</div></div>
       </div>}
     <div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
@@ -534,8 +538,8 @@ function InvestigationCard({
       <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[9px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
     </div>
     <div className="p-5">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{item.title}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
-      <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.summary || 'A collection of clues is ready to explore.'}</p>
+      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{displayTitle(item.title)}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
+      <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · model score {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
       <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
   </article>;
@@ -597,6 +601,10 @@ function InvestigatePage() {
   const [batchStatus, setBatchStatus] = useState('');
   const [progress, setProgress] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [stage, setStage] = useState<AnalysisStage>('uploading');
+  const [startedAt, setStartedAt] = useState(0);
+  const [failureMessage, setFailureMessage] = useState('');
+  const [dateFromPhoto, setDateFromPhoto] = useState(false);
   const [slotErrors, setSlotErrors] = useState<
     Partial<Record<PhotoUploadSlotId, string>>
   >({});
@@ -649,6 +657,12 @@ function InvestigatePage() {
     }
     setFiles((current) => ({ ...current, [slotId]: selected }));
     setRequestIds((current) => ({ ...current, [slotId]: crypto.randomUUID() }));
+    setFailureMessage('');
+    if (!shotAt || dateFromPhoto) {
+      void readPhotoTakenDate(selected).then((taken) => {
+        if (taken) { setShotAt(taken); setDateFromPhoto(true); }
+      });
+    }
   };
   const removeSelectedFile = (slotId: PhotoUploadSlotId) => {
     setFiles((current) => ({ ...current, [slotId]: null }));
@@ -660,6 +674,7 @@ function InvestigatePage() {
     event.preventDefault();
     setLocalError('');
     setBatchStatus('');
+    setFailureMessage('');
     setSavedInvestigations([]);
     const selected = investigationPhotoSlots.flatMap((slot) => {
       const file = files[slot.id];
@@ -678,6 +693,8 @@ function InvestigatePage() {
     }
 
     setSubmitting(true);
+    setStage('uploading');
+    setStartedAt(Date.now());
     let reportIdToOpen: string | null = null;
     try {
       const { created, failed } = await processInvestigationPhotoUploads({
@@ -702,7 +719,10 @@ function InvestigatePage() {
           }
         },
         createInvestigation: (variables) => create.mutateAsync(variables),
-        onProgress: setProgress,
+        onProgress: (message) => {
+          setProgress(message);
+          setStage(message.startsWith('Analyzing') ? 'analyzing' : 'uploading');
+        },
         onSaved: (slotId) => {
           setFiles((current) => ({ ...current, [slotId]: null }));
           setRequestIds((current) => ({ ...current, [slotId]: null }));
@@ -727,7 +747,8 @@ function InvestigatePage() {
           );
         }
       } else {
-        setLocalError('No investigations were saved. Review the highlighted upload and try again.');
+        const reasons = [...new Set(Object.values(failed).filter(Boolean))];
+        setFailureMessage(reasons.join(' ') || 'The location service could not finish. This is usually temporary.');
       }
     } finally {
       setSubmitting(false);
@@ -739,7 +760,7 @@ function InvestigatePage() {
   return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
      <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation searches public image pages for possible source images. It does not estimate the scene’s real-world location.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
-    <form onSubmit={submit} className="space-y-6">
+    <form id="investigate-form" onSubmit={submit} className="space-y-6">
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
           <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Choose a field desk</p>
@@ -785,14 +806,18 @@ function InvestigatePage() {
         <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Shared case name <span className="font-normal text-[#97a095]">optional</span></label>
         <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-xs text-[#87938a]">Each title also includes its upload label; without a name, the photo filename is used.</p>
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know?</label>
+        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know? <span className="font-normal text-[#97a095]">optional</span></label>
+        <p className="mt-1 text-xs text-[#87938a]">Saved with your report so the whole story stays together. The location finder looks only at the photo.</p>
         <textarea id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-right font-data text-[9px] text-[#a1a79d]">{context.length} / 3000</p>
         {activeSlotId === 'fake-news' && <><label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="journalism-question">Ask the image analyst a question <span className="font-normal text-[#97a095]">optional</span></label><textarea id="journalism-question" value={journalismQuestion} maxLength={1000} onChange={(event) => setJournalismQuestion(event.target.value)} rows={3} placeholder="What detail in this photo could reveal when it was taken?" data-testid="input-journalism-question" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></>}
         <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span></label>
-        <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => setShotAt(event.target.value)} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
+        <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => { setShotAt(event.target.value); setDateFromPhoto(false); }} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
+        {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
-        <button type="submit" disabled={pending} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70">
+        {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} />}
+        {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
+        <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage)} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
         </button>
          <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId === 'original' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
@@ -974,8 +999,8 @@ function InvestigationPage() {
   return <div className="fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><h1 className="mt-3 max-w-4xl font-editorial text-5xl tracking-[-.05em] md:text-6xl" data-testid="text-detail-title">{item.title}</h1><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
-      <div className="flex gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
+      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><h1 className="mt-3 max-w-4xl font-editorial text-5xl tracking-[-.05em] md:text-6xl" data-testid="text-detail-title">{displayTitle(item.title)}</h1><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
+      <div className="flex gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
     </div>
     {message && <p role="status" data-testid="status-investigation-update" className="mb-5 rounded-xl border border-[#c8d4c4] bg-[#edf2e9] px-4 py-3 text-sm text-[#476450]">{message}</p>}
     {editing && <form onSubmit={saveDetails} className="mb-7 grid gap-4 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 md:grid-cols-[.8fr_1.2fr_auto] md:items-end">
@@ -983,6 +1008,7 @@ function InvestigationPage() {
       <label className="block text-xs font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
       <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
+    {item.desk === 'original' && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
     <div className="grid items-start gap-7 lg:grid-cols-[1.05fr_.95fr]">
       <div>
         <div className="photo-frame relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl border border-[#d8d1c2] bg-[#e5e3d6] p-4 md:min-h-[490px]">
@@ -1017,6 +1043,7 @@ function InvestigationPage() {
           <h2 className="mt-2 font-editorial text-3xl">Visual assessment, not proof</h2>
           <p className="mt-3 text-sm leading-6 text-[#596d61]">The model assesses visible signs of editing, CGI, or AI generation. It cannot authenticate a photograph from pixels alone; check the original file, provenance, and independent sources.</p>
         </section> : <>
+        {rankedLeads[0] && <div className="hidden lg:block"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
         <div className="mb-4 flex items-end justify-between gap-3"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-refresh-location-leads" className="shrink-0 rounded-full border border-[#c9c7b7] px-3 py-2 text-[10px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Searching…' : 'Try different leads'}</button></div>
         {refreshMessage && <p role="status" className="mb-3 text-xs leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
         <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
@@ -1106,6 +1133,11 @@ function LeadLocationPage() {
   </article>;
 }
 
+/** Hides the desk name the upload code puts in front of every title ("Investigations — My trip" → "My trip"). */
+function displayTitle(title: string) {
+  return title.replace(/^(Investigations|Recreation|Investigative journalism) — /, '') || title;
+}
+
 function humanizeClueText(value: string) {
   const readable = value.replaceAll('_', ' ').replace(/\s+/g, ' ').trim();
   return readable ? readable[0].toLocaleUpperCase() + readable.slice(1) : readable;
@@ -1134,6 +1166,7 @@ function SettingsPage() {
       <h2 className="font-editorial text-2xl">Color theme</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {([
+          ['rescue', 'Rescue (demo)', '#ff6a13', '#0b1a2e'],
           ['field', 'Field notebook', '#385e51', '#f4f0e6'],
           ['ocean', 'Coastal blue', '#23617a', '#edf5f7'],
           ['sunset', 'Warm clay', '#8b4939', '#f8eee8'],
@@ -1165,7 +1198,9 @@ function SettingsPage() {
 }
 
 function formatDate(value: string) {
-  const date = new Date(value);
+  // "2007-06-03" (a date with no time) must stay on that day in every time zone.
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const date = dateOnly ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])) : new Date(value);
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
 }
 
