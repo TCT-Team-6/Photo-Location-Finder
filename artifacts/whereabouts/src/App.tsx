@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -802,7 +802,14 @@ function InvestigatePage() {
         </div>
       </section>
       <div className="desk-theme-panel mx-auto max-w-[720px] rounded-3xl border p-6 transition-colors duration-300 md:p-7">
-        <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Set the scene</p>
+        <details className="optional-details group" data-testid="details-optional-fields">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl" data-testid="toggle-optional-fields">
+          <span className="min-w-0">
+            <span className="desk-theme-eyebrow block font-data text-[9px] uppercase tracking-[.2em]">Add details <span className="normal-case tracking-normal">· optional</span></span>
+            <span className="mt-1 block truncate text-xs text-[#718078]">{[title.trim() && 'Case name', context.trim() && 'Notes', activeSlotId === 'fake-news' && journalismQuestion.trim() && 'Question', shotAt && (dateFromPhoto ? 'Date (from photo)' : 'Date')].filter(Boolean).join(' · ') || 'Case name, what you already know, date taken'}</span>
+          </span>
+          <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-[#718078] transition-transform group-open:rotate-180" />
+        </summary>
         <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Shared case name <span className="font-normal text-[#97a095]">optional</span></label>
         <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-xs text-[#87938a]">Each title also includes its upload label; without a name, the photo filename is used.</p>
@@ -814,6 +821,7 @@ function InvestigatePage() {
         <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span></label>
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => { setShotAt(event.target.value); setDateFromPhoto(false); }} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
+        </details>
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} />}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
