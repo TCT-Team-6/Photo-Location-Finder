@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   pipelineLinks, pipelineStatuses, pipelineSteps, stageAnnouncement, statusText,
+  pipelineTools, pipelineToolNote,
 } from "../components/analysis-progress-model";
 
 test("the overview always contains five distinct workflow stages", () => {
@@ -28,4 +29,24 @@ test("screen-reader announcements describe only observed request states", () => 
   assert.equal(stageAnnouncement("uploading"), "Uploading your photo.");
   assert.match(stageAnnouncement("analyzing"), /waiting for the response/i);
   assert.doesNotMatch(stageAnnouncement("analyzing"), /report saved|matching complete|ranked|%/i);
+});
+
+test("location-analysis labels do not invent undisclosed AI models", () => {
+  const tools = pipelineTools("original");
+  assert.equal(tools.length, 5);
+  assert.equal(tools[1].label, "Image Locator");
+  assert.match(tools[1].detail, /undisclosed/);
+  assert.match(tools[0].detail, /no AI/);
+  assert.equal(tools[4].label, "PostgreSQL");
+  assert.match(tools[4].detail, /no AI/);
+  assert.match(pipelineToolNote("original"), /Optional.*OpenAI web search/);
+});
+
+test("desk-specific labels distinguish source search from image-integrity review", () => {
+  const recreation = pipelineTools("recreation");
+  const journalism = pipelineTools("fake-news");
+  assert.equal(recreation[2].label, "OpenAI web search");
+  assert.equal(journalism[2].label, "OpenAI vision");
+  assert.doesNotMatch(JSON.stringify(journalism), /Image Locator|web search/);
+  assert.match(pipelineToolNote("fake-news"), /server configuration/);
 });

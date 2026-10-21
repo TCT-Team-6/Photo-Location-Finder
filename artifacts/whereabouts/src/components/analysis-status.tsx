@@ -5,9 +5,12 @@ import {
   pipelineLinks,
   pipelineStatuses,
   pipelineSteps,
+  pipelineTools,
+  pipelineToolNote,
   stageAnnouncement,
   statusText,
   type AnalysisStage,
+  type AnalysisDesk,
 } from "./analysis-progress-model";
 
 export type { AnalysisStage };
@@ -25,10 +28,12 @@ export function AnalysisProgress({
   stage,
   startedAt,
   photoCount,
+  desk = "original",
 }: {
   stage: AnalysisStage;
   startedAt: number;
   photoCount: number;
+  desk?: AnalysisDesk;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -38,6 +43,7 @@ export function AnalysisProgress({
   const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000));
   const statuses = pipelineStatuses(stage);
   const links = pipelineLinks(stage);
+  const tools = pipelineTools(desk);
 
   return (
     <section
@@ -82,12 +88,15 @@ export function AnalysisProgress({
                 )}
                 <span className="ap-label">
                   {step.label}
+                  <span className="ap-tool">{tools[index].label}</span>
+                  <span className="ap-tool-note">{tools[index].detail}</span>
                   <span className="ap-state">{statusText(status)}</span>
                 </span>
               </li>
             );
           })}
         </ol>
+        <p className="ap-tool-disclosure">{pipelineToolNote(desk)}</p>
       </div>
       {elapsed > 150 && (
         <p className="mt-4 text-xs text-[#718078]">

@@ -616,6 +616,7 @@ function InvestigatePage() {
   const [progress, setProgress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<AnalysisStage>('uploading');
+  const [analysisDesk, setAnalysisDesk] = useState<PhotoUploadSlotId>('original');
   const [startedAt, setStartedAt] = useState(0);
   const [failureMessage, setFailureMessage] = useState('');
   const [dateFromPhoto, setDateFromPhoto] = useState(false);
@@ -733,7 +734,8 @@ function InvestigatePage() {
           }
         },
         createInvestigation: (variables) => create.mutateAsync(variables),
-        onProgress: (message) => {
+        onProgress: (message, slotId) => {
+          setAnalysisDesk(slotId);
           setProgress(message);
           setStage(message.startsWith('Analyzing') ? 'analyzing' : 'uploading');
         },
@@ -837,7 +839,7 @@ function InvestigatePage() {
         {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
         </details>
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
-        {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} />}
+        {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} desk={analysisDesk} />}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
         <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage)} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}

@@ -49,6 +49,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
   for (const slotIds of combinations) {
     const uploadRequests: UploadUrlRequest[] = [];
     const investigationInputs: InvestigationInput[] = [];
+    const progressDesks: PhotoUploadSlotId[] = [];
     let uploadNumber = 0;
 
     const options: InvestigationPhotoUploadOptions = {
@@ -58,6 +59,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
       journalismQuestion: "  Is the shadow direction consistent?  ",
       shotAt: "2024-03-05",
       getContentType: validContentType,
+      onProgress: (_message, desk) => { progressDesks.push(desk); },
       requestUploadUrl: async ({ data }) => {
         uploadRequests.push(data);
         uploadNumber += 1;
@@ -79,6 +81,7 @@ test("creates one distinct investigation with shared metadata for every non-empt
     assert.equal(result.created.length, slotIds.length);
     assert.deepEqual(Object.keys(result.failed), []);
     assert.equal(uploadRequests.length, slotIds.length);
+    assert.deepEqual(progressDesks, slotIds.flatMap((desk) => [desk, desk]));
     assert.equal(investigationInputs.length, slotIds.length);
     assert.equal(new Set(investigationInputs.map((input) => input.objectPath)).size, slotIds.length);
     assert.deepEqual(
