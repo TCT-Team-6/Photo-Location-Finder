@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, LoaderCircle, RotateCcw } from "lucide-react";
+import { AlertTriangle, Check, Eye, FileText, ListOrdered, RotateCcw, Search, Upload } from "lucide-react";
+import "./analysis-progress.css";
+import {
+  pipelineLinks,
+  pipelineStatuses,
+  pipelineSteps,
+  stageAnnouncement,
+  statusText,
+  type AnalysisStage,
+} from "./analysis-progress-model";
 
-export type AnalysisStage = "uploading" | "analyzing";
+export type { AnalysisStage };
 
-const steps: { id: AnalysisStage | "saving"; label: string }[] = [
-  { id: "uploading", label: "Uploading the photo" },
-  { id: "analyzing", label: "Reading clues and matching places" },
-  { id: "saving", label: "Saving your report" },
-];
+const stepIcons = [Upload, Eye, Search, ListOrdered, FileText];
 
 function formatElapsed(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -31,15 +36,16 @@ export function AnalysisProgress({
     return () => window.clearInterval(timer);
   }, []);
   const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000));
-  const activeIndex = steps.findIndex((step) => step.id === stage);
+  const statuses = pipelineStatuses(stage);
+  const links = pipelineLinks(stage);
 
   return (
     <section
-      role="status"
-      aria-live="polite"
       data-testid="panel-analysis-progress"
-      className="mt-6 rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] p-5"
+      className="ap-root mt-6 rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] p-5"
     >
+      <div className="ap-grid" aria-hidden="true" />
+      <p className="ap-sr" role="status" aria-live="polite">{stageAnnouncement(stage)}</p>
       <div className="flex items-baseline justify-between gap-4">
         <p className="font-editorial text-2xl text-[#263d36]">
           Looking for clues{photoCount > 1 ? ` in ${photoCount} photos` : ""}…
@@ -51,25 +57,38 @@ export function AnalysisProgress({
       <p className="mt-1 text-xs text-[#718078]">
         This usually takes 1–3 minutes. Please keep this page open.
       </p>
-      <ol className="mt-4 space-y-2">
-        {steps.map((step, index) => {
-          const done = index < activeIndex;
-          const active = index === activeIndex;
-          return (
-            <li key={step.id} className="flex items-center gap-3 text-sm">
-              <span
-                className={`progress-step-dot ${done ? "bg-[#385e51] text-[#f4f0e6]" : active ? "border-2 border-[#385e51] text-[#385e51]" : "border border-[#c9c3b4]"}`}
-                aria-hidden="true"
+      <div className="ap-panel">
+        <p className="ap-eyebrow">Pipeline overview</p>
+        <p className="ap-note">
+          Animation illustrates the workflow; individual backend stages are not reported live.
+        </p>
+        <ol className="ap-track" aria-label="Pipeline overview">
+          {pipelineSteps.map((step, index) => {
+            const status = statuses[index];
+            const Icon = stepIcons[index];
+            return (
+              <li
+                key={step.id}
+                className="ap-step"
+                data-status={status}
+                data-link={index < links.length ? links[index] : undefined}
+                aria-current={status === "active" ? "step" : undefined}
               >
-                {done ? <Check size={13} strokeWidth={3} /> : active ? <LoaderCircle size={13} className="animate-spin" /> : null}
-              </span>
-              <span className={active ? "font-semibold text-[#263d36]" : done ? "text-[#263d36]" : "text-[#718078]"}>
-                {step.label}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+                <span className="ap-node" aria-hidden="true">
+                  {status === "done" ? <Check size={16} strokeWidth={3} /> : <Icon size={16} />}
+                </span>
+                {index < links.length && (
+                  <span className="ap-link" aria-hidden="true"><i /></span>
+                )}
+                <span className="ap-label">
+                  {step.label}
+                  <span className="ap-state">{statusText(status)}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
       {elapsed > 150 && (
         <p className="mt-4 text-xs text-[#718078]">
           Still working — busy times can take longer. If it fails, your photo stays selected so you can try again.

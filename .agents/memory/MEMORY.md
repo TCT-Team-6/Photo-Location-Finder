@@ -3,3 +3,4 @@
 - [React and Vite cache](react-vite-cache.md) — If React versions match but the browser reports a mismatch, check Vite's cached prebundle before changing packages again.
 - [pnpm workspace manifest](pnpm-workspace-install.md) — Review shared workspace config after package adds; the installed pnpm version may rewrite unrelated formatting and comments.
 - [Private case scope](private-case-scope.md) — Missing-person intake organizes authorized evidence; no social crawling, face matching, or automatic location analysis.
+- [Loading progress integrity](progress-integrity.md) — Pipeline animation is illustrative unless backed by real stage events; never fabricate completion or percentages.
