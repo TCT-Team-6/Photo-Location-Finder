@@ -14,3 +14,17 @@ mtime_ms = 1793005846341
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/a0e6044b-01c5-48e7-891a-2608e508758e/efd45341-869e-4b59-b352-6771dad8d05e"
 storage_version_token = "1793005898962459"
 content_type = "image/png"
+
+[[outputs]]
+id = "fhvhJRkqAX9_sgI47yR1a"
+uri = "file://attached_assets/generated_images/whereabouts-investigation-thumbnail.png"
+type = "image"
+title = "Whereabouts — Investigative Thumbnail"
+description = "Revised App Challenge thumbnail highlighting missing-person search leads, geographic clues in photos, and possible search areas."
+logical_id = "dd3d03d5-2d50-4b60-bad1-01ca0654229f"
+content_hash = "sha256:f2741648787ae0c0e103b7575b0d76a5dc54a26839b5a9a1cfcb4201a598bcb6"
+size = 1528212
+mtime_ms = 1793006155877
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/dd3d03d5-2d50-4b60-bad1-01ca0654229f/d1e87d92-98cf-4de4-8f07-75634380bc64"
+storage_version_token = "1793006171975768"
+content_type = "image/png"
