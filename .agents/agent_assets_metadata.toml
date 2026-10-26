@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "B44yfjNqUI63pOmgJtBeC"
+uri = "file://attached_assets/generated_images/whereabouts-challenge-thumbnail.png"
+type = "image"
+title = "Whereabouts — App Challenge Thumbnail"
+description = "A submission-ready PNG featuring Whereabouts branding and a photo-to-map illustration, with the tagline “Discover the place behind the photo.”"
+logical_id = "a0e6044b-01c5-48e7-891a-2608e508758e"
+content_hash = "sha256:bbeb41c8c5f05fa32a48040162f2bc0a159fb564ab09cc85c7233671664880e6"
+size = 1460673
+mtime_ms = 1793005846341
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/a0e6044b-01c5-48e7-891a-2608e508758e/efd45341-869e-4b59-b352-6771dad8d05e"
+storage_version_token = "1793005898962459"
+content_type = "image/png"
