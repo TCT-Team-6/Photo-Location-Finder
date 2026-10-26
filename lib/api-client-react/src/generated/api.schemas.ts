@@ -248,6 +248,133 @@ export interface VisualClue {
   significance: string;
 }
 
+export type InvestigationAnalysisSearchAreasItem = {
+  /** @minimum 1 */
+  rank?: number;
+  /** @maxLength 1200 */
+  name?: string;
+  /** @maxLength 1200 */
+  country?: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+  /** @minimum 0 */
+  search_radius_km?: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  score?: number;
+  /** @maxLength 1200 */
+  map_status?: string;
+};
+
+export type InvestigationAnalysisRejectedItem = {
+  /** @maxLength 1200 */
+  name?: string;
+  /** @maxLength 1200 */
+  reason?: string;
+};
+
+export type InvestigationAnalysisNearbyPlacesItem = {
+  /** @maxLength 1200 */
+  title?: string;
+  /** @minimum 0 */
+  distance_km?: number;
+};
+
+export type InvestigationAnalysisForensics = {
+  has_gps?: boolean;
+  /** @maxLength 1200 */
+  authenticity?: string;
+  edited?: boolean;
+  is_screenshot?: boolean;
+  metadata_stripped?: boolean;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  notes?: string[];
+};
+
+export type InvestigationAnalysisReasoningTraceItem = {
+  /** @maxLength 1200 */
+  stage?: string;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  details?: string[];
+  /** @maxLength 1200 */
+  step?: string;
+  /** @maxLength 1200 */
+  detail?: string;
+};
+
+export type InvestigationAnalysisDetailsExif = {
+  /** @maxLength 1200 */
+  timestamp?: string;
+};
+
+export type InvestigationAnalysisDetails = {
+  exif?: InvestigationAnalysisDetailsExif;
+};
+
+/**
+ * Optional sanitized Image Locator metadata. Provider claims are not independent verification.
+ * @nullable
+ */
+export type InvestigationAnalysis = {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+  /** @maxLength 2000 */
+  map_url?: string;
+  /** @maxLength 1200 */
+  address?: string;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  confidence?: number;
+  /** @maxLength 1200 */
+  source?: string;
+  /** @maxLength 1200 */
+  verified?: string;
+  /** @maxLength 1200 */
+  warning?: string;
+  meets_defined_radius?: boolean;
+  /** @minimum 0 */
+  defined_radius_km?: number;
+  /** @minimum 0 */
+  precision_m?: number;
+  elevation_m?: number;
+  /** @maxItems 10 */
+  search_areas?: InvestigationAnalysisSearchAreasItem[];
+  /** @maxItems 10 */
+  rejected?: InvestigationAnalysisRejectedItem[];
+  /** @maxItems 10 */
+  nearby_places?: InvestigationAnalysisNearbyPlacesItem[];
+  forensics?: InvestigationAnalysisForensics;
+  /** @maxItems 10 */
+  reasoning_trace?: InvestigationAnalysisReasoningTraceItem[];
+  details?: InvestigationAnalysisDetails;
+} | null;
+
 export type InvestigationDesk = typeof InvestigationDesk[keyof typeof InvestigationDesk];
 
 
@@ -270,6 +397,7 @@ export interface Investigation {
   summary: string;
   candidates: LocationCandidate[];
   clues: VisualClue[];
+  analysis?: InvestigationAnalysis | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -19,6 +19,7 @@ import {
   db,
   investigationsTable,
   pendingPhotoUploadsTable,
+  type InvestigationAnalysis,
   type LocationCandidate,
   type VisualClue,
 } from "@workspace/db";
@@ -250,11 +251,13 @@ router.post(
       let summary: string;
       let clues: VisualClue[];
       let analysisCandidates: LocationCandidate[];
+      let analysisMetadata: InvestigationAnalysis | null = null;
       if (parsed.data.desk === "original") {
         const analysis = await analyzeImageLocation(buffer, contentType, originalName);
         summary = analysis.summary;
         clues = analysis.clues;
         analysisCandidates = analysis.candidates;
+        analysisMetadata = analysis.analysis;
       } else {
         if (!apiKey) throw new Error("Image source search and journalism review require an OpenAI connection.");
         const openAIClient = new OpenAI({ apiKey });
@@ -332,6 +335,7 @@ router.post(
           summary,
           candidates,
           clues,
+          analysis: analysisMetadata,
         })
         .onConflictDoNothing({
           target: [
@@ -469,7 +473,12 @@ router.post(
       }));
       const summary = `The Image Locator service refreshed the leads. ${candidates[0].place} is the strongest new location lead.`;
       const [updated] = await db.update(investigationsTable)
-        .set({ candidates, summary, updatedAt: new Date() })
+        .set({
+          candidates,
+          summary,
+          ...(investigation.desk === "original" ? { analysis: analysis.analysis } : {}),
+          updatedAt: new Date(),
+        })
         .where(and(eq(investigationsTable.id, investigation.id), eq(investigationsTable.userId, userId)))
         .returning();
       if (!updated) {

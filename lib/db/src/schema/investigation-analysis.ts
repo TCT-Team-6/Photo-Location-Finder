@@ -1,0 +1,42 @@
+/** Sanitized, optional metadata reported by Image Locator; not independent verification. */
+export type InvestigationAnalysis = {
+  latitude?: number;
+  longitude?: number;
+  map_url?: string;
+  address?: string;
+  confidence?: number;
+  source?: string;
+  verified?: string;
+  warning?: string;
+  meets_defined_radius?: boolean;
+  defined_radius_km?: number;
+  precision_m?: number;
+  elevation_m?: number;
+  search_areas?: {
+    rank?: number;
+    name?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+    search_radius_km?: number;
+    score?: number;
+    map_status?: string;
+  }[];
+  rejected?: { name?: string; reason?: string }[];
+  nearby_places?: { title?: string; distance_km?: number }[];
+  forensics?: {
+    has_gps?: boolean;
+    authenticity?: string;
+    edited?: boolean;
+    is_screenshot?: boolean;
+    metadata_stripped?: boolean;
+    notes?: string[];
+  };
+  reasoning_trace?: {
+    stage?: string;
+    details?: string[];
+    step?: string;
+    detail?: string;
+  }[];
+  details?: { exif?: { timestamp?: string } };
+};

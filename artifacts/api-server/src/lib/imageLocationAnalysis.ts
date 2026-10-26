@@ -1,13 +1,15 @@
-import type { LocationCandidate, VisualClue } from "@workspace/db";
+import type { InvestigationAnalysis, LocationCandidate, VisualClue } from "@workspace/db";
+import { extractImageLocationMetadata } from "./imageLocationMetadata";
 
-const LOCATION_ANALYZER_URL =
-  "https://mit-app-inventor-backend.onrender.com/analyze";
+const DEFAULT_IMAGE_LOCATOR_URL =
+  "https://mit-app-inventor-backend.onrender.com";
 const MAX_ANALYZER_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export type ImageLocationAnalysis = {
   summary: string;
   candidates: LocationCandidate[];
   clues: VisualClue[];
+  analysis: InvestigationAnalysis;
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -284,6 +286,7 @@ export function normalizeImageLocationResponse(
         : "The Image Locator service returned no likely location."),
     candidates: normalizedCandidates,
     clues: visualClues(vision, body),
+    analysis: extractImageLocationMetadata(body),
   };
 }
 
@@ -303,7 +306,10 @@ export async function analyzeImageLocation(
 
   let response: Response;
   try {
-    response = await fetch(LOCATION_ANALYZER_URL, {
+    const baseUrl = process.env.IMAGE_LOCATOR_URL?.trim() || DEFAULT_IMAGE_LOCATOR_URL;
+    // Accept either the documented service base URL or an explicit /analyze URL.
+    const endpoint = `${baseUrl.replace(/\/+$/, "").replace(/\/analyze$/, "")}/analyze`;
+    response = await fetch(endpoint, {
       method: "POST",
       body: form,
       signal: AbortSignal.timeout(180_000),

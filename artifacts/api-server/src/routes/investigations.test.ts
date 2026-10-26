@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import express from "express";
 import { mock, test } from "node:test";
-import type { LocationCandidate, VisualClue } from "@workspace/db";
+import type { InvestigationAnalysis, LocationCandidate, VisualClue } from "@workspace/db";
+import { GetInvestigationResponse, ListInvestigationsResponse } from "@workspace/api-zod";
 import {
   investigationsTable,
   pendingPhotoUploadsTable,
@@ -12,6 +13,7 @@ type Analysis = {
   summary: string;
   candidates: LocationCandidate[];
   clues: VisualClue[];
+  analysis?: InvestigationAnalysis;
 };
 
 const sourceImageMatch = {
@@ -22,6 +24,13 @@ const sourceImageMatch = {
 };
 
 const originalAnalysis: Analysis = {
+  analysis: {
+    latitude: 47.84, longitude: -120.02,
+    verified: "unavailable", warning: "Map service unavailable.",
+    meets_defined_radius: false, defined_radius_km: 2,
+    forensics: { has_gps: false },
+    details: { exif: { timestamp: "2026:10:25 12:30:00" } },
+  },
   summary: "Original desk summary from the image locator.",
   candidates: [{
     place: "Alpine valley",
@@ -74,6 +83,8 @@ const analyses: Record<string, Analysis> = {
 let persistedValues: Record<string, unknown> | undefined;
 let analyzerCalls: string[] = [];
 let selectQueryCount = 0;
+let selectedReport: Record<string, unknown> | undefined;
+let updatedValues: Record<string, unknown> | undefined;
 
 const mockDb = {
   select: () => ({
@@ -81,7 +92,7 @@ const mockDb = {
       where: () => ({
         limit: async () => {
           selectQueryCount += 1;
-          return selectQueryCount === 1
+          return selectedReport ? [selectedReport] : selectQueryCount === 1
             ? []
             : [{
                 objectPath: "/objects/uploads/test-photo",
@@ -110,6 +121,16 @@ const mockDb = {
   }),
   delete: () => ({
     where: async () => [],
+  }),
+  update: () => ({
+    set: (values: Record<string, unknown>) => {
+      updatedValues = values;
+      return {
+        where: () => ({
+          returning: async () => [{ ...selectedReport, ...values }],
+        }),
+      };
+    },
   }),
 };
 
@@ -255,8 +276,85 @@ async function assertDeskReportMatches(
   assert.equal(body.summary, analysis.summary);
   assert.deepEqual(body.candidates, expectedReport.candidates);
   assert.deepEqual(body.clues, analysis.clues);
+  assert.deepEqual(savedValues.analysis, desk === "original" ? analysis.analysis : null);
+  assert.deepEqual(body.analysis, desk === "original" ? analysis.analysis : null);
   assert.deepEqual(analyzerCalls, desk === "original" ? [] : [desk]);
 }
+
+function reportFixture(analysis?: InvestigationAnalysis | null): Record<string, unknown> {
+  return {
+    id: "2f61f497-e0d9-4a17-b765-74a1063bc064",
+    userId: "test-user", title: "Existing investigation", desk: "original",
+    originalName: "photo.jpg", contentType: "image/jpeg",
+    objectPath: "/objects/uploads/test-photo", context: null, shotAt: null,
+    summary: originalAnalysis.summary, candidates: originalAnalysis.candidates,
+    clues: originalAnalysis.clues,
+    createdAt: new Date("2026-10-20T12:00:00.000Z"),
+    updatedAt: new Date("2026-10-20T12:00:00.000Z"),
+    ...(analysis === undefined ? {} : { analysis }),
+  };
+}
+
+test("old investigations and new metadata survive the generated detail and list contracts", async () => {
+  try {
+    for (const metadata of [undefined, null, originalAnalysis.analysis]) {
+      selectedReport = reportFixture(metadata);
+      const response = await fetch(`http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}`);
+      assert.equal(response.status, 200);
+      const body = GetInvestigationResponse.parse(await response.json());
+      assert.equal(ListInvestigationsResponse.safeParse([body]).success, true);
+      assert.deepEqual(body.analysis, metadata);
+    }
+  } finally {
+    selectedReport = undefined;
+  }
+});
+
+test("refresh saves fresh metadata with the new leads for Original investigations", async () => {
+  try {
+    selectedReport = {
+      ...reportFixture({ verified: "verified" }),
+      candidates: [{ ...originalAnalysis.candidates[0], place: "Previous lead" }],
+    };
+    updatedValues = undefined;
+    const response = await fetch(
+      `http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}/refresh-candidates`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ excludePlaces: ["Previous lead"] }),
+      },
+    );
+    assert.equal(response.status, 200);
+    const savedUpdate = updatedValues as Record<string, unknown> | undefined;
+    assert.ok(savedUpdate);
+    assert.deepEqual(savedUpdate.analysis, originalAnalysis.analysis);
+    const body = GetInvestigationResponse.parse(await response.json());
+    assert.deepEqual(body.analysis, originalAnalysis.analysis);
+    assert.equal(body.candidates[0].place, originalAnalysis.candidates[0]?.place);
+  } finally {
+    selectedReport = undefined;
+  }
+});
+
+test("unsuccessful lead refresh leaves existing report metadata unchanged", async () => {
+  try {
+    selectedReport = reportFixture({ verified: "partial" });
+    updatedValues = undefined;
+    const response = await fetch(
+      `http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}/refresh-candidates`,
+      {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ excludePlaces: [] }),
+      },
+    );
+    assert.equal(response.status, 409);
+    assert.equal(updatedValues, undefined);
+    assert.deepEqual(selectedReport.analysis, { verified: "partial" });
+  } finally {
+    selectedReport = undefined;
+  }
+});
 
 test.after(() => {
   server.close();

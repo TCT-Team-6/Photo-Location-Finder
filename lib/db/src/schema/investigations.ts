@@ -10,6 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import type { InvestigationAnalysis } from "./investigation-analysis";
+
+export type { InvestigationAnalysis } from "./investigation-analysis";
 
 export type LocationCandidate = {
   place: string;
@@ -54,6 +57,7 @@ export const investigationsTable = pgTable(
     summary: text("summary").notNull(),
     candidates: jsonb("candidates").$type<LocationCandidate[]>().notNull(),
     clues: jsonb("clues").$type<VisualClue[]>().notNull(),
+    analysis: jsonb("analysis").$type<InvestigationAnalysis>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
