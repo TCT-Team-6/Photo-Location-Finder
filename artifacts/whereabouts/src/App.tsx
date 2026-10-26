@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { isLegacyRecreationReport } from '@/lib/recreation-purpose';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
@@ -92,7 +93,7 @@ const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
   {
     id: 'recreation',
     label: 'Recreation',
-    description: 'A recreated or staged version of the scene.',
+    description: 'A personal, travel, or leisure photo whose location you want to discover.',
   },
   {
     id: 'fake-news',
@@ -102,7 +103,7 @@ const investigationPhotoSlots: PhotoUploadSlotDefinition[] = [
 ];
 const fieldDesks = [
   { id: 'original', label: 'Investigations', shortLabel: 'Investigations', icon: <FileImage size={16} />, subtitle: 'Original image investigations' },
-  { id: 'recreation', label: 'Recreation', shortLabel: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Recreated and staged scenes' },
+  { id: 'recreation', label: 'Recreation', shortLabel: 'Recreation', icon: <Layers3 size={16} />, subtitle: 'Personal photos, travel, and leisure' },
   { id: 'fake-news', label: 'Investigative journalism', shortLabel: 'Journalism', icon: <Newspaper size={16} />, subtitle: 'Reporting images and visual leads' },
 ] satisfies { id: PhotoUploadSlotId; label: string; shortLabel: string; icon: ReactNode; subtitle: string }[];
 
@@ -783,7 +784,7 @@ function InvestigatePage() {
 
   return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-     <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation searches public image pages for possible source images. It does not estimate the scene’s real-world location.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
+     <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
     <form id="investigate-form" onSubmit={submit} className="space-y-6">
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
@@ -853,7 +854,7 @@ function InvestigatePage() {
         <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
         </button>
-         <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId === 'original' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
+         <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId !== 'fake-news' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
         {batchStatus && (
           <div
             role="status"
@@ -990,6 +991,7 @@ function InvestigationPage() {
   const [refreshMessage, setRefreshMessage] = useState('');
   const refreshCandidates = useRefreshInvestigationCandidates();
   const item = query.data;
+  const legacySourceReport = isLegacyRecreationReport(item);
   useEffect(() => {
     if (refreshMessage !== 'Checking key moments in the video… this can take a few minutes.') return;
     if (item?.status === 'done') setRefreshMessage('New location leads are ready to review.');
@@ -1062,7 +1064,7 @@ function InvestigationPage() {
       <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
     {isVideo && <><EmbeddedGpsNotice analysis={item.analysis} /><VideoAnalysisStatus item={item} retrying={retryAnalysis.isPending} retryError={retryError} onRetry={() => void retryVideo()} /></>}
-    {item.desk === 'original' && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
+    {item.desk !== 'fake-news' && !legacySourceReport && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
     <div className="grid items-start gap-7 lg:grid-cols-[1.05fr_.95fr]">
       <div>
         <div className="photo-frame relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl border border-[#d8d1c2] bg-[#e5e3d6] p-4 md:min-h-[490px]">
@@ -1071,8 +1073,8 @@ function InvestigationPage() {
         </div>
         {isVideo && <KeyMoments analysis={item.analysis} onSeek={seekTo} />}
         <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
-          <PageEyebrow>{item.desk === 'fake-news' ? 'Image integrity review' : item.desk === 'recreation' ? 'Source image search' : 'Scene notes'}</PageEyebrow>
-          {item.desk === 'original' && rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
+          <PageEyebrow>{item.desk === 'fake-news' ? 'Image integrity review' : legacySourceReport ? 'Legacy source-image report' : 'Scene notes'}</PageEyebrow>
+          {item.desk !== 'fake-news' && !legacySourceReport && rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
           <p className={`mt-2 ${item.desk === 'fake-news' ? 'whitespace-pre-wrap text-sm leading-7' : 'font-editorial text-2xl leading-[1.25]'} text-[#344b42]`} data-testid="text-investigation-summary">{sceneSummary}</p>
           <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Your notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context?.trim() || 'No notes added yet.'}</p></div>
         </section>
@@ -1082,8 +1084,12 @@ function InvestigationPage() {
         </details>
       </div>
       <div>
-        {item.desk === 'recreation' ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
-          <PageEyebrow>Look for the source</PageEyebrow>
+        {legacySourceReport ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+          <PageEyebrow>Legacy source-image report</PageEyebrow>
+          <p className="mt-3 text-xs leading-5 text-[#859187]">This report was created before Recreation was corrected to personal-photo location discovery. Its saved matches are not location findings.</p>
+          <p className="mt-2 text-xs leading-5 text-[#859187]">Re-analyzing will replace these older source matches only if new location leads are returned.</p>
+          <button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-analyze-legacy-recreation" className="mt-4 rounded-full border border-[#c9c7b7] px-4 py-2 text-xs font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Analyzing location…' : 'Find this photo’s location'}</button>
+          {refreshMessage && <p role="status" className="mt-3 text-xs leading-5 text-[#718078]">{refreshMessage}</p>}
           <h2 className="mt-2 font-editorial text-3xl">Possible original images</h2>
           <p className="mt-3 text-xs leading-5 text-[#859187]">The image analyst searched public image pages for possible source matches. These are leads, not confirmed originals.</p>
           {rankedLeads.length ? <div className="mt-4 space-y-3">{rankedLeads.map((candidate, index) => {
@@ -1147,21 +1153,22 @@ function LeadLocationPage() {
   const lead = Number.isInteger(index) ? leads[index] : undefined;
   if (!lead) return <QueryError retry={() => query.refetch()} text="This location lead is no longer available." />;
   const coordinates = coordinatesFromMapsUrl(lead.mapsUrl);
+  const legacySourceReport = isLegacyRecreationReport(query.data);
   return <article className="fade-up mx-auto max-w-3xl">
     <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
-    <PageEyebrow>{query.data.desk === 'recreation' ? `Source image search / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
+    <PageEyebrow>{legacySourceReport ? `Legacy source-image report / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
     <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">{lead.place}</h1>
-    {query.data.desk !== 'recreation' && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
+    {!legacySourceReport && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
-      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{query.data.desk === 'recreation' ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
+      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{legacySourceReport ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>
-      {query.data.desk !== 'recreation' && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
+      {!legacySourceReport && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
       <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
       {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}</>}
     </section>
-    {query.data.desk === 'recreation' ? <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+    {legacySourceReport ? <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Possible source match</p>
-      <p className="mt-3 text-sm leading-7 text-[#596d61]">Compare this public image with the uploaded recreation. A similar result does not establish that it is the source.</p>
+      <p className="mt-3 text-sm leading-7 text-[#596d61]">This older report contains source-image matches, not location findings. Return to the report to analyze the photo’s location with the corrected Recreation workflow.</p>
       {lead.photoReferences?.[0] && <a href={lead.photoReferences[0].sourceUrl} target="_blank" rel="noreferrer" className="mt-4 block overflow-hidden rounded-xl border border-[#d8d1c2]">
         <img src={lead.photoReferences[0].thumbnailUrl ?? lead.photoReferences[0].imageUrl} alt={lead.photoReferences[0].caption ?? lead.place} referrerPolicy="no-referrer" className="max-h-[480px] w-full object-contain" />
         <span className="block p-3 text-xs text-[#385e51]">Open image source: {photoReferenceHost(lead.photoReferences[0].sourceUrl)} <ArrowUpRight size={13} className="inline" /></span>
@@ -1184,7 +1191,7 @@ function LeadLocationPage() {
         : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-4 text-sm leading-6 text-[#718078]">No structured visual details were saved for this photograph, so the report cannot connect specific features in the frame to this lead.</p>}
       {lead.clues.length > 0 && <div className="mt-5 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Location-specific clues named by the analyzer</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></div>}
     </section>}
-    {query.data.desk !== 'recreation' && lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
+    {!legacySourceReport && lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
   </article>;
 }
 

@@ -317,14 +317,16 @@ router.post(
       let clues: VisualClue[];
       let analysisCandidates: LocationCandidate[];
       let analysisMetadata: InvestigationAnalysis | null = null;
-      if (parsed.data.desk === "original") {
+      if (parsed.data.desk === "original" || parsed.data.desk === "recreation") {
         const analysis = await analyzeImageLocation(buffer, contentType, originalName);
         summary = analysis.summary;
         clues = analysis.clues;
         analysisCandidates = analysis.candidates;
-        analysisMetadata = analysis.analysis;
+        analysisMetadata = parsed.data.desk === "recreation"
+          ? { ...analysis.analysis, media_type: "image" }
+          : analysis.analysis;
       } else {
-        if (!apiKey) throw new Error("Image source search and journalism review require an OpenAI connection.");
+        if (!apiKey) throw new Error("Journalism review requires an OpenAI connection.");
         const openAIClient = new OpenAI({ apiKey });
         const analysis = await analyzeDeskImage(
           openAIClient,
@@ -338,7 +340,7 @@ router.post(
         analysisCandidates = analysis.candidates;
       }
       const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
-      const candidates = parsed.data.desk === "original"
+      const candidates = parsed.data.desk !== "fake-news"
         ? await Promise.all(
         analysisCandidates.map(
           async (candidate): Promise<LocationCandidate> => {
@@ -571,7 +573,11 @@ router.post(
         .set({
           candidates,
           summary,
-          ...(investigation.desk === "original" ? { analysis: analysis.analysis } : {}),
+          ...(investigation.desk === "original" ? { analysis: analysis.analysis } :
+            investigation.desk === "recreation" ? {
+              analysis: { ...analysis.analysis, media_type: "image" as const },
+              clues: analysis.clues,
+            } : {}),
           updatedAt: new Date(),
         })
         .where(and(eq(investigationsTable.id, investigation.id), eq(investigationsTable.userId, userId)))

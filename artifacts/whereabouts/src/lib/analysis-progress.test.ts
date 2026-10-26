@@ -42,10 +42,11 @@ test("location-analysis labels do not invent undisclosed AI models", () => {
   assert.match(pipelineToolNote("original"), /Optional.*OpenAI web search/);
 });
 
-test("desk-specific labels distinguish source search from image-integrity review", () => {
+test("Recreation uses location analysis while Journalism keeps image-integrity review", () => {
   const recreation = pipelineTools("recreation");
   const journalism = pipelineTools("fake-news");
-  assert.equal(recreation[2].label, "OpenAI web search");
+  assert.deepEqual(recreation, pipelineTools("original"));
+  assert.doesNotMatch(JSON.stringify(recreation), /Source.image|Source.match/i);
   assert.equal(journalism[2].label, "OpenAI vision");
   assert.doesNotMatch(JSON.stringify(journalism), /Image Locator|web search/);
   assert.match(pipelineToolNote("fake-news"), /server configuration/);

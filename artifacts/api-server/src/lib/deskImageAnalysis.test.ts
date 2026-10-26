@@ -26,46 +26,12 @@ function mockClient(response: { output?: unknown[]; output_text?: string }) {
 
 const image = Buffer.from("test image");
 
-test("Recreation searches public source-image matches rather than locations", async () => {
-  const { client, requests } = mockClient({
-    output: [{
-      type: "web_search_call",
-      results: [{
-        type: "image_result",
-        image_url: "https://images.example/source.jpg",
-        source_website_url: "https://archive.example/photo",
-        caption: "A matching archival photograph",
-      }],
-    }],
-  });
-
-  const report = await analyzeDeskImage(client, image, "image/jpeg", "recreation");
-
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0]?.tool_choice, "required");
-  assert.match(JSON.stringify(requests[0]?.tools), /image/);
-  const prompt = requests[0]?.input?.[0]?.content?.find(
-    (item) => item.type === "input_text",
-  )?.text ?? "";
-  assert.match(prompt, /source images/i);
-  assert.match(prompt, /Do not search for the real-world location/i);
-  assert.equal(report.candidates.length, 1);
-  assert.equal(report.candidates[0]?.place, "A matching archival photograph");
-  assert.equal(report.candidates[0]?.mapsUrl, "https://archive.example/photo");
-  assert.equal(report.candidates[0]?.photoReferences?.[0]?.imageUrl, "https://images.example/source.jpg");
-  assert.match(report.summary, /none is confirmed as the original/i);
-});
-
-test("Recreation reports a clear no-result response when image search finds no matches", async () => {
-  const { client, requests } = mockClient({ output: [] });
-
-  const report = await analyzeDeskImage(client, image, "image/png", "recreation");
-
-  assert.equal(requests.length, 1);
+test("Journalism remains a visual review without reverse-image search", async () => {
+  const { client, requests } = mockClient({ output_text: '{"assessment":"No conclusive editing signs."}' });
+  const report = await analyzeDeskImage(client, image, "image/png", "fake-news");
+  assert.equal(requests[0]?.tools, undefined);
   assert.deepEqual(report.candidates, []);
-  assert.deepEqual(report.clues, []);
-  assert.match(report.summary, /No plausible original source image was found/i);
-  assert.match(report.summary, /may miss private, removed, or poorly indexed images/i);
+  assert.match(report.summary, /not forensic authentication/);
 });
 
 test("Journalism includes the supplied question and cautious limits in the report", async () => {

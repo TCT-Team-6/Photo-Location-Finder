@@ -237,12 +237,38 @@ test("create investigation persists and returns the Original desk analysis", asy
   });
 });
 
-test("create investigation persists and returns the Recreation source-image matches", async () => {
-  await assertDeskReportMatches("recreation", recreationAnalysis, recreationAnalysis);
+test("Recreation uses Image Locator for personal-photo locations, not source-image matches", async () => {
+  const callsBefore = originalAnalyzerCalls;
+  await assertDeskReportMatches("recreation", originalAnalysis, {
+    ...originalAnalysis,
+    candidates: [{
+      ...originalAnalysis.candidates[0]!,
+      photoReferences: [sourceImageMatch],
+      photoSearchStatus: "found",
+    }],
+  });
+  assert.equal(originalAnalyzerCalls, callsBefore + 1);
 });
 
 test("create investigation persists and returns the Journalism summary and clues", async () => {
   await assertDeskReportMatches("fake-news", journalismAnalysis, journalismAnalysis);
+});
+
+test("Recreation location analysis does not require an OpenAI key", async () => {
+  const previousKey = process.env.OPENAI_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  try {
+    await assertDeskReportMatches("recreation", originalAnalysis, {
+      ...originalAnalysis,
+      candidates: [{
+        ...originalAnalysis.candidates[0]!,
+        photoReferences: [],
+        photoSearchStatus: "unavailable",
+      }],
+    });
+  } finally {
+    if (previousKey !== undefined) process.env.OPENAI_API_KEY = previousKey;
+  }
 });
 
 async function assertDeskReportMatches(
@@ -281,9 +307,12 @@ async function assertDeskReportMatches(
   assert.equal(body.summary, analysis.summary);
   assert.deepEqual(body.candidates, expectedReport.candidates);
   assert.deepEqual(body.clues, analysis.clues);
-  assert.deepEqual(savedValues.analysis, desk === "original" ? analysis.analysis : null);
-  assert.deepEqual(body.analysis, desk === "original" ? analysis.analysis : null);
-  assert.deepEqual(analyzerCalls, desk === "original" ? [] : [desk]);
+  const expectedMetadata = desk === "recreation"
+    ? { ...analysis.analysis, media_type: "image" }
+    : desk === "original" ? analysis.analysis : null;
+  assert.deepEqual(savedValues.analysis, expectedMetadata);
+  assert.deepEqual(body.analysis, expectedMetadata);
+  assert.deepEqual(analyzerCalls, desk === "fake-news" ? [desk] : []);
 }
 
 function reportFixture(analysis?: InvestigationAnalysis | null): Record<string, unknown> {
@@ -356,6 +385,33 @@ test("unsuccessful lead refresh leaves existing report metadata unchanged", asyn
     assert.equal(response.status, 409);
     assert.equal(updatedValues, undefined);
     assert.deepEqual(selectedReport.analysis, { verified: "partial" });
+  } finally {
+    selectedReport = undefined;
+  }
+});
+
+test("explicit legacy Recreation reanalysis saves locations, clues and the location-report marker", async () => {
+  try {
+    selectedReport = {
+      ...reportFixture(null),
+      desk: "recreation",
+      candidates: recreationAnalysis.candidates,
+      clues: [],
+    };
+    updatedValues = undefined;
+    const response = await fetch(
+      `http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}/refresh-candidates`,
+      {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ excludePlaces: [] }),
+      },
+    );
+    assert.equal(response.status, 200);
+    const saved = GetInvestigationResponse.parse(await response.json());
+    assert.equal(saved.desk, "recreation");
+    assert.equal(saved.analysis?.media_type, "image");
+    assert.deepEqual(saved.clues, originalAnalysis.clues);
+    assert.equal(saved.candidates[0]?.place, originalAnalysis.candidates[0]?.place);
   } finally {
     selectedReport = undefined;
   }
