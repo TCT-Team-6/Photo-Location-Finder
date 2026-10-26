@@ -184,6 +184,12 @@ export const UploadUrlRequestContentType = {
   'image/x-tiff': 'image/x-tiff',
   'image/heic': 'image/heic',
   'image/heif': 'image/heif',
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+  'video/x-matroska': 'video/x-matroska',
+  'video/x-msvideo': 'video/x-msvideo',
+  'video/3gpp': 'video/3gpp',
 } as const;
 
 export interface UploadUrlRequest {
@@ -194,7 +200,7 @@ export interface UploadUrlRequest {
   name: string;
   /**
      * @minimum 1
-     * @maximum 26214400
+     * @maximum 62914560
      */
   size: number;
   contentType: UploadUrlRequestContentType;
@@ -247,6 +253,50 @@ export interface VisualClue {
   observation: string;
   significance: string;
 }
+
+export type InvestigationAnalysisMediaType = typeof InvestigationAnalysisMediaType[keyof typeof InvestigationAnalysisMediaType];
+
+
+export const InvestigationAnalysisMediaType = {
+  video: 'video',
+  image: 'image',
+} as const;
+
+export type InvestigationAnalysisVideoEmbeddedGps = {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+};
+
+export type InvestigationAnalysisVideo = {
+  /** @minimum 0 */
+  duration_s?: number;
+  /** @minimum 0 */
+  fps?: number;
+  /** @minimum 0 */
+  frames_analyzed?: number;
+  embedded_gps?: InvestigationAnalysisVideoEmbeddedGps;
+};
+
+export type InvestigationAnalysisContributingFramesItem = {
+  /** @minimum 0 */
+  index?: number;
+  /** @minimum 0 */
+  timestamp_s?: number;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  candidates?: string[];
+  clues_found?: boolean;
+};
 
 export type InvestigationAnalysisSearchAreasItem = {
   /** @minimum 1 */
@@ -332,6 +382,10 @@ export type InvestigationAnalysisDetails = {
  * @nullable
  */
 export type InvestigationAnalysis = {
+  media_type?: InvestigationAnalysisMediaType;
+  video?: InvestigationAnalysisVideo;
+  /** @maxItems 10 */
+  contributing_frames?: InvestigationAnalysisContributingFramesItem[];
   /**
      * @minimum -90
      * @maximum 90
@@ -375,6 +429,18 @@ export type InvestigationAnalysis = {
   details?: InvestigationAnalysisDetails;
 } | null;
 
+/**
+ * @nullable
+ */
+export type InvestigationStatus = typeof InvestigationStatus[keyof typeof InvestigationStatus] | null;
+
+
+export const InvestigationStatus = {
+  analyzing: 'analyzing',
+  done: 'done',
+  failed: 'failed',
+} as const;
+
 export type InvestigationDesk = typeof InvestigationDesk[keyof typeof InvestigationDesk];
 
 
@@ -385,6 +451,10 @@ export const InvestigationDesk = {
 } as const;
 
 export interface Investigation {
+  /** @nullable */
+  status?: InvestigationStatus;
+  /** @nullable */
+  analysisError?: string | null;
   id: string;
   title: string;
   desk: InvestigationDesk;
@@ -417,6 +487,12 @@ export const InvestigationInputContentType = {
   'image/x-tiff': 'image/x-tiff',
   'image/heic': 'image/heic',
   'image/heif': 'image/heif',
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+  'video/x-matroska': 'video/x-matroska',
+  'video/x-msvideo': 'video/x-msvideo',
+  'video/3gpp': 'video/3gpp',
 } as const;
 
 export type InvestigationInputDesk = typeof InvestigationInputDesk[keyof typeof InvestigationInputDesk];
@@ -481,6 +557,10 @@ export interface InvestigationSummary {
   thisMonth: number;
   latest: Investigation | null;
 }
+
+export type GetLocatorHealth200 = {
+  video_enabled: boolean;
+};
 
 export type ListInvestigationsParams = {
 /**

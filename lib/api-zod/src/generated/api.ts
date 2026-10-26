@@ -8,6 +8,227 @@
 import * as zod from 'zod';
 
 
+/**
+ * @summary Check Image Locator video availability
+ */
+export const GetLocatorHealthResponse = zod.object({
+  "video_enabled": zod.boolean()
+})
+
+
+/**
+ * @summary Retry a failed saved video analysis
+ */
+export const RetryInvestigationAnalysisParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const retryInvestigationAnalysisResponseCandidatesItemConfidenceMin = 0;
+export const retryInvestigationAnalysisResponseCandidatesItemConfidenceMax = 1;
+
+export const retryInvestigationAnalysisResponseAnalysisVideoDurationSMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisVideoFpsMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const retryInvestigationAnalysisResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisContributingFramesMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisLatitudeMin = -90;
+export const retryInvestigationAnalysisResponseAnalysisLatitudeMax = 90;
+
+export const retryInvestigationAnalysisResponseAnalysisLongitudeMin = -180;
+export const retryInvestigationAnalysisResponseAnalysisLongitudeMax = 180;
+
+export const retryInvestigationAnalysisResponseAnalysisMapUrlMax = 2000;
+
+export const retryInvestigationAnalysisResponseAnalysisAddressMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisConfidenceMin = 0;
+export const retryInvestigationAnalysisResponseAnalysisConfidenceMax = 1;
+
+export const retryInvestigationAnalysisResponseAnalysisSourceMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisVerifiedMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisWarningMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisDefinedRadiusKmMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisPrecisionMMin = 0;
+
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemNameMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemCountryMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMin = -90;
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMax = 90;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemLongitudeMin = -180;
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemLongitudeMax = 180;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemSearchRadiusKmMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemScoreMin = 0;
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemScoreMax = 1;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasItemMapStatusMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisSearchAreasMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisRejectedItemNameMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisRejectedItemReasonMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisRejectedMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisNearbyPlacesItemTitleMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisNearbyPlacesItemDistanceKmMin = 0;
+
+export const retryInvestigationAnalysisResponseAnalysisNearbyPlacesMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisForensicsAuthenticityMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisForensicsNotesItemMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisForensicsNotesMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceItemStageMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailsItemMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailsMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceItemStepMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailMax = 1200;
+
+export const retryInvestigationAnalysisResponseAnalysisReasoningTraceMax = 10;
+
+export const retryInvestigationAnalysisResponseAnalysisDetailsExifTimestampMax = 1200;
+
+
+
+export const RetryInvestigationAnalysisResponse = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
+  "id": zod.string().uuid(),
+  "title": zod.string(),
+  "desk": zod.enum(['original', 'recreation', 'fake-news']),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "context": zod.string().nullable(),
+  "shotAt": zod.coerce.date().nullable(),
+  "summary": zod.string(),
+  "candidates": zod.array(zod.object({
+  "place": zod.string(),
+  "region": zod.string().nullable(),
+  "country": zod.string().nullable(),
+  "confidence": zod.number().min(retryInvestigationAnalysisResponseCandidatesItemConfidenceMin).max(retryInvestigationAnalysisResponseCandidatesItemConfidenceMax),
+  "rationale": zod.string(),
+  "clues": zod.array(zod.string()),
+  "mapsUrl": zod.string().url(),
+  "photoReferences": zod.array(zod.object({
+  "imageUrl": zod.string().url(),
+  "thumbnailUrl": zod.string().url().nullish(),
+  "sourceUrl": zod.string().url(),
+  "caption": zod.string().nullish()
+})).optional(),
+  "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
+})),
+  "clues": zod.array(zod.object({
+  "label": zod.string(),
+  "observation": zod.string(),
+  "significance": zod.string()
+})),
+  "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(retryInvestigationAnalysisResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(retryInvestigationAnalysisResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(retryInvestigationAnalysisResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesItemMax)).max(retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(retryInvestigationAnalysisResponseAnalysisContributingFramesMax).optional(),
+  "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisLatitudeMax).optional(),
+  "longitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisLongitudeMin).max(retryInvestigationAnalysisResponseAnalysisLongitudeMax).optional(),
+  "map_url": zod.string().url().max(retryInvestigationAnalysisResponseAnalysisMapUrlMax).optional(),
+  "address": zod.string().max(retryInvestigationAnalysisResponseAnalysisAddressMax).optional(),
+  "confidence": zod.number().min(retryInvestigationAnalysisResponseAnalysisConfidenceMin).max(retryInvestigationAnalysisResponseAnalysisConfidenceMax).optional(),
+  "source": zod.string().max(retryInvestigationAnalysisResponseAnalysisSourceMax).optional(),
+  "verified": zod.string().max(retryInvestigationAnalysisResponseAnalysisVerifiedMax).optional(),
+  "warning": zod.string().max(retryInvestigationAnalysisResponseAnalysisWarningMax).optional(),
+  "meets_defined_radius": zod.boolean().optional(),
+  "defined_radius_km": zod.number().min(retryInvestigationAnalysisResponseAnalysisDefinedRadiusKmMin).optional(),
+  "precision_m": zod.number().min(retryInvestigationAnalysisResponseAnalysisPrecisionMMin).optional(),
+  "elevation_m": zod.number().optional(),
+  "search_areas": zod.array(zod.object({
+  "rank": zod.number().int().min(1).optional(),
+  "name": zod.string().max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemNameMax).optional(),
+  "country": zod.string().max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemCountryMax).optional(),
+  "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMax).optional(),
+  "longitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLongitudeMin).max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLongitudeMax).optional(),
+  "search_radius_km": zod.number().min(retryInvestigationAnalysisResponseAnalysisSearchAreasItemSearchRadiusKmMin).optional(),
+  "score": zod.number().min(retryInvestigationAnalysisResponseAnalysisSearchAreasItemScoreMin).max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemScoreMax).optional(),
+  "map_status": zod.string().max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemMapStatusMax).optional()
+})).max(retryInvestigationAnalysisResponseAnalysisSearchAreasMax).optional(),
+  "rejected": zod.array(zod.object({
+  "name": zod.string().max(retryInvestigationAnalysisResponseAnalysisRejectedItemNameMax).optional(),
+  "reason": zod.string().max(retryInvestigationAnalysisResponseAnalysisRejectedItemReasonMax).optional()
+})).max(retryInvestigationAnalysisResponseAnalysisRejectedMax).optional(),
+  "nearby_places": zod.array(zod.object({
+  "title": zod.string().max(retryInvestigationAnalysisResponseAnalysisNearbyPlacesItemTitleMax).optional(),
+  "distance_km": zod.number().min(retryInvestigationAnalysisResponseAnalysisNearbyPlacesItemDistanceKmMin).optional()
+})).max(retryInvestigationAnalysisResponseAnalysisNearbyPlacesMax).optional(),
+  "forensics": zod.object({
+  "has_gps": zod.boolean().optional(),
+  "authenticity": zod.string().max(retryInvestigationAnalysisResponseAnalysisForensicsAuthenticityMax).optional(),
+  "edited": zod.boolean().optional(),
+  "is_screenshot": zod.boolean().optional(),
+  "metadata_stripped": zod.boolean().optional(),
+  "notes": zod.array(zod.string().max(retryInvestigationAnalysisResponseAnalysisForensicsNotesItemMax)).max(retryInvestigationAnalysisResponseAnalysisForensicsNotesMax).optional()
+}).optional(),
+  "reasoning_trace": zod.array(zod.object({
+  "stage": zod.string().max(retryInvestigationAnalysisResponseAnalysisReasoningTraceItemStageMax).optional(),
+  "details": zod.array(zod.string().max(retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailsItemMax)).max(retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailsMax).optional(),
+  "step": zod.string().max(retryInvestigationAnalysisResponseAnalysisReasoningTraceItemStepMax).optional(),
+  "detail": zod.string().max(retryInvestigationAnalysisResponseAnalysisReasoningTraceItemDetailMax).optional()
+})).max(retryInvestigationAnalysisResponseAnalysisReasoningTraceMax).optional(),
+  "details": zod.object({
+  "exif": zod.object({
+  "timestamp": zod.string().max(retryInvestigationAnalysisResponseAnalysisDetailsExifTimestampMax).optional()
+}).optional()
+}).optional()
+}).nullish().describe('Optional sanitized Image Locator metadata. Provider claims are not independent verification.'),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
 export const listMissingPersonCasesResponseOneFirstNameMax = 80;
 
 export const listMissingPersonCasesResponseOneLastNameMax = 80;
@@ -854,19 +1075,19 @@ export const HealthCheckResponse = zod.object({
  */
 export const requestUploadUrlBodyNameMax = 255;
 
-export const requestUploadUrlBodySizeMax = 26214400;
+export const requestUploadUrlBodySizeMax = 62914560;
 
 
 
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).max(requestUploadUrlBodyNameMax),
   "size": zod.number().int().min(1).max(requestUploadUrlBodySizeMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif'])
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp'])
 })
 
 export const requestUploadUrlResponseMetadataNameMax = 255;
 
-export const requestUploadUrlResponseMetadataSizeMax = 26214400;
+export const requestUploadUrlResponseMetadataSizeMax = 62914560;
 
 
 
@@ -876,7 +1097,7 @@ export const RequestUploadUrlResponse = zod.object({
   "metadata": zod.object({
   "name": zod.string().min(1).max(requestUploadUrlResponseMetadataNameMax),
   "size": zod.number().int().min(1).max(requestUploadUrlResponseMetadataSizeMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif'])
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp'])
 }).optional()
 })
 
@@ -894,6 +1115,28 @@ export const ListInvestigationsQueryParams = zod.object({
 
 export const listInvestigationsResponseCandidatesItemConfidenceMin = 0;
 export const listInvestigationsResponseCandidatesItemConfidenceMax = 1;
+
+export const listInvestigationsResponseAnalysisVideoDurationSMin = 0;
+
+export const listInvestigationsResponseAnalysisVideoFpsMin = 0;
+
+export const listInvestigationsResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const listInvestigationsResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const listInvestigationsResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const listInvestigationsResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const listInvestigationsResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const listInvestigationsResponseAnalysisContributingFramesMax = 10;
 
 export const listInvestigationsResponseAnalysisLatitudeMin = -90;
 export const listInvestigationsResponseAnalysisLatitudeMax = 90;
@@ -973,6 +1216,8 @@ export const listInvestigationsResponseAnalysisDetailsExifTimestampMax = 1200;
 
 
 export const ListInvestigationsResponseItem = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1003,6 +1248,22 @@ export const ListInvestigationsResponseItem = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(listInvestigationsResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(listInvestigationsResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(listInvestigationsResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(listInvestigationsResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(listInvestigationsResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(listInvestigationsResponseAnalysisContributingFramesItemCandidatesItemMax)).max(listInvestigationsResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(listInvestigationsResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(listInvestigationsResponseAnalysisLatitudeMin).max(listInvestigationsResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(listInvestigationsResponseAnalysisLongitudeMin).max(listInvestigationsResponseAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(listInvestigationsResponseAnalysisMapUrlMax).optional(),
@@ -1079,7 +1340,7 @@ export const CreateInvestigationBody = zod.object({
   "objectPath": zod.string().min(1),
   "clientRequestId": zod.string().uuid(),
   "originalName": zod.string().min(1).max(createInvestigationBodyOriginalNameMax),
-  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif']),
+  "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp']),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "context": zod.string().max(createInvestigationBodyContextMax).optional(),
   "journalismQuestion": zod.string().max(createInvestigationBodyJournalismQuestionMax).optional(),
@@ -1090,6 +1351,28 @@ export const CreateInvestigationBody = zod.object({
 
 export const createInvestigationResponseCandidatesItemConfidenceMin = 0;
 export const createInvestigationResponseCandidatesItemConfidenceMax = 1;
+
+export const createInvestigationResponseAnalysisVideoDurationSMin = 0;
+
+export const createInvestigationResponseAnalysisVideoFpsMin = 0;
+
+export const createInvestigationResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const createInvestigationResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const createInvestigationResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const createInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const createInvestigationResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const createInvestigationResponseAnalysisContributingFramesMax = 10;
 
 export const createInvestigationResponseAnalysisLatitudeMin = -90;
 export const createInvestigationResponseAnalysisLatitudeMax = 90;
@@ -1169,6 +1452,8 @@ export const createInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 
 
 export const CreateInvestigationResponse = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1199,6 +1484,22 @@ export const CreateInvestigationResponse = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(createInvestigationResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(createInvestigationResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(createInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(createInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(createInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(createInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(createInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(createInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(createInvestigationResponseAnalysisLatitudeMin).max(createInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(createInvestigationResponseAnalysisLongitudeMin).max(createInvestigationResponseAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(createInvestigationResponseAnalysisMapUrlMax).optional(),
@@ -1259,6 +1560,28 @@ export const CreateInvestigationResponse = zod.object({
  */
 export const getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMin = 0;
 export const getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMax = 1;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoDurationSMin = 0;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoFpsMin = 0;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoFramesAnalyzedMin = 0;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemIndexMin = 0;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const getInvestigationSummaryResponseLatestOneAnalysisContributingFramesMax = 10;
 
 export const getInvestigationSummaryResponseLatestOneAnalysisLatitudeMin = -90;
 export const getInvestigationSummaryResponseLatestOneAnalysisLatitudeMax = 90;
@@ -1341,6 +1664,8 @@ export const GetInvestigationSummaryResponse = zod.object({
   "total": zod.number().int(),
   "thisMonth": zod.number().int(),
   "latest": zod.union([zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1371,6 +1696,22 @@ export const GetInvestigationSummaryResponse = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(getInvestigationSummaryResponseLatestOneAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesItemMax)).max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisLatitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisLongitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(getInvestigationSummaryResponseLatestOneAnalysisMapUrlMax).optional(),
@@ -1436,6 +1777,28 @@ export const GetInvestigationParams = zod.object({
 
 export const getInvestigationResponseCandidatesItemConfidenceMin = 0;
 export const getInvestigationResponseCandidatesItemConfidenceMax = 1;
+
+export const getInvestigationResponseAnalysisVideoDurationSMin = 0;
+
+export const getInvestigationResponseAnalysisVideoFpsMin = 0;
+
+export const getInvestigationResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const getInvestigationResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const getInvestigationResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const getInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const getInvestigationResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const getInvestigationResponseAnalysisContributingFramesMax = 10;
 
 export const getInvestigationResponseAnalysisLatitudeMin = -90;
 export const getInvestigationResponseAnalysisLatitudeMax = 90;
@@ -1515,6 +1878,8 @@ export const getInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 
 
 export const GetInvestigationResponse = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1545,6 +1910,22 @@ export const GetInvestigationResponse = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(getInvestigationResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(getInvestigationResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(getInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(getInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(getInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(getInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(getInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(getInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(getInvestigationResponseAnalysisLatitudeMin).max(getInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(getInvestigationResponseAnalysisLongitudeMin).max(getInvestigationResponseAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(getInvestigationResponseAnalysisMapUrlMax).optional(),
@@ -1620,6 +2001,28 @@ export const UpdateInvestigationBody = zod.object({
 
 export const updateInvestigationResponseCandidatesItemConfidenceMin = 0;
 export const updateInvestigationResponseCandidatesItemConfidenceMax = 1;
+
+export const updateInvestigationResponseAnalysisVideoDurationSMin = 0;
+
+export const updateInvestigationResponseAnalysisVideoFpsMin = 0;
+
+export const updateInvestigationResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const updateInvestigationResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const updateInvestigationResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const updateInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const updateInvestigationResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const updateInvestigationResponseAnalysisContributingFramesMax = 10;
 
 export const updateInvestigationResponseAnalysisLatitudeMin = -90;
 export const updateInvestigationResponseAnalysisLatitudeMax = 90;
@@ -1699,6 +2102,8 @@ export const updateInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 
 
 export const UpdateInvestigationResponse = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1729,6 +2134,22 @@ export const UpdateInvestigationResponse = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(updateInvestigationResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(updateInvestigationResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(updateInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(updateInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(updateInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(updateInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(updateInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(updateInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(updateInvestigationResponseAnalysisLatitudeMin).max(updateInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(updateInvestigationResponseAnalysisLongitudeMin).max(updateInvestigationResponseAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(updateInvestigationResponseAnalysisMapUrlMax).optional(),
@@ -1814,6 +2235,28 @@ export const RefreshInvestigationCandidatesBody = zod.object({
 export const refreshInvestigationCandidatesResponseCandidatesItemConfidenceMin = 0;
 export const refreshInvestigationCandidatesResponseCandidatesItemConfidenceMax = 1;
 
+export const refreshInvestigationCandidatesResponseAnalysisVideoDurationSMin = 0;
+
+export const refreshInvestigationCandidatesResponseAnalysisVideoFpsMin = 0;
+
+export const refreshInvestigationCandidatesResponseAnalysisVideoFramesAnalyzedMin = 0;
+
+export const refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMin = -90;
+export const refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMax = 90;
+
+export const refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMin = -180;
+export const refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMax = 180;
+
+export const refreshInvestigationCandidatesResponseAnalysisContributingFramesItemIndexMin = 0;
+
+export const refreshInvestigationCandidatesResponseAnalysisContributingFramesItemTimestampSMin = 0;
+
+export const refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesItemMax = 1200;
+
+export const refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesMax = 10;
+
+export const refreshInvestigationCandidatesResponseAnalysisContributingFramesMax = 10;
+
 export const refreshInvestigationCandidatesResponseAnalysisLatitudeMin = -90;
 export const refreshInvestigationCandidatesResponseAnalysisLatitudeMax = 90;
 
@@ -1892,6 +2335,8 @@ export const refreshInvestigationCandidatesResponseAnalysisDetailsExifTimestampM
 
 
 export const RefreshInvestigationCandidatesResponse = zod.object({
+  "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
+  "analysisError": zod.string().nullish(),
   "id": zod.string().uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1922,6 +2367,22 @@ export const RefreshInvestigationCandidatesResponse = zod.object({
   "significance": zod.string()
 })),
   "analysis": zod.object({
+  "media_type": zod.enum(['video', 'image']).optional(),
+  "video": zod.object({
+  "duration_s": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoDurationSMin).optional(),
+  "fps": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoFpsMin).optional(),
+  "frames_analyzed": zod.number().int().min(refreshInvestigationCandidatesResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "embedded_gps": zod.object({
+  "latitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMax),
+  "longitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMax)
+}).optional()
+}).optional(),
+  "contributing_frames": zod.array(zod.object({
+  "index": zod.number().int().min(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "timestamp_s": zod.number().min(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemTimestampSMin).optional(),
+  "candidates": zod.array(zod.string().max(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesItemMax)).max(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesMax).optional(),
+  "clues_found": zod.boolean().optional()
+})).max(refreshInvestigationCandidatesResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisLatitudeMin).max(refreshInvestigationCandidatesResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisLongitudeMin).max(refreshInvestigationCandidatesResponseAnalysisLongitudeMax).optional(),
   "map_url": zod.string().url().max(refreshInvestigationCandidatesResponseAnalysisMapUrlMax).optional(),

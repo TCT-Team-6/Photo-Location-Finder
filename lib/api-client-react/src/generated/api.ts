@@ -24,6 +24,7 @@ import type {
   CaseLeadReviewInput,
   CaseReviewInput,
   ErrorEnvelope,
+  GetLocatorHealth200,
   HealthStatus,
   Investigation,
   InvestigationInput,
@@ -63,6 +64,157 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetLocatorHealthUrl = () => {
+
+
+
+
+  return `/api/locator-health`
+}
+
+/**
+ * @summary Check Image Locator video availability
+ */
+export const getLocatorHealth = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetLocatorHealth200> => {
+
+  return customFetch<GetLocatorHealth200>(getGetLocatorHealthUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLocatorHealthQueryKey = () => {
+    return [
+    `/api/locator-health`
+    ] as const;
+    }
+
+
+export const getGetLocatorHealthQueryOptions = <TData = Awaited<ReturnType<typeof getLocatorHealth>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocatorHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLocatorHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocatorHealth>>> = ({ signal }) => getLocatorHealth({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLocatorHealth>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLocatorHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getLocatorHealth>>>
+export type GetLocatorHealthQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Check Image Locator video availability
+ */
+
+export function useGetLocatorHealth<TData = Awaited<ReturnType<typeof getLocatorHealth>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocatorHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLocatorHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRetryInvestigationAnalysisUrl = (id: string,) => {
+
+
+
+
+  return `/api/investigations/${id}/retry-analysis`
+}
+
+/**
+ * @summary Retry a failed saved video analysis
+ */
+export const retryInvestigationAnalysis = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Investigation> => {
+
+  return customFetch<Investigation>(getRetryInvestigationAnalysisUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRetryInvestigationAnalysisMutationKey = () => ['retryInvestigationAnalysis'] as const;
+
+export const getRetryInvestigationAnalysisMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryInvestigationAnalysis>>, TError,RetryInvestigationAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryInvestigationAnalysis>>, TError,RetryInvestigationAnalysisMutationVariables, TContext> => {
+
+const mutationKey = getRetryInvestigationAnalysisMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryInvestigationAnalysis>>, RetryInvestigationAnalysisMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  retryInvestigationAnalysis(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryInvestigationAnalysisMutationResult = NonNullable<Awaited<ReturnType<typeof retryInvestigationAnalysis>>>
+
+    export type RetryInvestigationAnalysisMutationError = ErrorType<unknown>
+    export type RetryInvestigationAnalysisMutationVariables = {id: string}
+
+    /**
+ * @summary Retry a failed saved video analysis
+ */
+export const useRetryInvestigationAnalysis = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryInvestigationAnalysis>>, TError,RetryInvestigationAnalysisMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof retryInvestigationAnalysis>>,
+        TError,
+        RetryInvestigationAnalysisMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetryInvestigationAnalysisMutationOptions(options));
+    }
 
 export const getListMissingPersonCasesUrl = () => {
 

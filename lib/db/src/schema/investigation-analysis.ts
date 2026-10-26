@@ -1,5 +1,18 @@
 /** Sanitized, optional metadata reported by Image Locator; not independent verification. */
 export type InvestigationAnalysis = {
+  media_type?: "video" | "image";
+  video?: {
+    duration_s?: number;
+    fps?: number;
+    frames_analyzed?: number;
+    embedded_gps?: { latitude: number; longitude: number };
+  };
+  contributing_frames?: {
+    index?: number;
+    timestamp_s?: number;
+    candidates?: string[];
+    clues_found?: boolean;
+  }[];
   latitude?: number;
   longitude?: number;
   map_url?: string;

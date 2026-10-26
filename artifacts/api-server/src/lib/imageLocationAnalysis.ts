@@ -1,9 +1,28 @@
 import type { InvestigationAnalysis, LocationCandidate, VisualClue } from "@workspace/db";
 import { extractImageLocationMetadata } from "./imageLocationMetadata";
+import { isVideo } from "./locatorMedia";
 
 const DEFAULT_IMAGE_LOCATOR_URL =
   "https://mit-app-inventor-backend.onrender.com";
 const MAX_ANALYZER_RESPONSE_BYTES = 2 * 1024 * 1024;
+
+export class LocatorError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
+
+export function locatorEndpoint(path: "health" | "analyze" | "analyze-video"): string {
+  const base = process.env.IMAGE_LOCATOR_URL?.trim() || DEFAULT_IMAGE_LOCATOR_URL;
+  return `${base.replace(/\/+$/, "").replace(/\/(?:analyze|analyze-video)$/, "")}/${path}`;
+}
+
+export async function locatorHealth(): Promise<{ video_enabled: boolean }> {
+  try {
+    const response = await fetch(locatorEndpoint("health"), { signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) return { video_enabled: false };
+    const value = asRecord(await response.json());
+    return { video_enabled: value?.video_enabled === true };
+  } catch { return { video_enabled: false }; }
+}
 
 export type ImageLocationAnalysis = {
   summary: string;
@@ -305,20 +324,26 @@ export async function analyzeImageLocation(
   form.append("image", imageBlob, safeUploadFilename(originalName));
 
   let response: Response;
+  const video = isVideo(contentType);
   try {
-    const baseUrl = process.env.IMAGE_LOCATOR_URL?.trim() || DEFAULT_IMAGE_LOCATOR_URL;
-    // Accept either the documented service base URL or an explicit /analyze URL.
-    const endpoint = `${baseUrl.replace(/\/+$/, "").replace(/\/analyze$/, "")}/analyze`;
-    response = await fetch(endpoint, {
+    response = await fetch(locatorEndpoint(video ? "analyze-video" : "analyze"), {
       method: "POST",
       body: form,
-      signal: AbortSignal.timeout(180_000),
+      signal: AbortSignal.timeout(video ? 360_000 : 180_000),
     });
   } catch {
     throw new Error("The Image Locator service could not be reached.");
   }
 
   if (!response.ok) {
+    if (video) {
+      const messages: Record<number, string> = {
+        413: "This video is larger than 60 MB",
+        422: "We couldn't find clear frames in this video. Try a sharper or longer clip",
+        503: "Video analysis is turned off on the location service right now",
+      };
+      if (messages[response.status]) throw new LocatorError(messages[response.status], response.status);
+    }
     throw new Error(
       `The Image Locator service returned HTTP ${response.status}.`,
     );

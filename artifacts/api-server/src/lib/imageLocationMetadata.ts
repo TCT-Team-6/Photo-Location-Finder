@@ -64,6 +64,24 @@ function list(parse: Parser): Parser {
 }
 
 const parseMetadata = object({
+  media_type: (value) => value === "video" || value === "image" ? value : undefined,
+  video: object({
+    duration_s: nonnegative,
+    fps: nonnegative,
+    frames_analyzed: (value) => Number.isSafeInteger(value) && (value as number) >= 0 ? value : undefined,
+    embedded_gps: (value) => {
+      const gps = record(value);
+      const lat = latitude(gps?.latitude);
+      const lon = longitude(gps?.longitude);
+      return lat !== undefined && lon !== undefined ? { latitude: lat, longitude: lon } : undefined;
+    },
+  }),
+  contributing_frames: list(object({
+    index: (value) => Number.isSafeInteger(value) && (value as number) >= 0 ? value : undefined,
+    timestamp_s: nonnegative,
+    candidates: list(text),
+    clues_found: boolean,
+  })),
   latitude,
   longitude,
   map_url: mapUrl,

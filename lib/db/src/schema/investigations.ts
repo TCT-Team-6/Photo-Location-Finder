@@ -1,6 +1,7 @@
 import {
   date,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -58,6 +59,12 @@ export const investigationsTable = pgTable(
     candidates: jsonb("candidates").$type<LocationCandidate[]>().notNull(),
     clues: jsonb("clues").$type<VisualClue[]>().notNull(),
     analysis: jsonb("analysis").$type<InvestigationAnalysis>(),
+    status: text("status").$type<"analyzing" | "done" | "failed">(),
+    analysisError: text("analysis_error"),
+    analysisLeaseUntil: timestamp("analysis_lease_until", { withTimezone: true }),
+    analysisLeaseToken: uuid("analysis_lease_token"),
+    analysisAttempts: integer("analysis_attempts"),
+    analysisJob: jsonb("analysis_job").$type<{ excludePlaces?: string[] }>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

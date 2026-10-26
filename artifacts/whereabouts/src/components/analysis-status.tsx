@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Eye, FileText, ListOrdered, RotateCcw, Search, Upload } from "lucide-react";
 import "./analysis-progress.css";
+import { VIDEO_PROGRESS_MESSAGE } from "@/lib/video-analysis";
 import {
   pipelineLinks,
   pipelineStatuses,
@@ -29,11 +30,13 @@ export function AnalysisProgress({
   startedAt,
   photoCount,
   desk = "original",
+  video = false,
 }: {
   stage: AnalysisStage;
   startedAt: number;
   photoCount: number;
   desk?: AnalysisDesk;
+  video?: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -60,8 +63,8 @@ export function AnalysisProgress({
           {formatElapsed(elapsed)}
         </span>
       </div>
-      <p className="mt-1 text-xs text-[#718078]">
-        This usually takes 1–3 minutes. Please keep this page open.
+      <p className="mt-1 text-xs text-[#718078]" data-testid={video ? "text-video-progress" : undefined}>
+        {video ? VIDEO_PROGRESS_MESSAGE : "This usually takes 1–3 minutes. Please keep this page open."}
       </p>
       <div className="ap-panel">
         <p className="ap-eyebrow">Pipeline overview</p>

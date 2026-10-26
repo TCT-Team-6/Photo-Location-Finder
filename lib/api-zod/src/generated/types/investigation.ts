@@ -7,10 +7,15 @@
  */
 import type { InvestigationAnalysis } from './investigationAnalysis';
 import type { InvestigationDesk } from './investigationDesk';
+import type { InvestigationStatus } from './investigationStatus';
 import type { LocationCandidate } from './locationCandidate';
 import type { VisualClue } from './visualClue';
 
 export interface Investigation {
+  /** @nullable */
+  status?: InvestigationStatus;
+  /** @nullable */
+  analysisError?: string | null;
   id: string;
   title: string;
   desk: InvestigationDesk;

@@ -4,13 +4,14 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, lte } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { ObjectPermission } from "../lib/objectAcl";
+import { isVideo, mediaValidationError } from "../lib/locatorMedia";
+import { locatorHealth } from "../lib/imageLocationAnalysis";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { requireUser } from "../middlewares/requireUser";
 import { Readable } from "node:stream";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 router.use(requireUser);
 
@@ -24,8 +25,13 @@ router.post(
     }
 
     const { name, size, contentType } = parsed.data;
-    if (size > MAX_UPLOAD_BYTES || !contentType.startsWith("image/")) {
-      res.status(400).json({ error: "Choose a supported image under 25 MB." });
+    const validationError = mediaValidationError(name, contentType, size);
+    if (validationError) {
+      res.status(400).json({ error: validationError });
+      return;
+    }
+    if (isVideo(contentType) && !(await locatorHealth()).video_enabled) {
+      res.status(503).json({ error: "Video is not available right now. You can still upload photos." });
       return;
     }
 

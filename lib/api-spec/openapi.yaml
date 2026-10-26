@@ -15,6 +15,37 @@ tags:
   - name: Investigations
     description: Photo location investigations and the user's saved library.
 paths:
+  /locator-health:
+    get:
+      operationId: getLocatorHealth
+      summary: Check Image Locator video availability
+      responses:
+        "200":
+          description: Current capabilities, with unavailable video disabled
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [video_enabled]
+                properties:
+                  video_enabled:
+                    type: boolean
+  /investigations/{id}/retry-analysis:
+    post:
+      operationId: retryInvestigationAnalysis
+      summary: Retry a failed saved video analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Saved investigation queued for analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
   /cases:
     get:
       operationId: listMissingPersonCases
@@ -483,7 +514,7 @@ components:
         size:
           type: integer
           minimum: 1
-          maximum: 26214400
+          maximum: 62914560
         contentType:
           type: string
           enum:
@@ -498,6 +529,12 @@ components:
             - image/x-tiff
             - image/heic
             - image/heif
+            - video/mp4
+            - video/quicktime
+            - video/webm
+            - video/x-matroska
+            - video/x-msvideo
+            - video/3gpp
     UploadUrlResponse:
       type: object
       required: [uploadURL, objectPath]
@@ -569,6 +606,37 @@ components:
       description: Optional sanitized Image Locator metadata. Provider claims are not independent verification.
       additionalProperties: false
       properties:
+        media_type:
+          type: string
+          enum: [video, image]
+        video:
+          type: object
+          additionalProperties: false
+          properties:
+            duration_s: { type: number, minimum: 0 }
+            fps: { type: number, minimum: 0 }
+            frames_analyzed: { type: integer, minimum: 0 }
+            embedded_gps:
+              type: object
+              additionalProperties: false
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number, minimum: -90, maximum: 90 }
+                longitude: { type: number, minimum: -180, maximum: 180 }
+        contributing_frames:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              index: { type: integer, minimum: 0 }
+              timestamp_s: { type: number, minimum: 0 }
+              candidates:
+                type: array
+                maxItems: 10
+                items: { type: string, maxLength: 1200 }
+              clues_found: { type: boolean }
         latitude:
           type: number
           minimum: -90
@@ -737,6 +805,11 @@ components:
         - createdAt
         - updatedAt
       properties:
+        status:
+          type: [string, "null"]
+          enum: [analyzing, done, failed, null]
+        analysisError:
+          type: [string, "null"]
         id:
           type: string
           format: uuid
@@ -800,6 +873,12 @@ components:
             - image/x-tiff
             - image/heic
             - image/heif
+            - video/mp4
+            - video/quicktime
+            - video/webm
+            - video/x-matroska
+            - video/x-msvideo
+            - video/3gpp
         desk:
           type: string
           enum: [original, recreation, fake-news]

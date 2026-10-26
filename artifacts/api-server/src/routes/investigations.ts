@@ -27,7 +27,8 @@ import { and, count, desc, eq, gte, ilike, or } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectPermission } from "../lib/objectAcl";
-import { analyzeImageLocation } from "../lib/imageLocationAnalysis";
+import { analyzeImageLocation, locatorHealth } from "../lib/imageLocationAnalysis";
+import { imageTypes, isVideo, mediaValidationError } from "../lib/locatorMedia";
 import { analyzeDeskImage } from "../lib/deskImageAnalysis";
 import { searchLocationPhotoReferences } from "../lib/locationPhotoSearch";
 import {
@@ -38,20 +39,6 @@ import { requireUser } from "../middlewares/requireUser";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
-const SUPPORTED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-  "image/bmp",
-  "image/x-ms-bmp",
-  "image/tiff",
-  "image/x-tiff",
-  "image/heic",
-  "image/heif",
-]);
 const VISUAL_MODEL_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -60,6 +47,53 @@ const VISUAL_MODEL_IMAGE_TYPES = new Set([
 ]);
 
 router.use(requireUser);
+
+router.get("/locator-health", async (_req, res) => {
+  res.setHeader("Cache-Control", "private, no-store");
+  res.json(await locatorHealth());
+});
+
+router.post("/investigations/:id/retry-analysis", async (req, res) => {
+  const params = GetInvestigationParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid investigation ID." });
+    return;
+  }
+  const owner = and(
+    eq(investigationsTable.id, params.data.id),
+    eq(investigationsTable.userId, getAuth(req).userId!),
+  );
+  const [investigation] = await db.select().from(investigationsTable).where(owner).limit(1);
+  if (!investigation) {
+    res.status(404).json({ error: "Investigation not found." });
+    return;
+  }
+  if (investigation.desk !== "original" || !isVideo(investigation.contentType)) {
+    res.status(400).json({ error: "Only saved video analyses can be retried here." });
+    return;
+  }
+  if (investigation.status === "analyzing") {
+    res.json(GetInvestigationResponse.parse(investigation));
+    return;
+  }
+  if (investigation.status !== "failed") {
+    res.status(409).json({ error: "This video already has a completed report." });
+    return;
+  }
+  if (!(await locatorHealth()).video_enabled) {
+    res.status(503).json({ error: "Video analysis is turned off on the location service right now" });
+    return;
+  }
+  const [queued] = await db.update(investigationsTable).set({
+    status: "analyzing", analysisError: null, analysisAttempts: 0,
+    analysisLeaseUntil: null, analysisLeaseToken: null, updatedAt: new Date(),
+  }).where(and(owner, eq(investigationsTable.status, "failed"))).returning();
+  if (!queued) {
+    res.status(409).json({ error: "This analysis has already changed. Refresh the page." });
+    return;
+  }
+  res.json(GetInvestigationResponse.parse(queued));
+});
 
 function defaultTitle(originalName: string): string {
   const withoutExtension = originalName.replace(/\.[^.]+$/, "");
@@ -171,7 +205,7 @@ router.post(
     }
     if (
       !objectPath.startsWith("/objects/uploads/") ||
-      !SUPPORTED_IMAGE_TYPES.has(contentType)
+      !(imageTypes.has(contentType) || isVideo(contentType))
     ) {
       res.status(400).json({ error: "Unsupported photo upload." });
       return;
@@ -232,13 +266,44 @@ router.post(
       const file = await objectStorageService.getObjectEntityFile(objectPath);
       const [metadata] = await file.getMetadata();
       const fileSize = Number(metadata.size);
+      const mediaError = mediaValidationError(originalName, contentType, fileSize);
       if (
         metadata.contentType !== contentType ||
-        !Number.isFinite(fileSize) ||
-        fileSize < 1 ||
-        fileSize > MAX_UPLOAD_BYTES
+        mediaError
       ) {
-        res.status(400).json({ error: "The uploaded file did not match its image details." });
+        res.status(400).json({ error: mediaError || "The uploaded file did not match its image details." });
+        return;
+      }
+
+      if (isVideo(contentType)) {
+        if (!(await locatorHealth()).video_enabled) {
+          res.status(503).json({ error: "Video analysis is turned off on the location service right now" });
+          return;
+        }
+        await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
+          owner: userId, visibility: "private",
+        });
+        const [inserted] = await db.insert(investigationsTable).values({
+          userId, title: parsed.data.title?.trim() || defaultTitle(originalName),
+          desk: "original", originalName, contentType, objectPath,
+          clientRequestId: parsed.data.clientRequestId,
+          context: parsed.data.context?.trim() || null,
+          shotAt: parsed.data.shotAt?.toISOString().slice(0, 10) || null,
+          status: "analyzing", analysisError: null, analysisAttempts: 0,
+          summary: "Checking key moments in the video… this can take a few minutes.",
+          candidates: [], clues: [], analysis: null,
+        }).onConflictDoNothing({
+          target: [investigationsTable.userId, investigationsTable.clientRequestId],
+        }).returning();
+        const [saved] = inserted ? [inserted] : await db.select().from(investigationsTable)
+          .where(and(eq(investigationsTable.userId, userId),
+            eq(investigationsTable.clientRequestId, parsed.data.clientRequestId))).limit(1);
+        if (!saved) throw new Error("Video save conflict could not be resolved.");
+        await db.delete(pendingPhotoUploadsTable).where(and(
+          eq(pendingPhotoUploadsTable.objectPath, objectPath),
+          eq(pendingPhotoUploadsTable.userId, userId),
+        ));
+        res.status(inserted ? 201 : 200).json(CreateInvestigationResponse.parse(saved));
         return;
       }
 
@@ -336,6 +401,7 @@ router.post(
           candidates,
           clues,
           analysis: analysisMetadata,
+          status: "done",
         })
         .onConflictDoNothing({
           target: [
@@ -445,6 +511,35 @@ router.post(
       res.status(404).json({ error: "Investigation not found." });
       return;
     }
+    if (isVideo(investigation.contentType)) {
+      if (investigation.status === "analyzing") {
+        res.status(409).json({ error: "This video is still being analyzed." });
+        return;
+      }
+      if (!(await locatorHealth()).video_enabled) {
+        res.status(503).json({ error: "Video analysis is turned off on the location service right now" });
+        return;
+      }
+      const [queued] = await db.update(investigationsTable).set({
+        status: "analyzing", analysisError: null, analysisAttempts: 0,
+        analysisLeaseUntil: null, analysisLeaseToken: null,
+        analysisJob: { excludePlaces: [...new Set([
+          ...investigation.candidates.map((candidate) => candidate.place),
+          ...body.data.excludePlaces,
+        ])].slice(0, 30) },
+        updatedAt: new Date(),
+      }).where(and(
+        eq(investigationsTable.id, investigation.id),
+        eq(investigationsTable.userId, userId),
+        or(eq(investigationsTable.status, "done"), eq(investigationsTable.status, "failed")),
+      )).returning();
+      if (!queued) {
+        res.status(409).json({ error: "This analysis has already changed. Refresh the page." });
+        return;
+      }
+      res.json(RefreshInvestigationCandidatesResponse.parse(queued));
+      return;
+    }
     try {
       const file = await objectStorageService.getObjectEntityFile(investigation.objectPath);
       const [buffer] = await file.download();
@@ -534,7 +629,7 @@ router.get(
         res.status(403).json({ error: "Forbidden" });
         return;
       }
-      const response = await objectStorageService.downloadObject(file);
+      const response = await objectStorageService.downloadObject(file, 3600, req.headers.range);
       res.status(response.status);
       response.headers.forEach((value, key) => res.setHeader(key, value));
       if (response.body) {

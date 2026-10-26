@@ -85,6 +85,10 @@ let analyzerCalls: string[] = [];
 let selectQueryCount = 0;
 let selectedReport: Record<string, unknown> | undefined;
 let updatedValues: Record<string, unknown> | undefined;
+let videoAvailable = true;
+let downloadCalls = 0;
+let originalAnalyzerCalls = 0;
+let uploadContentType = "image/jpeg";
 
 const mockDb = {
   select: () => ({
@@ -97,7 +101,7 @@ const mockDb = {
             : [{
                 objectPath: "/objects/uploads/test-photo",
                 userId: "test-user",
-                contentType: "image/jpeg",
+                contentType: uploadContentType,
                 expiresAt: new Date(Date.now() + 60_000),
               }];
         },
@@ -147,9 +151,9 @@ class MockObjectStorageService {
     return {
       getMetadata: async () => [{
         size: "9",
-        contentType: "image/jpeg",
+        contentType: uploadContentType,
       }],
-      download: async () => [Buffer.from("mock image")],
+      download: async () => { downloadCalls += 1; return [Buffer.from("mock image")]; },
     };
   }
 
@@ -184,7 +188,8 @@ mock.module("../lib/objectStorage.js", {
 });
 mock.module("../lib/imageLocationAnalysis.js", {
   namedExports: {
-    analyzeImageLocation: async () => analyses.original,
+    analyzeImageLocation: async () => { originalAnalyzerCalls += 1; return analyses.original; },
+    locatorHealth: async () => ({ video_enabled: videoAvailable }),
   },
 });
 mock.module("../lib/deskImageAnalysis.js", {
@@ -354,6 +359,83 @@ test("unsuccessful lead refresh leaves existing report metadata unchanged", asyn
   } finally {
     selectedReport = undefined;
   }
+});
+
+test("locator health exposes only the safe video capability", async () => {
+  videoAvailable = false;
+  const response = await fetch(`http://127.0.0.1:${listenPort}/locator-health`);
+  assert.deepEqual(await response.json(), { video_enabled: false });
+  videoAvailable = true;
+});
+
+test("non-Original desks reject videos before any analyzer runs", async () => {
+  const response = await fetch(`http://127.0.0.1:${listenPort}/investigations`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      objectPath: "/objects/uploads/test-photo",
+      clientRequestId: "d4864dca-0654-41ea-83bf-96791047c59f",
+      originalName: "test.mp4", contentType: "video/mp4", desk: "recreation",
+    }),
+  });
+  assert.equal(response.status, 400);
+});
+
+test("retrying a failed video queues its existing record and clears the error", async () => {
+  try {
+    selectedReport = {
+      ...reportFixture(), contentType: "video/mp4", originalName: "test.mp4",
+      status: "failed", analysisError: "No clear frames", analysisAttempts: 3,
+    };
+    updatedValues = undefined;
+    const response = await fetch(
+      `http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}/retry-analysis`,
+      { method: "POST" },
+    );
+    assert.equal(response.status, 200);
+    const body = GetInvestigationResponse.parse(await response.json());
+    assert.equal(body.id, selectedReport.id);
+    assert.equal(body.status, "analyzing");
+    assert.equal(body.analysisError, null);
+    assert.equal((updatedValues as Record<string, unknown> | undefined)?.analysisAttempts, 0);
+  } finally { selectedReport = undefined; }
+});
+
+test("creating a video saves a pending record without waiting for downloads or analysis", async () => {
+  selectQueryCount = 0;
+  uploadContentType = "video/mp4";
+  persistedValues = undefined;
+  originalAnalyzerCalls = 0;
+  downloadCalls = 0;
+  try {
+    const response = await fetch(`http://127.0.0.1:${listenPort}/investigations`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        objectPath: "/objects/uploads/test-photo",
+        clientRequestId: "d4864dca-0654-41ea-83bf-96791047c59f",
+        originalName: "test.mp4", contentType: "video/mp4", desk: "original",
+      }),
+    });
+    assert.equal(response.status, 201);
+    const body = GetInvestigationResponse.parse(await response.json());
+    assert.equal(body.status, "analyzing");
+    assert.deepEqual(body.candidates, []);
+    assert.equal(body.analysis, null);
+    assert.equal(originalAnalyzerCalls, 0);
+    assert.equal(downloadCalls, 0);
+  } finally { uploadContentType = "image/jpeg"; }
+});
+
+test("retry is idempotent for a running video and does not restart it", async () => {
+  try {
+    selectedReport = { ...reportFixture(), contentType: "video/mp4", status: "analyzing" };
+    updatedValues = undefined;
+    const response = await fetch(
+      `http://127.0.0.1:${listenPort}/investigations/${selectedReport.id}/retry-analysis`,
+      { method: "POST" },
+    );
+    assert.equal(response.status, 200);
+    assert.equal(updatedValues, undefined);
+  } finally { selectedReport = undefined; }
 });
 
 test.after(() => {

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { analyzeImageLocation, normalizeImageLocationResponse } from "./imageLocationAnalysis.js";
+import { analyzeImageLocation, locatorHealth, normalizeImageLocationResponse } from "./imageLocationAnalysis.js";
 import { extractImageLocationMetadata } from "./imageLocationMetadata.js";
+import { IMAGE_LIMIT, VIDEO_LIMIT, mediaValidationError } from "./locatorMedia.js";
 
 test("ranks the highest-scored lead first and keeps the summary aligned", () => {
   const result = normalizeImageLocationResponse({
@@ -186,4 +187,81 @@ test("keeps upstream success flag, HTTP, invalid JSON, and response-size protect
   await assert.rejects(analyze, /invalid JSON/);
   response = new Response("x".repeat(2 * 1024 * 1024 + 1));
   await assert.rejects(analyze, /too large/);
+});
+
+test("video request uses analyze-video, original multipart field and six-minute timeout", async (t) => {
+  const timeouts: number[] = [];
+  t.mock.method(AbortSignal, "timeout", (ms: number) => {
+    timeouts.push(ms);
+    return new AbortController().signal;
+  });
+  t.mock.method(globalThis, "fetch", async (url: string, options: RequestInit) => {
+    assert.match(url, /\/analyze-video$/);
+    assert.ok(options.body instanceof FormData);
+    const file = options.body.get("image") as File;
+    assert.equal(file.name, "upload.mp4");
+    assert.equal(await file.text(), "video bytes");
+    return Response.json({
+      success: true, location_name: "Lake Chelan",
+      media_type: "video", video: {
+        duration_s: 42.5, fps: 30, frames_analyzed: 5,
+        embedded_gps: { latitude: 0, longitude: -120.02, private: "ignored" },
+      },
+      contributing_frames: [{
+        index: 12, timestamp_s: 4.2, candidates: ["Lake Chelan"], clues_found: false,
+      }],
+    });
+  });
+  const result = await analyzeImageLocation(Buffer.from("video bytes"), "video/mp4", "test.mp4");
+  assert.deepEqual(timeouts, [360_000]);
+  assert.equal(result.analysis.video?.duration_s, 42.5);
+  assert.deepEqual(result.analysis.video?.embedded_gps, { latitude: 0, longitude: -120.02 });
+  assert.deepEqual(result.analysis.contributing_frames?.[0], {
+    index: 12, timestamp_s: 4.2, candidates: ["Lake Chelan"], clues_found: false,
+  });
+});
+
+test("video upstream errors have the documented actionable messages", async (t) => {
+  let code = 413;
+  t.mock.method(globalThis, "fetch", async () => new Response("", { status: code }));
+  const run = () => analyzeImageLocation(Buffer.from("video"), "video/mp4", "test.mp4");
+  await assert.rejects(run, /This video is larger than 60 MB/);
+  code = 422;
+  await assert.rejects(run, /couldn't find clear frames/);
+  code = 503;
+  await assert.rejects(run, /Video analysis is turned off/);
+});
+
+test("health fails closed without leaking provider details", async (t) => {
+  let response = Response.json({ video_enabled: true, secret: "not exposed" });
+  t.mock.method(globalThis, "fetch", async (url: string) => {
+    assert.match(url, /\/health$/);
+    return response;
+  });
+  assert.deepEqual(await locatorHealth(), { video_enabled: true });
+  response = Response.json({ video_enabled: "true" });
+  assert.deepEqual(await locatorHealth(), { video_enabled: false });
+  response = new Response("private error", { status: 503 });
+  assert.deepEqual(await locatorHealth(), { video_enabled: false });
+  response = new Response("bad json");
+  assert.deepEqual(await locatorHealth(), { video_enabled: false });
+});
+
+test("server media validation keeps all image types and separate video/extension limits", () => {
+  assert.equal(mediaValidationError("test.heic", "image/heic", IMAGE_LIMIT), null);
+  assert.match(mediaValidationError("test.tif", "image/tiff", IMAGE_LIMIT + 1)!, /25 MB/);
+  for (const [ext, type] of [
+    ["mp4", "video/mp4"], ["mov", "video/quicktime"], ["webm", "video/webm"],
+    ["mkv", "video/x-matroska"], ["avi", "video/x-msvideo"], ["3gp", "video/3gpp"],
+  ]) {
+    assert.equal(mediaValidationError(`test.${ext}`, type!, VIDEO_LIMIT), null);
+    assert.match(mediaValidationError(`test.${ext}`, type!, VIDEO_LIMIT + 1)!, /60 MB/);
+  }
+  assert.match(mediaValidationError("video.exe", "video/mp4", 500)!, /supported/);
+  assert.match(mediaValidationError("video.mov", "video/mp4", 500)!, /supported/);
+  assert.match(mediaValidationError("video.mp4", "video/mp4", 0)!, /empty/);
+  assert.deepEqual(extractImageLocationMetadata({
+    video: { embedded_gps: { latitude: 95, longitude: 0 }, fps: -1 },
+    contributing_frames: [{ index: -1, timestamp_s: -2, candidates: [3] }],
+  }), { contributing_frames: [{ candidates: [] }] });
 });

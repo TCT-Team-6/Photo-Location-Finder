@@ -5,18 +5,25 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { InvestigationAnalysisContributingFramesItem } from './investigationAnalysisContributingFramesItem';
 import type { InvestigationAnalysisDetails } from './investigationAnalysisDetails';
 import type { InvestigationAnalysisForensics } from './investigationAnalysisForensics';
+import type { InvestigationAnalysisMediaType } from './investigationAnalysisMediaType';
 import type { InvestigationAnalysisNearbyPlacesItem } from './investigationAnalysisNearbyPlacesItem';
 import type { InvestigationAnalysisReasoningTraceItem } from './investigationAnalysisReasoningTraceItem';
 import type { InvestigationAnalysisRejectedItem } from './investigationAnalysisRejectedItem';
 import type { InvestigationAnalysisSearchAreasItem } from './investigationAnalysisSearchAreasItem';
+import type { InvestigationAnalysisVideo } from './investigationAnalysisVideo';
 
 /**
  * Optional sanitized Image Locator metadata. Provider claims are not independent verification.
  * @nullable
  */
 export type InvestigationAnalysis = {
+  media_type?: InvestigationAnalysisMediaType;
+  video?: InvestigationAnalysisVideo;
+  /** @maxItems 10 */
+  contributing_frames?: InvestigationAnalysisContributingFramesItem[];
   /**
      * @minimum -90
      * @maximum 90

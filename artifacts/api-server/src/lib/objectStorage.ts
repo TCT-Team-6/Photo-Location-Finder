@@ -91,24 +91,42 @@ export class ObjectStorageService {
   async downloadObject(
     file: File,
     cacheTtlSec: number = 3600,
+    range?: string,
   ): Promise<Response> {
     const [metadata] = await file.getMetadata();
     const aclPolicy = await getObjectAclPolicy(file);
     const isPublic = aclPolicy?.visibility === 'public';
 
-    const nodeStream = file.createReadStream();
+    const size = Number(metadata.size);
+    let start: number | undefined;
+    let end: number | undefined;
+    if (range) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+      if (!match || (!match[1] && !match[2]) || !Number.isSafeInteger(size) || size < 1) {
+        return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+      }
+      start = match[1] ? Number(match[1]) : Math.max(0, size - Number(match[2]));
+      end = match[1] && match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
+        start < 0 || start >= size || end < start) {
+        return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+      }
+    }
+    const nodeStream = file.createReadStream(start === undefined ? undefined : { start, end });
     const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
     const headers: Record<string, string> = {
+      'Accept-Ranges': 'bytes',
       'Content-Type':
         (metadata.contentType as string) || 'application/octet-stream',
       'Cache-Control': `${isPublic ? 'public' : 'private'}, max-age=${cacheTtlSec}`,
     };
     if (metadata.size) {
-      headers['Content-Length'] = String(metadata.size);
+      headers['Content-Length'] = String(start === undefined ? metadata.size : end! - start + 1);
     }
+    if (start !== undefined) headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
 
-    return new Response(webStream, { headers });
+    return new Response(webStream, { headers, status: start === undefined ? 200 : 206 });
   }
 
   async getObjectEntityUploadURL(): Promise<string> {

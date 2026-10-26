@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -20,6 +20,7 @@ import {
   useListInvestigations,
   useRequestUploadUrl,
   useRefreshInvestigationCandidates,
+  useRetryInvestigationAnalysis,
   useUpdateInvestigation,
 } from '@workspace/api-client-react';
 import type { Investigation, InvestigationInputContentType } from '@workspace/api-client-react';
@@ -36,6 +37,9 @@ import { AnalysisFailed, AnalysisProgress, type AnalysisStage } from '@/componen
 import { BestGuessCard } from '@/components/best-guess-card';
 import { buildLeadSummary } from '@/lib/lead-summary';
 import { readPhotoTakenDate } from '@/lib/photo-date';
+import { OriginalMediaIntake } from '@/components/original-media-intake';
+import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
+import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
 import CaseDetailPage from '@/features/cases/case-detail-page';
@@ -486,7 +490,7 @@ function QueryError({ retry, text = 'We could not reach your field notes.' }: { 
 
 function DashboardPage() {
   const summary = useGetInvestigationSummary();
-  const investigations = useListInvestigations();
+  const investigations = useListInvestigations(undefined, { query: { queryKey: getListInvestigationsQueryKey(), refetchInterval: pollListWhileAnalyzing } });
   const latest = summary.data?.latest;
   const rows = investigations.data ?? [];
   return <div className="fade-up">
@@ -545,10 +549,12 @@ function InvestigationCard({
   const place = rankCandidates(item.candidates)[0];
   return <article className="group relative overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(43,58,48,.09)]" data-testid={`card-investigation-${item.id}`}>
     <div className={`relative h-[148px] overflow-hidden bg-[#d9ddcf] ${selectable ? 'cursor-pointer' : ''}`} onClick={() => selectable && onToggleSelect?.(item)}>
-      <img src={`/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />
+      {isVideoInvestigation(item) ? <div className="flex h-full w-full items-center justify-center bg-[#2f4a40] text-[#d9e2d4]" data-testid={`placeholder-video-${item.id}`}><Film size={34} strokeWidth={1.4} aria-hidden="true" /></div> : <img src={investigationMediaUrl(item.id)} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />}
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c3028]/55 to-transparent" />
       {selectable && <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelect?.(item); }} aria-label={`${selected ? 'Deselect' : 'Select'} ${item.title}`} aria-pressed={selected} data-testid={`button-select-investigation-${item.id}`} className={`absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full border-2 shadow-sm transition ${selected ? 'border-[#2e7047] bg-[#2e7047] text-white' : 'border-white bg-black/20 text-transparent hover:bg-black/40'}`}>{selected ? <Check size={18} strokeWidth={3} /> : <Circle size={20} className="text-white" />}</button>}
       <span className="absolute bottom-3 left-4 font-data text-[9px] uppercase tracking-[.14em] text-white">{place ? `${place.place}${place.country ? ` · ${place.country}` : ''}` : 'Place still unfolding'}</span>
+      {isVideoInvestigation(item) && <span className="absolute bottom-3 right-4 rounded-full bg-[#263d36]/85 px-2.5 py-1 font-data text-[9px] uppercase tracking-[.12em] text-[#f4f0e6]" data-testid={`badge-video-${item.id}`}>Video</span>}
+      {isAnalyzing(item) && <span className="absolute left-3 bottom-9 rounded-full bg-[#f6f2e6]/90 px-2.5 py-1 font-data text-[9px] text-[#a56743]" data-testid={`badge-analyzing-${item.id}`}>Analyzing…</span>}
       <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[9px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
     </div>
     <div className="p-5">
@@ -578,7 +584,7 @@ function candidateScore(confidence: number) {
 function FieldDeskPage() {
   const [, params] = useRoute('/desk/:deskId');
   const desk = fieldDesks.find((item) => item.id === params?.deskId);
-  const query = useListInvestigations();
+  const query = useListInvestigations(undefined, { query: { queryKey: getListInvestigationsQueryKey(), refetchInterval: pollListWhileAnalyzing } });
   if (!desk) return <NotFound />;
   const rows = (query.data ?? []).filter((item) => item.desk === desk.id);
   return <div className="fade-up">
@@ -636,6 +642,7 @@ function InvestigatePage() {
   ).length;
   const activeSlot = investigationPhotoSlots.find((slot) => slot.id === activeSlotId)!;
   const activeDeskIndex = fieldDesks.findIndex((desk) => desk.id === activeSlotId);
+  const [originalRunning, setOriginalRunning] = useState(false);
   const pending = submitting || uploadUrl.isPending || create.isPending;
   const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
     setLocalError('');
@@ -687,6 +694,7 @@ function InvestigatePage() {
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (activeSlotId === 'original' || originalRunning) return;
     setLocalError('');
     setBatchStatus('');
     setFailureMessage('');
@@ -793,7 +801,7 @@ function InvestigatePage() {
               type="button"
               aria-pressed={isActive}
               aria-label={`${desk.label}${hasPhoto ? ', photo selected' : ''}${hasError ? ', needs attention' : ''}`}
-              disabled={pending}
+              disabled={pending || originalRunning}
               onClick={() => setActiveSlotId(desk.id)}
               data-testid={`toggle-photo-desk-${desk.id}`}
               className="desk-choice relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[10px] font-semibold transition sm:gap-2 sm:px-3 sm:text-xs"
@@ -806,15 +814,16 @@ function InvestigatePage() {
           })}
         </div>
         <div role="region" aria-label={`${activeSlot.label} photo upload`}>
-          <PhotoUploadSlot
+          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => setLocation(path)} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
+          {activeSlot.id !== 'original' && <PhotoUploadSlot
             key={activeSlot.id}
             slot={activeSlot}
             file={files[activeSlot.id]}
             error={slotErrors[activeSlot.id]}
-            disabled={pending}
+            disabled={pending || originalRunning}
             onSelectFile={(file) => setSelectedFile(activeSlot.id, file)}
             onRemoveFile={() => removeSelectedFile(activeSlot.id)}
-          />
+          />}
         </div>
       </section>
       <div className="desk-theme-panel mx-auto max-w-[720px] rounded-3xl border p-6 transition-colors duration-300 md:p-7">
@@ -841,7 +850,7 @@ function InvestigatePage() {
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} desk={analysisDesk} />}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
-        <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage)} data-testid="button-analyze-photo" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
+        <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
         </button>
          <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId === 'original' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
@@ -877,7 +886,7 @@ function InvestigatePage() {
 
 function LibraryPage() {
   const [search, setSearch] = useState('');
-  const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined);
+  const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined, { query: { queryKey: getListInvestigationsQueryKey(search.trim() ? { query: search.trim() } : undefined), refetchInterval: pollListWhileAnalyzing } });
   const remove = useDeleteInvestigation();
   const update = useUpdateInvestigation();
   const client = useQueryClient();
@@ -954,8 +963,21 @@ function LibraryPage() {
 function InvestigationPage() {
   const [, params] = useRoute('/investigation/:id');
   const id = params?.id ?? '';
-  const query = useGetInvestigation(id, { query: { enabled: Boolean(id), queryKey: getGetInvestigationQueryKey(id) } });
-  const photo = useGetInvestigationPhoto(id, { query: { enabled: Boolean(id), queryKey: getGetInvestigationPhotoQueryKey(id) } });
+  const query = useGetInvestigation(id, { query: { enabled: Boolean(id), queryKey: getGetInvestigationQueryKey(id), refetchInterval: pollWhileAnalyzing } });
+  const isVideo = isVideoInvestigation(query.data);
+  const photo = useGetInvestigationPhoto(id, { query: { enabled: Boolean(id) && Boolean(query.data) && !isVideo, queryKey: getGetInvestigationPhotoQueryKey(id) } });
+  const retryAnalysis = useRetryInvestigationAnalysis();
+  const [retryError, setRetryError] = useState('');
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const seekTo = (seconds: number) => { const player = playerRef.current; if (!player) return; player.currentTime = seconds; void player.play().catch(() => {}); player.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  const retryVideo = async () => {
+    setRetryError('');
+    try {
+      const saved = await retryAnalysis.mutateAsync({ id });
+      client.setQueryData(getGetInvestigationQueryKey(id), saved);
+      await client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() });
+    } catch (error) { setRetryError(error instanceof Error ? error.message : 'The analysis could not be restarted. Please try again.'); }
+  };
   const update = useUpdateInvestigation();
   const remove = useDeleteInvestigation();
   const client = useQueryClient();
@@ -968,6 +990,11 @@ function InvestigationPage() {
   const [refreshMessage, setRefreshMessage] = useState('');
   const refreshCandidates = useRefreshInvestigationCandidates();
   const item = query.data;
+  useEffect(() => {
+    if (refreshMessage !== 'Checking key moments in the video… this can take a few minutes.') return;
+    if (item?.status === 'done') setRefreshMessage('New location leads are ready to review.');
+    if (item?.status === 'failed') setRefreshMessage('The video could not be re-checked. Use Try again above.');
+  }, [item?.status, refreshMessage]);
   const rankedLeads = useMemo(() => rankCandidates(item?.candidates ?? []), [item?.candidates]);
   useEffect(() => {
     if (item) { setTitle(item.title); setContext(item.context ?? ''); setSelectedCandidateIndex(0); }
@@ -978,13 +1005,15 @@ function InvestigationPage() {
     if (!item) return;
     setRefreshMessage('Looking for different location leads…');
     try {
-      await refreshCandidates.mutateAsync({
+      const saved = await refreshCandidates.mutateAsync({
         id: item.id,
         data: { excludePlaces: item.candidates.map((candidate) => candidate.place) },
-      });
+      }) as Investigation | undefined;
+      if (saved && typeof saved === 'object' && 'id' in saved) client.setQueryData(getGetInvestigationQueryKey(item.id), saved);
       await client.invalidateQueries({ queryKey: getGetInvestigationQueryKey(item.id) });
+      await client.invalidateQueries({ queryKey: getListInvestigationsQueryKey() });
       setSelectedCandidateIndex(0);
-      setRefreshMessage('New location leads are ready to review.');
+      setRefreshMessage(saved?.status === 'analyzing' ? 'Checking key moments in the video… this can take a few minutes.' : saved?.status === 'failed' ? 'The video could not be re-checked. Use Try again above.' : 'New location leads are ready to review.');
     } catch (error) {
       setRefreshMessage(error instanceof Error ? error.message : 'Different location leads could not be found. Your current report is unchanged.');
     }
@@ -1032,13 +1061,15 @@ function InvestigationPage() {
       <label className="block text-xs font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
       <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
+    {isVideo && <><EmbeddedGpsNotice analysis={item.analysis} /><VideoAnalysisStatus item={item} retrying={retryAnalysis.isPending} retryError={retryError} onRetry={() => void retryVideo()} /></>}
     {item.desk === 'original' && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
     <div className="grid items-start gap-7 lg:grid-cols-[1.05fr_.95fr]">
       <div>
         <div className="photo-frame relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl border border-[#d8d1c2] bg-[#e5e3d6] p-4 md:min-h-[490px]">
-          {photo.isLoading ? <SkeletonBlock className="absolute inset-4" /> : photo.isError ? <div className="px-6 text-center text-sm text-[#7c8378]" data-testid="status-photo-error"><FileImage size={26} className="mx-auto mb-3 text-[#a06d4b]" />The saved photograph is temporarily unavailable.</div> : <img src={photoUrl || `/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph: ${item.originalName}`} className="max-h-[620px] w-full rounded-2xl object-contain" data-testid="img-original-investigation-photo" />}
-          <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[9px] uppercase tracking-[.13em] text-[#52695d]">Original photograph</span>
+          {isVideo ? <VideoPlayer id={item.id} name={item.originalName} playerRef={playerRef} /> : photo.isLoading ? <SkeletonBlock className="absolute inset-4" /> : photo.isError ? <div className="px-6 text-center text-sm text-[#7c8378]" data-testid="status-photo-error"><FileImage size={26} className="mx-auto mb-3 text-[#a06d4b]" />The saved photograph is temporarily unavailable.</div> : <img src={photoUrl || `/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph: ${item.originalName}`} className="max-h-[620px] w-full rounded-2xl object-contain" data-testid="img-original-investigation-photo" />}
+          <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[9px] uppercase tracking-[.13em] text-[#52695d]">{isVideo ? 'Saved video' : 'Original photograph'}</span>
         </div>
+        {isVideo && <KeyMoments analysis={item.analysis} onSeek={seekTo} />}
         <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
           <PageEyebrow>{item.desk === 'fake-news' ? 'Image integrity review' : item.desk === 'recreation' ? 'Source image search' : 'Scene notes'}</PageEyebrow>
           {item.desk === 'original' && rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
