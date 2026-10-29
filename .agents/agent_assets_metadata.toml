@@ -42,3 +42,17 @@ mtime_ms = 1793037741078
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/99b57e0d-18b4-46fa-aa52-c8e1f712d17c/9fd1e289-f3c3-4385-a220-de71491dac7c"
 storage_version_token = "1793037749541461"
 content_type = "image/png"
+
+[[outputs]]
+id = "IBlLuEGBubAl8AO-LTwGd"
+uri = "file://attached_assets/generated_images/whereabouts-tech-stack.png"
+type = "image"
+title = "Whereabouts — Technology Stack"
+description = "Presentation-ready 1920 × 1080 PNG in the Rescue palette, showing the frontend, application API, Python AI service, authentication, database, storage, and maps."
+logical_id = "2057ee85-3056-4f4b-916d-f42de35fbf75"
+content_hash = "sha256:f6bb7819d11fbf28a54de8f3ff34021b46241aecf7c16431fec46cd6ed9ed350"
+size = 359818
+mtime_ms = 1793306141537
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/2057ee85-3056-4f4b-916d-f42de35fbf75/51e6c7b0-1241-4626-9413-aef73e06b778"
+storage_version_token = "1793306150358447"
+content_type = "image/png"
