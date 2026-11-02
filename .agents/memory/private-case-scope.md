@@ -20,3 +20,9 @@ The user approved an explicit guided manual case-review step after intake: full-
 **Why:** Saving a case without a clear next action felt incomplete; the user accepted guided review rather than connecting these cases to automated location analysis.
 
 **How to apply:** Make review discoverable on existing as well as newly created cases. Keep reported-taken, posted, and added-to-case dates distinct; missing dates must remain unknown. Review notes are the responder's assessment, not verified findings.
+
+For the Healthy & Smart Living update, leave the existing photo-analysis backend and pipeline unchanged; consume only their outputs, and use the supplied urgency scoring rules without modifying them.
+
+**Why:** The user explicitly set these boundaries for the phased update.
+
+**How to apply:** Build the sample demo and urgency display as consumers of existing results. Map only fields actually present; leave unsupported clue values undefined.

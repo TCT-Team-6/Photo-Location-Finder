@@ -17,7 +17,6 @@ import {
   useGetInvestigation,
   useGetInvestigationPhoto,
   useGetInvestigationSummary,
-  useHealthCheck,
   useListInvestigations,
   useRequestUploadUrl,
   useRefreshInvestigationCandidates,
@@ -186,24 +185,27 @@ function HomeRedirect() {
 }
 
 function LandingPage() {
-  const health = useHealthCheck();
   return (
     <main className="min-h-[100dvh] overflow-hidden bg-[#f4f0e6] text-[#263d36]">
       <header className="relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
         <Mark />
         <nav className="flex items-center gap-3">
           <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
-          <ActionLink href="/demo" testId="link-get-started"><span className="hidden sm:inline">Start an investigation</span><span className="sm:hidden">Investigate</span><ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/demo" testId="link-get-started">Start a search <ArrowRight size={16} /></ActionLink>
         </nav>
       </header>
       <section className="relative mx-auto grid max-w-[1440px] items-center gap-10 px-6 pb-20 pt-10 md:grid-cols-[1.02fr_.98fr] md:px-12 md:pb-28 md:pt-16">
         <div className="fade-up relative z-10 max-w-[670px]">
-          <p className="mb-7 inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.2em] text-[#657d6f]"><span className="h-2 w-2 rounded-full bg-[#c8794d]" />A field notebook for image sleuths</p>
-          <h1 className="font-editorial text-[clamp(3.65rem,8.5vw,7.6rem)] leading-[.88] tracking-[-.065em]">Every image<br />has a <em className="font-normal text-[#c8794d]">somewhere.</em></h1>
-          <p className="mt-8 max-w-[520px] text-lg leading-8 text-[#62756c] md:text-xl">Follow the details hiding in a photograph. Gather the clues, compare likely places, and keep the trail somewhere private.</p>
-          <div className="mt-12 flex items-center gap-4 border-t border-[#d8d1c2] pt-5">
+          <p className="mb-7 inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.2em] text-[#657d6f]"><span className="h-2 w-2 rounded-full bg-[#c8794d]" />A search tool for families and rescue teams</p>
+          <h1 className="font-editorial text-[clamp(3.65rem,8.5vw,7.6rem)] leading-[.88] tracking-[-.065em]">Every hour matters.<br /><em className="font-normal text-[#c8794d]">Every photo is a clue.</em></h1>
+          <p className="mt-8 max-w-[520px] text-lg leading-8 text-[#62756c] md:text-xl">When someone vulnerable goes missing, their last photo often holds the best clue to where they are. Whereabouts uses AI to read that photo and point searchers to the most likely places, in minutes instead of hours.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <ActionLink href="/demo" testId="link-start-search">Start a search <ArrowRight size={16} /></ActionLink>
+            <ActionLink href="/demo" secondary testId="link-see-sample-case">See a sample case</ActionLink>
+          </div>
+          <div className="mt-8 flex items-center gap-4 border-t border-[#d8d1c2] pt-5">
             <ShieldCheck size={18} className="text-[#627d6d]" />
-            <p className="text-sm text-[#6f7f76]">Private by default. Your photos and findings stay yours.</p>
+            <p className="text-sm text-[#6f7f76]">Private by default. Built for safety, never for tracking.</p>
           </div>
         </div>
         <div className="fade-up-delay relative mx-auto w-full max-w-[590px]">
@@ -225,47 +227,87 @@ function LandingPage() {
                   <div className="absolute right-[15%] top-[13%] h-9 w-9 rounded-full bg-[#e1ba7c]/75" />
                 </div>
               </div>
-              <span className="absolute bottom-2 left-3 font-editorial text-sm italic text-[#59675c]">the original clue</span>
             </div>
-            <div className="absolute right-[12%] top-[21%] rounded-full border border-[#a4ad9a] bg-[#f5f0e4]/90 px-4 py-2 font-data text-[9px] uppercase tracking-[.14em] text-[#58705f]">coastal light?</div>
+            <div className="absolute right-[8%] top-[18%] rounded-full border border-[#a4ad9a] bg-[#f5f0e4]/90 px-4 py-2 font-data text-[9px] uppercase tracking-[.14em] text-[#58705f]">Trail marker spotted</div>
             <div className="map-pin absolute left-[57%] top-[58%] grid h-12 w-12 place-items-center rounded-full bg-[#c8794d] text-[#fff7e9]"><MapPin size={22} /></div>
             <div className="absolute bottom-[16%] right-[9%] rotate-[4deg] rounded-sm border border-[#d6cfbf] bg-[#faf7ee]/95 px-5 py-4 shadow-lg">
-              <p className="font-data text-[9px] uppercase tracking-[.18em] text-[#a36a47]">Field note 04</p>
-              <p className="mt-1 font-editorial text-xl text-[#334b3f]">trace the horizon</p>
+              <p className="font-data text-[9px] uppercase tracking-[.18em] text-[#a36a47]">Urgency: High</p>
+              <p className="mt-1 font-editorial text-xl text-[#334b3f]">Sunset in about 2 hours</p>
             </div>
-            <div className="absolute bottom-[12%] left-[12%] rounded-full border border-[#9aa697] bg-[#eff0e5] px-4 py-2 text-xs text-[#4e6d5d]">3 visual clues</div>
           </div>
-          <span className="absolute -right-2 top-[52%] hidden rotate-90 font-data text-[9px] uppercase tracking-[.23em] text-[#78897b] md:block">IMAGE / MEMORY / PLACE</span>
         </div>
-        <div className="absolute bottom-8 left-12 hidden font-data text-[9px] uppercase tracking-[.18em] text-[#899589] md:block">N 37° 46′ 49″ &nbsp; / &nbsp; FIELD INDEX 01</div>
+      </section>
+      <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
+        <div className="mx-auto max-w-[1180px]">
+          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Who it helps</p>
+          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Built for the people who search first.</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
+              <h3 className="font-editorial text-2xl">Caregivers &amp; families</h3>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">A parent with dementia walked out the door. A child with autism wandered from a park. You have a recent photo and no idea where to start. Whereabouts gives you a starting point to share with police and searchers.</p>
+            </article>
+            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
+              <h3 className="font-editorial text-2xl">Search &amp; rescue volunteers</h3>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">Turn a photo from social media into a ranked list of likely locations, with the terrain, landmarks and conditions that matter for your team's safety and plan.</p>
+            </article>
+            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
+              <h3 className="font-editorial text-2xl">Hikers &amp; outdoor groups</h3>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">When a friend stops answering, the last trail photo they posted can narrow a search from a whole park to a single trailhead.</p>
+            </article>
+          </div>
+        </div>
       </section>
       <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
         <div className="mx-auto grid max-w-[1240px] gap-10 md:grid-cols-[.75fr_1.25fr] md:gap-24">
           <div>
-            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">A slower kind of search</p>
-            <h2 className="mt-5 font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Look closer.<br /><em className="font-normal text-[#d78b5a]">Get somewhere.</em></h2>
+            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">From photo to search plan</p>
+            <h2 className="mt-5 font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">One photo. Three steps.<br /><em className="font-normal text-[#d78b5a]">A smarter search.</em></h2>
           </div>
           <div className="grid gap-8 sm:grid-cols-3">
-            <Feature number="01" icon={<ImagePlus size={18} />} title="Bring the image" text="Upload the photograph and add the fragments you already know." />
-            <Feature number="02" icon={<Crosshair size={18} />} title="Read the scene" text="Turn architecture, terrain, and light into a trail of visual evidence." />
-            <Feature number="03" icon={<BookOpen size={18} />} title="Keep the trail" text="Save likely places and notes in a personal, searchable archive." />
+            <Feature number="01" icon={<ImagePlus size={18} />} title="Upload their last photo." text="Add the most recent photo of the missing person, plus anything you already know: when they left, what they were wearing, places they like to go." />
+            <Feature number="02" icon={<Crosshair size={18} />} title="AI reads the scene." text="Whereabouts checks the photo's hidden data, spots landmarks, terrain, signs and light, and compares likely places, the way an experienced investigator would." />
+            <Feature number="03" icon={<BookOpen size={18} />} title="Get a search plan." text="See likely locations ranked by confidence, plus a health-risk summary that shows how urgent the search is and what searchers should bring." />
+          </div>
+        </div>
+      </section>
+      <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
+        <div className="mx-auto max-w-[1180px]">
+          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Healthy &amp; smart living</p>
+          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Finding someone fast keeps them healthy.</h2>
+          <p className="mt-6 max-w-[760px] text-base leading-7 text-[#65766c]">For a person with dementia, a young child, or an injured hiker, every hour outside brings new risks: cold or heat, dehydration, darkness, and missed medication. Whereabouts flags those risks on every search, so families and rescuers know what to prioritize and what to bring.</p>
+          <div className="mt-9 grid gap-5 md:grid-cols-3">
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Exposure risk</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">cold, heat, water and darkness, checked automatically</p></article>
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Urgency level</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Low, Moderate, High or Critical, explained in plain words</p></article>
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Next steps</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">what to search first and what searchers should carry</p></article>
+          </div>
+        </div>
+      </section>
+      <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
+        <div className="mx-auto max-w-[1180px]">
+          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">Safety first</p>
+          <h2 className="mt-5 max-w-3xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Made for finding people, never for tracking them.</h2>
+          <p className="mt-6 max-w-2xl leading-7 text-[#c1cbbd]">A tool that can tell where a photo was taken is powerful, so we built Whereabouts with guardrails.</p>
+          <div className="mt-9 grid gap-6 md:grid-cols-2">
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Emergency first.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">If someone is in danger, call 911 before anything else. Whereabouts supports searchers; it does not replace them.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">A real reason, every time.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Each search asks why you're looking, such as a missing person or a lost hiker, and records it in your private activity log.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Private by default.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Your photos and results stay in your account. We never share them or post them anywhere.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Estimates, not certainty.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Locations and risk levels are AI estimates to guide a search, not proof and not medical advice.</p></article>
           </div>
         </div>
       </section>
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto flex max-w-[1180px] flex-col items-start justify-between gap-9 rounded-[28px] border border-[#d6cfbf] bg-[#f7f3e9]/85 p-8 md:flex-row md:items-center md:p-12">
           <div className="max-w-[650px]">
-            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Start with what you have</p>
-            <h2 className="mt-4 font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">A corner of a roof. A certain kind of light. A feeling you can’t place.</h2>
-            <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">Whereabouts gives your curiosity a place to begin—and a notebook to return to.</p>
+            <h2 className="font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">When every hour counts, start with what you have.</h2>
+            <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">A blurry trail sign. A storefront in the background. The angle of the afternoon sun. Whereabouts turns those small details into a place to start looking.</p>
           </div>
-          <ActionLink href="/sign-up" testId="link-begin-field-notes">Begin your field notes <ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/demo" testId="link-closing-start-search">Start a search <ArrowRight size={16} /></ActionLink>
         </div>
       </section>
       <footer className="flex flex-col items-center justify-between gap-4 bg-[#263d36] px-6 py-6 text-[#c1cbbd] md:flex-row md:px-12">
         <Mark inverse />
-        <p className="font-data text-[9px] uppercase tracking-[.16em]">Private by nature · {health.isLoading ? 'checking field systems' : health.isError ? 'field systems unavailable' : 'field systems online'}</p>
-        <Link href="/sign-in" data-testid="link-footer-sign-in" className="text-xs text-[#e4e8dc] hover:text-[#d78b5a]">Return to your notebook</Link>
+        <p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · smart search for safer communities · private by default</p>
+        <Link href="/sign-in" data-testid="link-footer-sign-in" className="text-xs text-[#e4e8dc] hover:text-[#d78b5a]">Sign in</Link>
       </footer>
     </main>
   );
