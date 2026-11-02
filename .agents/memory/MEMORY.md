@@ -7,3 +7,4 @@
 - [Image Locator rollout](image-locator-rollout.md) — User requests one reviewed step at a time, preserving working UI and using nullable-only database additions.
 - [Recreation purpose](recreation-purpose.md) — Recreation means personal and leisure use, not re-creating photos or reverse-image search.
 - [Locator model choice](locator-model-choice.md) — User reports choosing GPT-4o vision after testing GAEA and other Qwen-based geolocation models.
+- [Preview process lifecycle](preview-process-lifecycle.md) — Direct Node startup avoids orphaned Vite children; managed service commands run from the artifact directory.

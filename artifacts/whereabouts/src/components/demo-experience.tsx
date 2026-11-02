@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, ImagePlu
 import { Link } from 'wouter';
 import { demoSamples, type DemoSample } from '@/lib/demo-samples';
 import { trackEvent } from '@/lib/analytics';
+import { HealthUrgencyCard } from '@/components/health-urgency-card';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 
 type DemoView = 'overview' | 'investigate' | 'library';
@@ -65,6 +66,7 @@ function ResultView({ sample, onBack }: { sample: DemoSample; onBack: () => void
       <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#cbd3c5] bg-[#e8eee4] px-3 py-2 font-data text-[9px] uppercase tracking-[.1em] text-[#385e51]"><Check size={13} />Precomputed sample</span>
     </div>
     <DemoBoundary />
+    <HealthUrgencyCard investigation={investigation} stored={{ assessedAt: sample.urgencyAssessedAt, inputs: sample.urgencyInputs, result: sample.urgency }} />
     <div className="mt-6 grid gap-6 lg:grid-cols-[.92fr_1.08fr]">
       <section className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]" data-testid="panel-demo-original-photo">
         <img src={sample.imageUrl} alt={`Original fictional scenery photograph: ${investigation.title}`} className="max-h-[520px] min-h-[250px] w-full object-cover" data-testid="img-demo-result-original" />

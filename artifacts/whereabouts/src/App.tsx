@@ -35,6 +35,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import { AnalysisFailed, AnalysisProgress, type AnalysisStage } from '@/components/analysis-status';
 import { BestGuessCard } from '@/components/best-guess-card';
+import { HealthUrgencyCard } from '@/components/health-urgency-card';
 import { buildLeadSummary } from '@/lib/lead-summary';
 import { readPhotoTakenDate } from '@/lib/photo-date';
 import { OriginalMediaIntake } from '@/components/original-media-intake';
@@ -1078,6 +1079,7 @@ function InvestigationPage() {
       <label className="block text-xs font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
       <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
+    <HealthUrgencyCard investigation={item} />
     {isVideo && <><EmbeddedGpsNotice analysis={item.analysis} /><VideoAnalysisStatus item={item} retrying={retryAnalysis.isPending} retryError={retryError} onRetry={() => void retryVideo()} /></>}
     {item.desk !== 'fake-news' && !legacySourceReport && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
     <div className="grid items-start gap-7 lg:grid-cols-[1.05fr_.95fr]">
@@ -1174,6 +1176,7 @@ function LeadLocationPage() {
     <PageEyebrow>{legacySourceReport ? `Legacy source-image report / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
     <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">{lead.place}</h1>
     {!legacySourceReport && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
+    <HealthUrgencyCard investigation={query.data} />
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{legacySourceReport ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>

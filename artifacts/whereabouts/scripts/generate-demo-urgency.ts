@@ -14,7 +14,7 @@ const records = JSON.parse(readFileSync(fixture, "utf8")) as Array<{
 for (const record of records) {
   const now = new Date(record.urgencyAssessedAt);
   if (!Number.isFinite(now.getTime())) throw new Error("Invalid sample assessment time");
-  const { scene, person } = urgencyInputsFromInvestigation(record.investigation);
+  const { scene, person } = urgencyInputsFromInvestigation(record.investigation, {}, now);
   record.urgencyInputs = { scene, person };
   record.urgency = assessUrgency(scene, person, now);
 }

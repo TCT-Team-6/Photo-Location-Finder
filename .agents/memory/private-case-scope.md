@@ -26,3 +26,9 @@ For the Healthy & Smart Living update, leave the existing photo-analysis backend
 **Why:** The user explicitly set these boundaries for the phased update.
 
 **How to apply:** Build the sample demo and urgency display as consumers of existing results. Map only fields actually present; leave unsupported clue values undefined.
+
+Complete the Healthy & Smart Living phases one at a time, show the result and changed files, and wait for the user's approval before starting the next phase.
+
+**Why:** The user explicitly requested review between phases, including the optional caregiver profiles and misuse safeguards.
+
+**How to apply:** Finishing urgency cards does not authorize adding profiles or safeguards in the same turn.
