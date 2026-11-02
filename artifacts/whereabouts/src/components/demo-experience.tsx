@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, ImagePlus, LoaderCircle, ShieldAlert } from 'lucide-react';
 import { Link } from 'wouter';
 import { demoSamples, type DemoSample } from '@/lib/demo-samples';
+import { trackEvent } from '@/lib/analytics';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 
 type DemoView = 'overview' | 'investigate' | 'library';
@@ -139,6 +140,7 @@ export function DemoExperience() {
     { id: 'library' as const, label: 'My library', icon: <BookOpen size={17} /> },
   ];
   const openSample = (sample: DemoSample) => {
+    trackEvent('demo_sample_open', { scenario_id: sample.investigation.id });
     setActiveSample(sample);
     setProgressSample(null);
     setIsSimulating(false);
@@ -152,6 +154,7 @@ export function DemoExperience() {
   const startSimulation = () => {
     const sample = demoSamples.find((item) => item.investigation.id === selectedSampleId);
     if (!sample) return;
+    trackEvent('demo_sample_run', { scenario_id: sample.investigation.id });
     setProgressSample(sample);
     setIsSimulating(true);
   };
