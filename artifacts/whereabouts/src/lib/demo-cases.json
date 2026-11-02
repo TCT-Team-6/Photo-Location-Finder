@@ -1,0 +1,452 @@
+[
+  {
+    "scenario": "Lost hiker",
+    "imageUrl": "demo-samples/lost-hiker.jpg",
+    "sourceImageUrl": "https://www.pexels.com/photo/9147887/",
+    "sourceName": "Pexels",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "urgencyAssessedAt": "2026-11-02T12:00:00.000Z",
+    "investigation": {
+      "id": "sample-lost-hiker",
+      "title": "Lost hiker – mountain trail",
+      "desk": "original",
+      "originalName": "mountain-trail-sample.jpg",
+      "contentType": "image/jpeg",
+      "context": "Fictional safety scenario: a hiking group is comparing the scenery in a friend's last trail photo. No age, health conditions or capture timestamp are known. These places are illustrative comparisons, not verified whereabouts.",
+      "shotAt": null,
+      "summary": "An uneven stone trail climbs through conifers toward a rocky mountain ridge. The stored scene observations describe a mountain trail, not a person.",
+      "status": "done",
+      "candidates": [
+        {
+          "place": "Tatra National Park",
+          "region": "Lesser Poland",
+          "country": "Poland",
+          "confidence": 0.82,
+          "rationale": "Illustrative comparison based on the stone trail, conifers and rocky ridge; not a verified location.",
+          "clues": [
+            "Stone trail",
+            "Conifers",
+            "Rocky ridge"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=49.2333%2C19.9817"
+        },
+        {
+          "place": "High Tatras",
+          "region": "Prešov",
+          "country": "Slovakia",
+          "confidence": 0.68,
+          "rationale": "A secondary fictional comparison for established trails beneath rocky mountain peaks.",
+          "clues": [
+            "Mountain trail",
+            "Forest slopes"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=49.1656%2C20.1403"
+        },
+        {
+          "place": "Low Tatras National Park",
+          "region": "Central Slovakia",
+          "country": "Slovakia",
+          "confidence": 0.53,
+          "rationale": "Another illustrative mountain-forest comparison; these visual features are not unique.",
+          "clues": [
+            "Conifer forest",
+            "Hilly terrain"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=48.9439%2C19.5906"
+        }
+      ],
+      "clues": [
+        {
+          "label": "Setting",
+          "observation": "Trail: a stone walking path winds through conifers toward a mountain ridge.",
+          "significance": "The visible path supports a trail setting; it does not establish the person's location."
+        },
+        {
+          "label": "Terrain",
+          "observation": "Hilly: the uneven stone path crosses sloping ground below a rocky ridge.",
+          "significance": "The walking surface and slope may affect access for searchers."
+        },
+        {
+          "label": "Vegetation",
+          "observation": "Conifers and low green vegetation border the trail.",
+          "significance": "Vegetation provides a scenery comparison, not a temperature measurement."
+        }
+      ],
+      "analysis": {
+        "media_type": "image",
+        "latitude": 49.2333,
+        "longitude": 19.9817,
+        "map_url": "https://www.google.com/maps/search/?api=1&query=49.2333%2C19.9817",
+        "confidence": 0.82,
+        "source": "Illustrative precomputed sample",
+        "verified": "Not independently verified",
+        "warning": "Fictional demonstration data. This result describes scenery in the sample photograph; it does not locate or verify a person.",
+        "search_areas": [
+          {
+            "rank": 1,
+            "name": "Tatra National Park",
+            "country": "Poland",
+            "latitude": 49.2333,
+            "longitude": 19.9817,
+            "search_radius_km": 15,
+            "score": 0.82,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 2,
+            "name": "High Tatras",
+            "country": "Slovakia",
+            "latitude": 49.1656,
+            "longitude": 20.1403,
+            "search_radius_km": 15,
+            "score": 0.68,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 3,
+            "name": "Low Tatras National Park",
+            "country": "Slovakia",
+            "latitude": 48.9439,
+            "longitude": 19.5906,
+            "search_radius_km": 15,
+            "score": 0.53,
+            "map_status": "sample coordinates"
+          }
+        ]
+      },
+      "createdAt": "2026-11-02T12:00:00.000Z",
+      "updatedAt": "2026-11-02T12:00:00.000Z"
+    },
+    "urgencyInputs": {
+      "scene": {
+        "setting": "trail",
+        "terrain": "hilly"
+      },
+      "person": {}
+    },
+    "urgency": {
+      "level": "Moderate",
+      "score": 3,
+      "color": "yellow",
+      "risks": [
+        {
+          "label": "Remote terrain",
+          "reason": "Looks like a trail — fewer people to help and a risk of falls.",
+          "points": 2,
+          "category": "terrain"
+        },
+        {
+          "label": "Photo time unknown",
+          "reason": "The photo has no time data, so we can't tell how long ago it was taken.",
+          "points": 1,
+          "category": "time"
+        }
+      ],
+      "nextSteps": [
+        "If you're worried, contact local police or 911.",
+        "Alert park rangers or local search and rescue and share the likely trailhead.",
+        "Share the photo and the top likely locations with everyone searching."
+      ],
+      "timeSincePhoto": null,
+      "disclaimer": "Estimates only — not medical or emergency advice. If someone may be in danger, call 911 first."
+    }
+  },
+  {
+    "scenario": "Missing grandparent",
+    "imageUrl": "demo-samples/grandparent.jpg",
+    "sourceImageUrl": "https://images.unsplash.com/photo-1519331379826-f10be5486c6f",
+    "sourceName": "Unsplash",
+    "licenseUrl": "https://unsplash.com/license",
+    "urgencyAssessedAt": "2026-11-02T12:00:00.000Z",
+    "investigation": {
+      "id": "sample-grandparent",
+      "title": "Missing grandparent – city park",
+      "desk": "original",
+      "originalName": "city-park-sample.jpg",
+      "contentType": "image/jpeg",
+      "context": "Fictional safety scenario: a family is identifying a city park from a grandparent's last photo. Age and health conditions have not been supplied and are not inferred from the case name. These places are illustrative scenery comparisons only.",
+      "shotAt": null,
+      "summary": "A broad park path passes beneath mature trees beside an open lawn and a bench. The scene offers public-park features but no uniquely identifying landmark.",
+      "status": "done",
+      "candidates": [
+        {
+          "place": "Golden Gate Park",
+          "region": "California",
+          "country": "United States",
+          "confidence": 0.76,
+          "rationale": "A fictional comparison based on mature trees, lawns and public walking paths.",
+          "clues": [
+            "Mature trees",
+            "Park path",
+            "Open lawn"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=37.7694%2C-122.4862"
+        },
+        {
+          "place": "Stanley Park",
+          "region": "British Columbia",
+          "country": "Canada",
+          "confidence": 0.67,
+          "rationale": "Another illustrative comparison for tree-lined public paths; not a verified match.",
+          "clues": [
+            "Tree canopy",
+            "Public park landscape"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=49.3043%2C-123.1443"
+        },
+        {
+          "place": "Luxembourg Gardens",
+          "region": "Paris",
+          "country": "France",
+          "confidence": 0.58,
+          "rationale": "A secondary scenery comparison based on established paths, mature trees and seating.",
+          "clues": [
+            "Park seating",
+            "Established tree cover"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=48.8462%2C2.3372"
+        }
+      ],
+      "clues": [
+        {
+          "label": "Setting",
+          "observation": "Park: a managed public walking path runs beneath mature trees beside a lawn and a bench.",
+          "significance": "The path, seating and maintained lawn support a park setting."
+        },
+        {
+          "label": "Terrain",
+          "observation": "Flat: the visible park walkway crosses level ground.",
+          "significance": "Only the visible portion of the path is described."
+        },
+        {
+          "label": "Vegetation",
+          "observation": "Mature leafy trees shade a broad grassy lawn.",
+          "significance": "Tree cover is a general comparison clue, not evidence of a particular park."
+        }
+      ],
+      "analysis": {
+        "media_type": "image",
+        "latitude": 37.7694,
+        "longitude": -122.4862,
+        "map_url": "https://www.google.com/maps/search/?api=1&query=37.7694%2C-122.4862",
+        "confidence": 0.76,
+        "source": "Illustrative precomputed sample",
+        "verified": "Not independently verified",
+        "warning": "Fictional demonstration data. This result describes scenery in the sample photograph; it does not locate or verify a person.",
+        "search_areas": [
+          {
+            "rank": 1,
+            "name": "Golden Gate Park",
+            "country": "United States",
+            "latitude": 37.7694,
+            "longitude": -122.4862,
+            "search_radius_km": 10,
+            "score": 0.76,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 2,
+            "name": "Stanley Park",
+            "country": "Canada",
+            "latitude": 49.3043,
+            "longitude": -123.1443,
+            "search_radius_km": 10,
+            "score": 0.67,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 3,
+            "name": "Luxembourg Gardens",
+            "country": "France",
+            "latitude": 48.8462,
+            "longitude": 2.3372,
+            "search_radius_km": 10,
+            "score": 0.58,
+            "map_status": "sample coordinates"
+          }
+        ]
+      },
+      "createdAt": "2026-11-02T12:00:00.000Z",
+      "updatedAt": "2026-11-02T12:00:00.000Z"
+    },
+    "urgencyInputs": {
+      "scene": {
+        "setting": "park",
+        "terrain": "flat"
+      },
+      "person": {}
+    },
+    "urgency": {
+      "level": "Low",
+      "score": 1,
+      "color": "green",
+      "risks": [
+        {
+          "label": "Photo time unknown",
+          "reason": "The photo has no time data, so we can't tell how long ago it was taken.",
+          "points": 1,
+          "category": "time"
+        }
+      ],
+      "nextSteps": [
+        "If you're worried, contact local police or 911.",
+        "Share the photo and the top likely locations with everyone searching."
+      ],
+      "timeSincePhoto": null,
+      "disclaimer": "Estimates only — not medical or emergency advice. If someone may be in danger, call 911 first."
+    }
+  },
+  {
+    "scenario": "Child separated",
+    "imageUrl": "demo-samples/child-separated.jpg",
+    "sourceImageUrl": "https://www.pexels.com/photo/20944196/",
+    "sourceName": "Pexels",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "urgencyAssessedAt": "2026-11-02T12:00:00.000Z",
+    "investigation": {
+      "id": "sample-child-separated",
+      "title": "Child separated – beach boardwalk",
+      "desk": "original",
+      "originalName": "beach-boardwalk-sample.jpg",
+      "contentType": "image/jpeg",
+      "context": "Fictional safety scenario: a family is comparing a beach boardwalk photo after becoming separated during an outing. No personal or medical factors are supplied to the scorer. The sample describes scenery and does not identify or locate a child.",
+      "shotAt": null,
+      "summary": "A wooden boardwalk with rope handrails crosses low dunes toward a sandy beach and the ocean. The water and dune access path are visible scenery clues.",
+      "status": "done",
+      "candidates": [
+        {
+          "place": "Cape Henlopen State Park",
+          "region": "Delaware",
+          "country": "United States",
+          "confidence": 0.78,
+          "rationale": "An illustrative comparison for wooden beach-access paths through sandy dunes; not a verified match.",
+          "clues": [
+            "Wooden boardwalk",
+            "Dunes",
+            "Ocean shoreline"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=38.7833%2C-75.1000"
+        },
+        {
+          "place": "Assateague Island National Seashore",
+          "region": "Maryland",
+          "country": "United States",
+          "confidence": 0.66,
+          "rationale": "A secondary fictional comparison based on low dunes and ocean-facing beach access.",
+          "clues": [
+            "Sandy dunes",
+            "Beach access"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=38.0933%2C-75.2087"
+        },
+        {
+          "place": "Cape Hatteras National Seashore",
+          "region": "North Carolina",
+          "country": "United States",
+          "confidence": 0.55,
+          "rationale": "Another broad coastline comparison with dune boardwalks; these features are not unique.",
+          "clues": [
+            "Coastal boardwalk",
+            "Atlantic shoreline"
+          ],
+          "mapsUrl": "https://www.google.com/maps/search/?api=1&query=35.2510%2C-75.5280"
+        }
+      ],
+      "clues": [
+        {
+          "label": "Setting",
+          "observation": "Beach: a wooden access boardwalk crosses dunes toward a sandy shoreline.",
+          "significance": "The visible shoreline supports a beach setting."
+        },
+        {
+          "label": "Terrain",
+          "observation": "Flat: the visible boardwalk crosses low, gently rolling dunes.",
+          "significance": "This describes the access path, not conditions beyond the frame."
+        },
+        {
+          "label": "Water nearby",
+          "observation": "Yes: ocean water and breaking waves are visible beyond the end of the boardwalk.",
+          "significance": "Visible water is a scene clue; it does not establish anyone's current proximity to it."
+        }
+      ],
+      "analysis": {
+        "media_type": "image",
+        "latitude": 38.7833,
+        "longitude": -75.1,
+        "map_url": "https://www.google.com/maps/search/?api=1&query=38.7833%2C-75.1000",
+        "confidence": 0.78,
+        "source": "Illustrative precomputed sample",
+        "verified": "Not independently verified",
+        "warning": "Fictional demonstration data. This result describes scenery in the sample photograph; it does not locate or verify a person.",
+        "search_areas": [
+          {
+            "rank": 1,
+            "name": "Cape Henlopen State Park",
+            "country": "United States",
+            "latitude": 38.7833,
+            "longitude": -75.1,
+            "search_radius_km": 10,
+            "score": 0.78,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 2,
+            "name": "Assateague Island National Seashore",
+            "country": "United States",
+            "latitude": 38.0933,
+            "longitude": -75.2087,
+            "search_radius_km": 10,
+            "score": 0.66,
+            "map_status": "sample coordinates"
+          },
+          {
+            "rank": 3,
+            "name": "Cape Hatteras National Seashore",
+            "country": "United States",
+            "latitude": 35.251,
+            "longitude": -75.528,
+            "search_radius_km": 10,
+            "score": 0.55,
+            "map_status": "sample coordinates"
+          }
+        ]
+      },
+      "createdAt": "2026-11-02T12:00:00.000Z",
+      "updatedAt": "2026-11-02T12:00:00.000Z"
+    },
+    "urgencyInputs": {
+      "scene": {
+        "setting": "beach",
+        "terrain": "flat",
+        "nearWater": true
+      },
+      "person": {}
+    },
+    "urgency": {
+      "level": "Moderate",
+      "score": 3,
+      "color": "yellow",
+      "risks": [
+        {
+          "label": "Water nearby",
+          "reason": "Water is close by — slips, falls and cold water are a risk.",
+          "points": 2,
+          "category": "exposure"
+        },
+        {
+          "label": "Photo time unknown",
+          "reason": "The photo has no time data, so we can't tell how long ago it was taken.",
+          "points": 1,
+          "category": "time"
+        }
+      ],
+      "nextSteps": [
+        "If you're worried, contact local police or 911.",
+        "Search shorelines, docks and banks near the photo location first.",
+        "Share the photo and the top likely locations with everyone searching."
+      ],
+      "timeSincePhoto": null,
+      "disclaimer": "Estimates only — not medical or emergency advice. If someone may be in danger, call 911 first."
+    }
+  }
+]
