@@ -39,6 +39,7 @@ import { buildLeadSummary } from '@/lib/lead-summary';
 import { readPhotoTakenDate } from '@/lib/photo-date';
 import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
+import { DemoExperience } from '@/components/demo-experience';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
@@ -422,34 +423,6 @@ function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppS
 function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
 
 function DemoRoute() { return <DemoExperience />; }
-
-function DemoExperience() {
-  const [view, setView] = useState<'overview' | 'investigate' | 'library'>('overview');
-  const navigation = [
-    ['overview', 'Overview', <Compass size={17} />],
-    ['investigate', 'New investigation', <ImagePlus size={17} />],
-    ['library', 'My library', <BookOpen size={17} />],
-  ] as const;
-  return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
-    <aside className="hidden w-[252px] shrink-0 flex-col bg-[#263d36] p-5 text-[#f4f0e6] md:flex">
-      <Mark inverse />
-      <nav className="mt-12 space-y-1">{navigation.map(([id, label, icon]) => <button key={id} onClick={() => setView(id)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm ${view === id ? 'bg-[#3b5d50]' : 'text-[#c1cdbf] hover:bg-white/5'}`}>{icon}{label}</button>)}</nav>
-      <div className="mt-auto border-t border-[#52695d] pt-5"><p className="text-xs text-[#c1cdbf]">Demo mode · nothing is saved</p></div>
-    </aside>
-    <main className="min-w-0 flex-1 px-5 py-8 md:px-10">
-      <div className="mb-8 flex items-center justify-between"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#829087]">Personal field notes / Demo</p><Link href="/" className="text-xs text-[#62756c]">Back to home</Link></div>
-      <nav className="mb-6 flex gap-2 overflow-x-auto md:hidden">{navigation.map(([id,label])=><button key={id} onClick={()=>setView(id)} className={`shrink-0 rounded-full px-4 py-2 text-xs ${view===id?'bg-[#3b5d50] text-white':'border border-[#d8d1c2]'}`}>{label}</button>)}</nav>
-      {view === 'overview' && <><PageEyebrow>Personal archive / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Your field desk.</h1><p className="mt-3 text-sm text-[#718078]">Explore a sample archive. Demo changes are not saved.</p><div className="my-8 grid gap-4 sm:grid-cols-3">{[['Saved investigations','3'],['This month','2'],['Most recent','Harbor walk']].map(([label,value])=><div key={label} className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><p className="text-xs text-[#738078]">{label}</p><p className="mt-4 font-editorial text-3xl">{value}</p></div>)}</div><DemoCards /></>}
-      {view === 'library' && <><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Your library.</h1><p className="my-6 text-sm text-[#718078]">Sample investigations in the demo archive.</p><DemoCards /></>}
-      {view === 'investigate' && <><PageEyebrow>New investigation / demo</PageEyebrow><h1 className="mt-3 font-editorial text-5xl">Try the workflow.</h1><div className="mt-8 max-w-2xl rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-8"><div className="grid h-48 place-items-center rounded-xl border border-dashed border-[#b5c1b1] bg-[#e8e9df] text-sm text-[#557363]"><ImagePlus size={28} />Photo analysis is disabled in the demo</div><button disabled className="mt-5 w-full rounded-full bg-[#385e51] py-3 text-sm text-white opacity-60">Demo only — no projects are saved</button></div></>}
-    </main>
-    <Link href="/sign-in" className="fixed bottom-5 right-5 z-30 rounded-full border border-[#d8d1c2] bg-white px-4 py-3 text-xs font-semibold text-[#263d36] shadow-lg">← Log in to save your progress</Link>
-  </div>;
-}
-
-function DemoCards() {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[['Harbor walk','Coastal village'],['Mountain pass','Alpine road'],['Old town square','Historic district']].map(([title,place],i)=><article key={title} className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]"><div className={`h-36 ${i===0?'bg-gradient-to-br from-[#b5c9c1] to-[#456c69]':i===1?'bg-gradient-to-br from-[#c6c5af] to-[#66766c]':'bg-gradient-to-br from-[#d6b89d] to-[#805d4c]'}`} /><div className="p-5"><p className="font-data text-[9px] uppercase tracking-widest text-[#9c6d4e]">Sample location</p><h3 className="mt-2 font-editorial text-2xl">{title}</h3><p className="mt-2 text-xs text-[#718078]">{place} · example clues and location leads</p></div></article>)}</div>;
-}
 
 function AppShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
