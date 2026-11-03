@@ -20,10 +20,11 @@ const badgeStyles: Record<UrgencyLevel, { backgroundColor: string; color: string
   Critical: { backgroundColor: "#fee2e2", color: "#991b1b", borderColor: "#e59a9a" },
 };
 
-export function HealthUrgencyCard({ investigation, stored, person }: {
+export function HealthUrgencyCard({ investigation, stored, person, demo = false }: {
   investigation: Investigation;
   stored?: StoredUrgencyAssessment;
   person?: PersonFactors;
+  demo?: boolean;
 }) {
   const headingId = useId();
   const [now, setNow] = useState(() => new Date());
@@ -44,9 +45,9 @@ export function HealthUrgencyCard({ investigation, stored, person }: {
   const fields = [
     ["Setting", scene.setting ?? "Unknown"],
     ["Terrain", scene.terrain ?? "Unknown"],
-    ["Water nearby", scene.nearWater === undefined ? "Unknown" : scene.nearWater ? "Reported in photo" : "Not reported nearby"],
+    ["Water nearby", scene.nearWater === undefined ? "Unknown" : scene.nearWater ? (demo ? "Reported by family" : "Reported in photo") : "Not reported nearby"],
     ["Weather", scene.weather?.join(", ") || "Unknown"],
-    ["Photo lighting", scene.timeOfDay ?? "Unknown"],
+    [demo ? "Time of day (family)" : "Photo lighting", scene.timeOfDay ?? "Unknown"],
     ["Temperature", scene.temperatureC === undefined ? "Unknown — not supplied" : `${scene.temperatureC}°C`],
   ];
   const knownPerson = Object.entries(inputs.person).filter(([, value]) => value !== undefined);
@@ -56,25 +57,25 @@ export function HealthUrgencyCard({ investigation, stored, person }: {
       <div>
         <p className="inline-flex items-center gap-2 font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]"><ShieldAlert size={15} aria-hidden="true" />Safety summary</p>
         <h2 id={headingId} className="mt-2 font-editorial text-3xl tracking-[-.03em]">Health risk &amp; urgency</h2>
-        <p className="mt-2 max-w-2xl text-xs leading-5 text-[#718078]">Scene clues describe the photo, not current conditions or a person's present location.</p>
+        {!demo && <p className="mt-2 max-w-2xl text-xs leading-5 text-[#718078]">Scene clues describe the photo, not current conditions or a person's present location.</p>}
       </div>
       {pending
         ? <p className="rounded-full border border-[#d8d1c2] px-4 py-2 text-xs font-semibold text-[#596d61]" data-testid="status-urgency-unavailable">Assessment unavailable</p>
         : <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold" style={badgeStyles[result.level]} data-testid="status-urgency-level" role="status">{result.level} urgency</span>}
     </div>
     {pending ? <p className="mt-5 text-sm leading-6 text-[#596d61]" data-testid="text-urgency-pending">A completed analysis is needed before scene risks can be assessed. Do not wait for this tool in an emergency.</p> : <>
-      {stored && <p className="mt-4 font-data text-[9px] uppercase tracking-[.1em] text-[#9c6d4e]" data-testid="text-urgency-snapshot">Precomputed sample assessment · fixed demonstration, not a live risk update</p>}
-      <p className="mt-4 rounded-xl border border-[#ddc6aa] bg-[#f7ecdd] px-4 py-3 text-xs leading-5 text-[#604a37]" data-testid="notice-urgency-limits">Missing information can understate urgency. A Low result does not mean someone is safe. This is not an assessment of the person's medical condition.</p>
+      {stored && !demo && <p className="mt-4 font-data text-[9px] uppercase tracking-[.1em] text-[#9c6d4e]" data-testid="text-urgency-snapshot">Precomputed sample assessment · fixed demonstration, not a live risk update</p>}
+      {!demo && <p className="mt-4 rounded-xl border border-[#ddc6aa] bg-[#f7ecdd] px-4 py-3 text-xs leading-5 text-[#604a37]" data-testid="notice-urgency-limits">Missing information can understate urgency. A Low result does not mean someone is safe. This is not an assessment of the person's medical condition.</p>}
       <div className="mt-5 flex items-start gap-2 border-b border-[#e1dbce] pb-4 text-sm text-[#596d61]">
         <Clock3 size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
         <div><p data-testid="text-time-since-photo"><strong>Time since photo:</strong> {result.timeSincePhoto ?? "Unknown — usable capture metadata unavailable"}</p>
-          <p className="mt-1 text-xs leading-5 text-[#718078]">Photo age is not proof of how long someone has been missing.</p>
+          {!demo && <p className="mt-1 text-xs leading-5 text-[#718078]">Photo age is not proof of how long someone has been missing.</p>}
           {sourceTimestamp && !scene.photoTakenAt && <p className="mt-1 text-xs leading-5 text-[#718078]" data-testid="text-capture-time-unusable">The capture time cannot be reliably compared with now. A missing timezone, invalid date or future camera clock is not treated as elapsed time.</p>}
         </div>
       </div>
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
         <div>
-          <h3 className="font-editorial text-xl">Detected risk factors</h3>
+          <h3 className="font-editorial text-xl">{demo ? "Risk factors" : "Detected risk factors"}</h3>
           {result.risks.length ? <ul className="mt-3 space-y-3">{result.risks.map((risk, index) => <li key={risk.label} className="rounded-xl border border-[#e1dbce] px-4 py-3" data-testid={`item-urgency-risk-${index}`}>
             <p className="text-sm font-semibold text-[#344b42]">{risk.label} <span className="ml-1 font-data text-[9px] font-normal uppercase text-[#718078]">{risk.category}</span></p>
             <p className="mt-1 text-xs leading-5 text-[#596d61]">{risk.reason}</p>
@@ -88,7 +89,9 @@ export function HealthUrgencyCard({ investigation, stored, person }: {
       <details className="mt-5 border-t border-[#e1dbce] pt-4">
         <summary className="cursor-pointer text-xs font-semibold text-[#385e51]" data-testid="button-urgency-inputs">Inputs used and missing information</summary>
         <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">{fields.map(([label, value]) => <div key={label}><dt className="font-semibold text-[#344b42]">{label}</dt><dd className="mt-1 text-[#718078]">{value}</dd></div>)}</dl>
-        <p className="mt-4 break-words text-xs leading-5 text-[#718078]">Capture metadata: {sourceTimestamp || "Not supplied"}. Upload and save dates are not used as the photo's capture time.</p>
+        {demo
+          ? <p className="mt-4 break-words text-xs leading-5 text-[#718078]">Family-provided photo time: {String(scene.photoTakenAt ?? "Not supplied")}. All scenario inputs above were provided by the fictional family, not inferred from the photo.</p>
+          : <p className="mt-4 break-words text-xs leading-5 text-[#718078]">Capture metadata: {sourceTimestamp || "Not supplied"}. Upload and save dates are not used as the photo's capture time.</p>}
         <p className="mt-2 text-xs leading-5 text-[#718078]">Person factors: {knownPerson.length ? knownPerson.map(([key, value]) => `${key}: ${value}`).join("; ") : "Not supplied — no age, diagnosis, medication or mobility assumptions."}</p>
       </details>
       <details className="mt-4 border-t border-[#e1dbce] pt-4">
@@ -98,6 +101,6 @@ export function HealthUrgencyCard({ investigation, stored, person }: {
       </details>
     </>}
     <p className="mt-5 border-t border-[#e1dbce] pt-4 text-xs font-semibold leading-5 text-[#604a37]" data-testid="text-urgency-disclaimer">{result.disclaimer}</p>
-    <p className="mt-1 text-xs leading-5 text-[#718078]">Always contact emergency services. This tool supports, but never replaces, an emergency response.</p>
+    {!demo && <p className="mt-1 text-xs leading-5 text-[#718078]">Always contact emergency services. This tool supports, but never replaces, an emergency response.</p>}
   </section>;
 }

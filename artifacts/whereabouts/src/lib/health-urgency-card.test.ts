@@ -61,22 +61,25 @@ test("only valid, timezone-qualified past capture times become elapsed hours", (
   assert.equal(assessUrgency(inputs.scene, {}, now).timeSincePhoto, "about 2 hours ago");
 });
 
-test("each sample renders its stored assessment, next steps, unknown inputs and disclaimer", () => {
+test("each demo card renders family-based urgency with one disclaimer", () => {
   for (const sample of demoSamples) {
     const html = renderToStaticMarkup(createElement(HealthUrgencyCard, {
       investigation: sample.investigation,
+      demo: true,
       stored: { assessedAt: sample.urgencyAssessedAt, inputs: sample.urgencyInputs, result: sample.urgency },
     }));
     assert.ok(html.includes("Health risk &amp; urgency"));
     assert.ok(html.includes(`${sample.urgency.level} urgency`));
-    assert.ok(html.includes("Precomputed sample assessment"));
-    assert.ok(html.includes("Detected risk factors"));
+    assert.ok(!html.includes("Precomputed sample assessment"));
+    assert.ok(html.includes("Risk factors"));
     assert.ok(html.includes("Suggested next steps"));
-    assert.ok(html.includes("Unknown — usable capture metadata unavailable"));
-    assert.ok(html.includes("Unknown — not supplied"));
+    assert.ok(html.includes(sample.urgency.timeSincePhoto!));
+    assert.ok(html.includes(`${sample.urgencyInputs.scene.temperatureC}°C`));
     assert.ok(html.includes("How this was scored"));
     assert.ok(html.includes(DISCLAIMER));
-    assert.ok(html.includes("A Low result does not mean someone is safe"));
+    assert.equal(html.split(DISCLAIMER).length - 1, 1);
+    assert.ok(!html.includes("A Low result does not mean someone is safe"));
+    assert.ok(!html.includes("Always contact emergency services."));
     for (const risk of sample.urgency.risks) assert.ok(html.includes(risk.label));
   }
 });

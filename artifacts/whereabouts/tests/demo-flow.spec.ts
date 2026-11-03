@@ -37,7 +37,13 @@ async function verifyResult(page: import('@playwright/test').Page, sample: DemoC
   await expect.poll(() => page.getByTestId('img-demo-result-original').evaluate(
     (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
   )).toBe(true);
-  await expect(page.getByTestId('notice-demo-boundary')).toContainText('Fictional scenery-only demo.');
+  await expect(page.getByTestId('notice-demo-boundary')).toHaveCount(1);
+  await expect(page.getByTestId('notice-demo-boundary')).toHaveText('Sample cases with fictional scenarios. Real searches run the full AI pipeline.');
+  await expect(page.getByTestId('panel-demo-family')).toContainText('What the family told us');
+  await expect(page.getByTestId('status-urgency-level')).toHaveText(
+    record.id === 'sample-grandparent' ? 'Critical urgency' : 'High urgency',
+  );
+  if (record.id === 'sample-grandparent') await expect(page.getByTestId('panel-demo-family')).toContainText('Age 78');
   await expect(page.getByText('Precomputed sample', { exact: true })).toBeVisible();
   await expect(page.getByTestId('link-demo-sign-in')).toHaveAttribute('href', '/sign-in');
   await expect(page.getByTestId('link-demo-sign-in')).toBeVisible();
@@ -57,7 +63,7 @@ async function verifyResult(page: import('@playwright/test').Page, sample: DemoC
     await expect(card).toContainText(candidate.country);
     await expect(card).toContainText(candidate.rationale);
     for (const clue of candidate.clues) await expect(card).toContainText(clue);
-    await expect(page.getByTestId(`text-demo-candidate-score-${index}`)).toHaveText(`Model score ${score} / 100`);
+    await expect(page.getByTestId(`text-demo-candidate-score-${index}`)).toHaveText(`Match score ${score} / 100`);
     await expect(page.getByTestId(`text-demo-candidate-coordinates-${index}`))
       .toHaveText(`Sample coordinates ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
     await expect(page.getByTestId(`link-demo-candidate-map-${index}`)).toHaveAttribute('href', candidate.mapsUrl);
@@ -137,10 +143,10 @@ test('anonymous demo journey uses only stored scenery results', async ({ page },
     await page.getByTestId('button-run-demo-sample').click();
     await expect.poll(() => page.evaluate(() =>
       (window as typeof window & { __demoProgressRecords: { text: string; disabled: boolean; login: string }[] })
-        .__demoProgressRecords.some((entry) => entry.text.includes('Simulated demo step')
-          && entry.text.includes('No live pipeline is running') && entry.disabled && entry.login === '/sign-in'),
+        .__demoProgressRecords.some((entry) => entry.text.includes('Sample walkthrough')
+          && entry.text.includes('Checking photo metadata & authenticity') && entry.disabled && entry.login === '/sign-in'),
     ), { timeout: 3000 }).toBe(true);
-    await expect(page.getByTestId('text-demo-result-title')).toHaveText(sample.investigation.title, { timeout: 5000 });
+    await expect(page.getByTestId('text-demo-result-title')).toHaveText(sample.investigation.title, { timeout: 7000 });
     await verifyResult(page, sample);
     await page.getByTestId('button-back-from-demo-result').click();
     await expect(page.getByTestId('panel-demo-sample-picker')).toBeVisible();

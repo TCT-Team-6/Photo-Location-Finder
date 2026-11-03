@@ -9,3 +9,4 @@
 - [Locator model choice](locator-model-choice.md) — User reports choosing GPT-4o vision after testing GAEA and other Qwen-based geolocation models.
 - [Preview process lifecycle](preview-process-lifecycle.md) — Direct Node startup avoids orphaned Vite children; managed service commands run from the artifact directory.
 - [ProseMirror dependency alignment](prosemirror-alignment.md) — Align the pinned model with a patched view before changing editor code to resolve schema-type errors.
+- [Demo family scenarios](demo-family-scenarios.md) — Fictional family inputs drive sample urgency; keep relative times and demo-only presentation separate from live analysis.

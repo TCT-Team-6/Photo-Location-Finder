@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { demoSamples, getDemoSample } from "./demo-samples";
+import { demoSamples, getDemoSample, refreshDemoSample } from "./demo-samples";
+import { demoProgressStages } from "./demo-scenarios";
 import { assessUrgency } from "./urgency";
 import { urgencyInputsFromInvestigation } from "./urgency-inputs";
 
@@ -56,22 +57,44 @@ test("supplied urgency module is byte-for-byte unchanged", () => {
   );
 });
 
-test("stored JSON urgency results come from the supplied scorer and only available inputs", () => {
+test("demo urgency uses explicit family facts and produces the requested levels", () => {
   for (const sample of demoSamples) {
-    const inputs = urgencyInputsFromInvestigation(sample.investigation);
-    assert.deepEqual(JSON.parse(JSON.stringify(inputs)), sample.urgencyInputs);
-    assert.deepEqual(assessUrgency(inputs.scene, inputs.person, new Date(sample.urgencyAssessedAt)), sample.urgency);
-    assert.equal(inputs.scene.temperatureC, undefined);
-    assert.equal(inputs.scene.photoTakenAt, undefined);
-    assert.equal(inputs.scene.timeOfDay, undefined);
-    assert.equal(inputs.scene.weather, undefined);
-    assert.deepEqual(inputs.person, {});
-    assert.equal(sample.urgency.timeSincePhoto, null);
-    assert.ok(sample.urgency.risks.some((risk) => risk.label === "Photo time unknown"));
+    const { scene, person } = sample.urgencyInputs;
+    assert.deepEqual(assessUrgency({ ...scene, photoTakenAt: new Date(scene.photoTakenAt!) }, person, new Date(sample.urgencyAssessedAt)), sample.urgency);
+    assert.equal(scene.weather, undefined);
+    assert.ok(!sample.urgency.risks.some((risk) => risk.label === "Photo time unknown"));
   }
   assert.deepEqual(demoSamples.map((sample) => [sample.urgency.level, sample.urgency.score]), [
-    ["Moderate", 3], ["Low", 1], ["Moderate", 3],
+    ["High", 6], ["Critical", 9], ["High", 7],
   ]);
+  assert.deepEqual(demoSamples.map((sample) => sample.urgencyInputs.person), [
+    { ageGroup: "adult" },
+    { ageGroup: "older_adult", mayWanderOrBeConfused: true, needsMedication: true },
+    { ageGroup: "child" },
+  ]);
+  assert.ok(demoSamples[1].familyFacts.includes("Age 78"));
+});
+
+test("sample timestamps refresh relative to result opening, even long after page load", () => {
+  const now = new Date("2030-07-01T12:00:00Z");
+  const samples = demoSamples.map((sample) => refreshDemoSample(sample, now));
+  assert.deepEqual(samples.map((sample) => (now.getTime() - new Date(sample.urgencyInputs.scene.photoTakenAt!).getTime()) / 3_600_000), [5, 3, 0.5]);
+  assert.deepEqual(samples.map((sample) => sample.urgency.timeSincePhoto), [
+    "about 5 hours ago", "about 3 hours ago", "less than an hour ago",
+  ]);
+  assert.deepEqual(samples.map((sample) => sample.urgencyInputs.scene), [
+    { setting: "trail", terrain: "steep", temperatureC: 6, timeOfDay: "afternoon", photoTakenAt: "2030-07-01T07:00:00.000Z" },
+    { setting: "park", temperatureC: 29, timeOfDay: "evening", photoTakenAt: "2030-07-01T09:00:00.000Z" },
+    { setting: "beach", nearWater: true, temperatureC: 30, timeOfDay: "afternoon", photoTakenAt: "2030-07-01T11:30:00.000Z" },
+  ]);
+  assert.deepEqual(samples.map((sample) => sample.urgency.level), ["High", "Critical", "High"]);
+  assert.notEqual(samples[0].urgencyInputs.scene, demoSamples[0].urgencyInputs.scene);
+});
+
+test("demo walkthrough has exactly five named stages", () => {
+  assert.equal(demoProgressStages.length, 5);
+  assert.equal(demoProgressStages[0], "Checking photo metadata & authenticity");
+  assert.equal(demoProgressStages[2], "Generating location hypotheses");
 });
 
 test("adapter never derives health, weather or water facts from case names, guesses or negated prose", () => {

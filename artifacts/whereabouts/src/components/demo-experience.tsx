@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, ImagePlus, LoaderCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, Compass, ImagePlus, LoaderCircle } from 'lucide-react';
 import { Link } from 'wouter';
-import { demoSamples, type DemoSample } from '@/lib/demo-samples';
+import { demoSamples, refreshDemoSample, type DemoSample } from '@/lib/demo-samples';
+import { demoProgressStages } from '@/lib/demo-scenarios';
 import { trackEvent } from '@/lib/analytics';
 import { HealthUrgencyCard } from '@/components/health-urgency-card';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
@@ -11,13 +12,6 @@ type DemoView = 'overview' | 'investigate' | 'library';
 function scoreLabel(score: number) {
   const normalized = score > 1 ? score / 100 : score;
   return Math.round(Math.max(0, Math.min(1, normalized)) * 100);
-}
-
-function DemoBoundary({ compact = false }: { compact?: boolean }) {
-  return <div className={`flex gap-3 rounded-xl border border-[#ddc6aa] bg-[#f7ecdd] text-[#604a37] ${compact ? 'p-3' : 'p-4'}`} role="note" data-testid="notice-demo-boundary">
-    <ShieldAlert size={18} className="mt-0.5 shrink-0 text-[#9d6441]" aria-hidden="true" />
-    <p className="text-xs leading-5"><strong className="font-semibold">Fictional scenery-only demo.</strong> These samples do not represent current whereabouts and do not track or identify anyone. Model scores are illustrative comparisons, not probabilities.</p>
-  </div>;
 }
 
 function BrandMark({ inverse = false }: { inverse?: boolean }) {
@@ -65,8 +59,12 @@ function ResultView({ sample, onBack }: { sample: DemoSample; onBack: () => void
       <div><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">{sample.scenario} / illustrative result</p><h1 className="mt-3 font-editorial text-4xl tracking-[-.05em] md:text-5xl" data-testid="text-demo-result-title">{investigation.title}</h1></div>
       <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#cbd3c5] bg-[#e8eee4] px-3 py-2 font-data text-[9px] uppercase tracking-[.1em] text-[#385e51]"><Check size={13} />Precomputed sample</span>
     </div>
-    <DemoBoundary />
-    <HealthUrgencyCard investigation={investigation} stored={{ assessedAt: sample.urgencyAssessedAt, inputs: sample.urgencyInputs, result: sample.urgency }} />
+    <section className="rounded-2xl border border-[#bdc8bb] bg-[#e9ede3] p-5 sm:p-7" data-testid="panel-demo-family">
+      <h2 className="font-editorial text-2xl">What the family told us</h2>
+      <p className="mt-2 text-xs text-[#596d61]">Family-provided scenario details, not inferred from the photo.</p>
+      <ul className="mt-4 flex flex-wrap gap-2">{sample.familyFacts.map((fact) => <li key={fact} className="rounded-full border border-[#bdc8bb] bg-[#f8f5ec] px-3 py-2 text-sm text-[#385e51]">{fact}</li>)}</ul>
+    </section>
+    <HealthUrgencyCard demo investigation={investigation} stored={{ assessedAt: sample.urgencyAssessedAt, inputs: sample.urgencyInputs, result: sample.urgency }} />
     <div className="mt-6 grid gap-6 lg:grid-cols-[.92fr_1.08fr]">
       <section className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]" data-testid="panel-demo-original-photo">
         <img src={sample.imageUrl} alt={`Original fictional scenery photograph: ${investigation.title}`} className="max-h-[520px] min-h-[250px] w-full object-cover" data-testid="img-demo-result-original" />
@@ -87,7 +85,7 @@ function ResultView({ sample, onBack }: { sample: DemoSample; onBack: () => void
       </div>
     </div>
     <section className="mt-8" data-testid="section-demo-candidates">
-      <div className="mb-4"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Candidate places</p><h2 className="mt-1 font-editorial text-3xl">Scenery comparisons</h2><p className="mt-2 max-w-2xl text-xs leading-5 text-[#718078]">The supplied model scores are comparative sample values. They are not probabilities, certainty, or evidence that anyone was at a place.</p></div>
+      <div className="mb-4"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Candidate places</p><h2 className="mt-1 font-editorial text-3xl">Likely places</h2></div>
       <div className="grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
         <div className="space-y-3">
           {investigation.candidates.map((candidate, index) => {
@@ -97,7 +95,7 @@ function ResultView({ sample, onBack }: { sample: DemoSample; onBack: () => void
               <div className="flex items-start gap-3">
                 <button type="button" onClick={() => { setSelectedIndex(index); setOpenedLead(index); }} data-testid={`button-select-demo-candidate-${index}`} aria-pressed={active} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full font-data text-xs ${active ? 'bg-[#385e51] text-white' : 'bg-[#e8e4d8] text-[#385e51]'}`}>{index + 1}</button>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-editorial text-xl" data-testid={`text-demo-candidate-place-${index}`}>{candidate.place}</h3><span className="font-data text-[10px] text-[#9c6d4e]" data-testid={`text-demo-candidate-score-${index}`}>Model score {scoreLabel(candidate.confidence)} / 100</span></div>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-editorial text-xl" data-testid={`text-demo-candidate-place-${index}`}>{candidate.place}</h3><span className="font-data text-[10px] text-[#9c6d4e]" data-testid={`text-demo-candidate-score-${index}`}>Match score {scoreLabel(candidate.confidence)} / 100</span></div>
                   <p className="mt-1 text-xs text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ')}</p>
                   <p className="mt-3 text-xs leading-5 text-[#66796e]">{candidate.rationale}</p>
                   <div className="mt-3 flex flex-wrap gap-1.5">{candidate.clues.map((clue) => <span key={clue} className="rounded-full bg-[#e9ede3] px-2.5 py-1 text-[10px] text-[#557363]">{clue}</span>)}</div>
@@ -111,7 +109,7 @@ function ResultView({ sample, onBack }: { sample: DemoSample; onBack: () => void
           })}
         </div>
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <LeadLocationMap candidates={investigation.candidates} selectedIndex={selectedIndex} onSelect={setSelectedIndex} onOpenLead={setOpenedLead} popupActionLabel="Click marker to select this sample lead" />
+          <LeadLocationMap candidates={investigation.candidates} selectedIndex={selectedIndex} onSelect={setSelectedIndex} onOpenLead={setOpenedLead} scoreLabel="Match score" popupActionLabel="Click marker to select this sample lead" />
           <p className="mt-2 text-[10px] leading-4 text-[#829087]" data-testid="text-demo-map-note">{openedLead === null ? `Map points use the sample coordinates for ${topLead?.place ?? 'the selected candidate'}.` : `Selected map lead ${openedLead + 1}: ${investigation.candidates[openedLead]?.place}.`}</p>
         </div>
       </div>
@@ -124,16 +122,18 @@ export function DemoExperience() {
   const [activeSample, setActiveSample] = useState<DemoSample | null>(null);
   const [progressSample, setProgressSample] = useState<DemoSample | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [progressStage, setProgressStage] = useState(0);
   const [selectedSampleId, setSelectedSampleId] = useState(demoSamples[0]?.investigation.id ?? '');
 
   useEffect(() => {
     if (!isSimulating || !progressSample) return;
+    const interval = window.setInterval(() => setProgressStage((stage) => Math.min(stage + 1, demoProgressStages.length - 1)), 1000);
     const timer = window.setTimeout(() => {
-      setActiveSample(progressSample);
+      setActiveSample(refreshDemoSample(progressSample));
       setProgressSample(null);
       setIsSimulating(false);
-    }, 1150);
-    return () => window.clearTimeout(timer);
+    }, 5000);
+    return () => { window.clearTimeout(timer); window.clearInterval(interval); };
   }, [isSimulating, progressSample]);
 
   const navigation = [
@@ -143,7 +143,7 @@ export function DemoExperience() {
   ];
   const openSample = (sample: DemoSample) => {
     trackEvent('demo_sample_open', { scenario_id: sample.investigation.id });
-    setActiveSample(sample);
+    setActiveSample(refreshDemoSample(sample));
     setProgressSample(null);
     setIsSimulating(false);
   };
@@ -158,6 +158,7 @@ export function DemoExperience() {
     if (!sample) return;
     trackEvent('demo_sample_run', { scenario_id: sample.investigation.id });
     setProgressSample(sample);
+    setProgressStage(0);
     setIsSimulating(true);
   };
 
@@ -169,30 +170,27 @@ export function DemoExperience() {
     </aside>
     <main className="min-w-0 flex-1 px-5 py-6 md:px-10 md:py-8">
       <div className="mb-7 flex items-center justify-between gap-4"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#829087]">Personal field notes / Demo</p><Link href="/" data-testid="link-demo-home" className="text-xs text-[#62756c] hover:text-[#385e51]">Back to home</Link></div>
+      <p className="mb-6 text-xs leading-5 text-[#718078]" role="note" data-testid="notice-demo-boundary">Sample cases with fictional scenarios. Real searches run the full AI pipeline.</p>
       <nav className="mb-6 flex gap-2 overflow-x-auto md:hidden" aria-label="Demo navigation">{navigation.map((item) => <button type="button" key={item.id} onClick={() => chooseView(item.id)} aria-current={view === item.id ? 'page' : undefined} data-testid={`button-demo-mobile-nav-${item.id}`} className={`shrink-0 rounded-full px-4 py-2.5 text-xs ${view === item.id ? 'bg-[#3b5d50] text-white' : 'border border-[#d8d1c2] bg-[#f8f5ec]'}`}>{item.label}</button>)}</nav>
       <div className="mb-6 flex justify-end md:hidden"><Link href="/sign-in" data-testid="link-demo-sign-in-mobile" className="text-xs font-semibold text-[#385e51] underline underline-offset-4">Log in to save your progress</Link></div>
       {activeSample ? <ResultView sample={activeSample} onBack={() => setActiveSample(null)} /> : <>
         {view === 'overview' && <div className="fade-up">
           <div className="mb-7 grid gap-6 lg:grid-cols-[1fr_320px] lg:items-end">
             <div><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Personal archive / overview</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">A field desk, in miniature.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Explore three complete, precomputed scenery examples. Open a result directly, or pick one to walk through the short illustrative demo flow.</p></div>
-            <div className="rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#d78b5a]">Three sample records</p><p className="mt-2 font-editorial text-3xl">No live search</p><p className="mt-2 text-xs leading-5 text-[#c1cdbf]">Everything you see is precomputed and stays in this page session only.</p></div>
+            <div className="rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#d78b5a]">Three sample records</p><p className="mt-2 font-editorial text-3xl">Every clue matters</p><p className="mt-2 text-xs leading-5 text-[#c1cdbf]">Explore likely places alongside the family's details and a health risk summary.</p></div>
           </div>
-          <div className="mb-6"><DemoBoundary /></div>
           <div className="mb-4 flex items-end justify-between border-b border-[#d8d1c2] pb-3"><div><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Sample archive</p><h2 className="mt-1 font-editorial text-3xl">Three scenery studies</h2></div><button type="button" onClick={() => chooseView('library')} data-testid="button-overview-open-library" className="hidden items-center gap-2 text-xs font-semibold text-[#385e51] sm:inline-flex">Browse library <ArrowRight size={14} /></button></div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{demoSamples.map((sample) => <SampleCard key={sample.investigation.id} sample={sample} onOpen={openSample} />)}</div>
-          <div className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#eee9dc] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5"><div><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Try the interaction</p><p className="mt-2 font-editorial text-2xl">Choose a sample, then follow its stored result.</p><p className="mt-1 text-xs leading-5 text-[#718078]">The brief progress screen is explicitly simulated; it does not run analysis.</p></div><button type="button" onClick={() => chooseView('investigate')} data-testid="button-overview-new-investigation" className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] sm:mt-0 motion-reduce:transition-none">New investigation <ArrowRight size={15} /></button></div>
+          <div className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#eee9dc] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5"><div><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Try the interaction</p><p className="mt-2 font-editorial text-2xl">Choose a sample, then follow its result.</p></div><button type="button" onClick={() => chooseView('investigate')} data-testid="button-overview-new-investigation" className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] sm:mt-0 motion-reduce:transition-none">New investigation <ArrowRight size={15} /></button></div>
         </div>}
         {view === 'library' && <div className="fade-up">
           <div className="mb-7"><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Personal archive / index</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">My library.</h1><p className="mt-3 text-sm text-[#718078]">Every result below is a fixed fictional sample, available to open without signing in.</p></div>
-          <div className="mb-6"><DemoBoundary compact /></div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{demoSamples.map((sample) => <SampleCard key={sample.investigation.id} sample={sample} onOpen={openSample} actionLabel="Open complete result" />)}</div>
         </div>}
         {view === 'investigate' && <div className="fade-up">
-          <div className="mb-7"><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">New investigation / demo</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Choose a sample.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">A real photo analysis is not available here. Select one precomputed record to see its complete illustrative result.</p></div>
-          <div className="mb-6"><DemoBoundary /></div>
+          <div className="mb-7"><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">New investigation / demo</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Choose a sample.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">Select a case to explore its photo, likely places and health risk summary.</p></div>
           <section className="max-w-3xl rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 sm:p-7" data-testid="panel-demo-sample-picker">
             <label htmlFor="demo-sample-choice" className="block font-editorial text-2xl">Select a scenery study</label>
-            <p className="mt-1 text-xs leading-5 text-[#718078]">Choosing a sample only changes this in-memory demo view.</p>
             <select id="demo-sample-choice" value={selectedSampleId} onChange={(event) => setSelectedSampleId(event.target.value)} data-testid="select-demo-sample" className="mt-4 h-12 w-full rounded-xl border border-[#c9c2b3] bg-[#fbf9f3] px-4 text-sm text-[#263d36] focus:outline-none focus:ring-2 focus:ring-[#385e51]/25">
               {demoSamples.map((sample) => <option key={sample.investigation.id} value={sample.investigation.id}>{sample.scenario} — {sample.investigation.title}</option>)}
             </select>
@@ -200,10 +198,12 @@ export function DemoExperience() {
               <img src={demoSamples.find((sample) => sample.investigation.id === selectedSampleId)?.imageUrl} alt="Selected fictional scenery sample" className="h-36 w-full rounded-xl object-cover sm:h-32" data-testid="img-selected-demo-sample" />
               <div><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Stored sample</p><p className="mt-2 font-editorial text-2xl">{demoSamples.find((sample) => sample.investigation.id === selectedSampleId)?.investigation.title}</p><p className="mt-1 text-xs leading-5 text-[#718078]">{demoSamples.find((sample) => sample.investigation.id === selectedSampleId)?.investigation.summary}</p></div>
             </div>}
-            <button type="button" onClick={startSimulation} disabled={isSimulating || !selectedSampleId} data-testid="button-run-demo-sample" className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"><ImagePlus size={16} />Run illustrative demo <ArrowRight size={16} /></button>
+            <button type="button" onClick={startSimulation} disabled={isSimulating || !selectedSampleId} data-testid="button-run-demo-sample" className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"><ImagePlus size={16} />Analyze photo <ArrowRight size={16} /></button>
           </section>
           {isSimulating && progressSample && <section className="mt-5 max-w-3xl rounded-2xl border border-[#bdc8bb] bg-[#e9ede3] p-5" role="status" aria-live="polite" data-testid="status-demo-simulated-progress">
-            <div className="flex items-start gap-3"><LoaderCircle size={18} className="mt-1 shrink-0 animate-spin text-[#385e51] motion-reduce:animate-none" aria-hidden="true" /><div><p className="font-editorial text-xl">Simulated demo step</p><p className="mt-1 text-sm leading-6 text-[#596d61]">No live pipeline is running. This short pause is illustrative; opening the existing precomputed result for <strong>{progressSample.investigation.title}</strong>.</p></div></div>
+            <p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Sample walkthrough</p>
+            <div className="mt-3 flex items-center gap-3"><LoaderCircle size={18} className="shrink-0 animate-spin text-[#385e51] motion-reduce:animate-none" aria-hidden="true" /><p className="font-editorial text-xl" data-testid="text-demo-progress-stage">{demoProgressStages[progressStage]}</p></div>
+            <ol className="mt-5 space-y-2">{demoProgressStages.map((stage, index) => <li key={stage} aria-current={index === progressStage ? 'step' : undefined} className={`flex gap-3 rounded-lg px-3 py-2 text-xs ${index === progressStage ? 'bg-[#385e51] font-semibold text-white' : 'text-[#718078]'}`}><span className="font-data">{index + 1}</span>{stage}</li>)}</ol>
           </section>}
           <div className="mt-8 grid gap-3 md:grid-cols-3">{demoSamples.map((sample) => <button key={sample.investigation.id} type="button" onClick={() => setSelectedSampleId(sample.investigation.id)} aria-pressed={selectedSampleId === sample.investigation.id} data-testid={`button-choose-sample-${sample.investigation.id}`} className={`flex min-h-20 items-center gap-3 rounded-xl border p-3 text-left transition-colors motion-reduce:transition-none ${selectedSampleId === sample.investigation.id ? 'border-[#718c79] bg-[#e8eee4]' : 'border-[#d8d1c2] bg-[#f8f5ec] hover:bg-[#eee9dc]'}`}><img src={sample.imageUrl} alt="" className="h-14 w-16 rounded-lg object-cover" /><span><span className="block font-data text-[9px] uppercase tracking-[.12em] text-[#9c6d4e]">{sample.scenario}</span><span className="mt-1 block font-editorial text-lg">{sample.investigation.title}</span></span></button>)}</div>
         </div>}
