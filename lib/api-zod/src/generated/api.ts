@@ -20,7 +20,7 @@ export const GetLocatorHealthResponse = zod.object({
  * @summary Retry a failed saved video analysis
  */
 export const RetryInvestigationAnalysisParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const retryInvestigationAnalysisResponseCandidatesItemConfidenceMin = 0;
@@ -128,7 +128,7 @@ export const retryInvestigationAnalysisResponseAnalysisDetailsExifTimestampMax =
 export const RetryInvestigationAnalysisResponse = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -143,11 +143,11 @@ export const RetryInvestigationAnalysisResponse = zod.object({
   "confidence": zod.number().min(retryInvestigationAnalysisResponseCandidatesItemConfidenceMin).max(retryInvestigationAnalysisResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -162,21 +162,21 @@ export const RetryInvestigationAnalysisResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(retryInvestigationAnalysisResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(retryInvestigationAnalysisResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(retryInvestigationAnalysisResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(retryInvestigationAnalysisResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(retryInvestigationAnalysisResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(retryInvestigationAnalysisResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesItemMax)).max(retryInvestigationAnalysisResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(retryInvestigationAnalysisResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisLongitudeMin).max(retryInvestigationAnalysisResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(retryInvestigationAnalysisResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(retryInvestigationAnalysisResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(retryInvestigationAnalysisResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(retryInvestigationAnalysisResponseAnalysisConfidenceMin).max(retryInvestigationAnalysisResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(retryInvestigationAnalysisResponseAnalysisSourceMax).optional(),
@@ -187,7 +187,7 @@ export const RetryInvestigationAnalysisResponse = zod.object({
   "precision_m": zod.number().min(retryInvestigationAnalysisResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMin).max(retryInvestigationAnalysisResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -274,7 +274,7 @@ export const listMissingPersonCasesResponseTwoLeadsItemOnePhotoOneOriginalNameMa
 
 
 export const ListMissingPersonCasesResponseItem = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(listMissingPersonCasesResponseOneFirstNameMax),
   "lastName": zod.string().max(listMissingPersonCasesResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(listMissingPersonCasesResponseOneNicknameMax).optional(),
@@ -291,17 +291,17 @@ export const ListMissingPersonCasesResponseItem = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(listMissingPersonCasesResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(listMissingPersonCasesResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(listMissingPersonCasesResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(listMissingPersonCasesResponseTwoLeadsItemOneSourceMax),
@@ -316,7 +316,7 @@ export const ListMissingPersonCasesResponseItem = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -348,7 +348,7 @@ export const createMissingPersonCaseBodyHeadshotOneOriginalNameMax = 255;
 
 
 export const CreateMissingPersonCaseBody = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(createMissingPersonCaseBodyFirstNameMax),
   "lastName": zod.string().max(createMissingPersonCaseBodyLastNameMax).optional(),
   "nickname": zod.string().max(createMissingPersonCaseBodyNicknameMax).optional(),
@@ -411,7 +411,7 @@ export const createMissingPersonCaseResponseTwoLeadsItemOnePhotoOneOriginalNameM
 
 
 export const CreateMissingPersonCaseResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(createMissingPersonCaseResponseOneFirstNameMax),
   "lastName": zod.string().max(createMissingPersonCaseResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(createMissingPersonCaseResponseOneNicknameMax).optional(),
@@ -428,17 +428,17 @@ export const CreateMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(createMissingPersonCaseResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(createMissingPersonCaseResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(createMissingPersonCaseResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(createMissingPersonCaseResponseTwoLeadsItemOneSourceMax),
@@ -453,7 +453,7 @@ export const CreateMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -461,7 +461,7 @@ export const CreateMissingPersonCaseResponse = zod.object({
 
 
 export const GetMissingPersonCaseParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const getMissingPersonCaseResponseOneFirstNameMax = 80;
@@ -509,7 +509,7 @@ export const getMissingPersonCaseResponseTwoLeadsItemOnePhotoOneOriginalNameMax 
 
 
 export const GetMissingPersonCaseResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(getMissingPersonCaseResponseOneFirstNameMax),
   "lastName": zod.string().max(getMissingPersonCaseResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(getMissingPersonCaseResponseOneNicknameMax).optional(),
@@ -526,17 +526,17 @@ export const GetMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(getMissingPersonCaseResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(getMissingPersonCaseResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(getMissingPersonCaseResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(getMissingPersonCaseResponseTwoLeadsItemOneSourceMax),
@@ -551,7 +551,7 @@ export const GetMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -559,7 +559,7 @@ export const GetMissingPersonCaseResponse = zod.object({
 
 
 export const UpdateMissingPersonCaseParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const updateMissingPersonCaseBodyFirstNameMax = 80;
@@ -586,7 +586,7 @@ export const updateMissingPersonCaseBodyHeadshotOneOriginalNameMax = 255;
 
 
 export const UpdateMissingPersonCaseBody = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(updateMissingPersonCaseBodyFirstNameMax),
   "lastName": zod.string().max(updateMissingPersonCaseBodyLastNameMax).optional(),
   "nickname": zod.string().max(updateMissingPersonCaseBodyNicknameMax).optional(),
@@ -649,7 +649,7 @@ export const updateMissingPersonCaseResponseTwoLeadsItemOnePhotoOneOriginalNameM
 
 
 export const UpdateMissingPersonCaseResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(updateMissingPersonCaseResponseOneFirstNameMax),
   "lastName": zod.string().max(updateMissingPersonCaseResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(updateMissingPersonCaseResponseOneNicknameMax).optional(),
@@ -666,17 +666,17 @@ export const UpdateMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(updateMissingPersonCaseResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(updateMissingPersonCaseResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(updateMissingPersonCaseResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(updateMissingPersonCaseResponseTwoLeadsItemOneSourceMax),
@@ -691,7 +691,7 @@ export const UpdateMissingPersonCaseResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -699,14 +699,14 @@ export const UpdateMissingPersonCaseResponse = zod.object({
 
 
 export const DeleteMissingPersonCaseParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const DeleteMissingPersonCaseResponse = zod.void()
 
 
 export const SaveCaseReviewParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const saveCaseReviewBodyObservationsMax = 10000;
@@ -720,7 +720,7 @@ export const saveCaseReviewBodyExpectedRevisionMin = 0;
 export const SaveCaseReviewBody = zod.object({
   "observations": zod.string().max(saveCaseReviewBodyObservationsMax),
   "nextSteps": zod.string().max(saveCaseReviewBodyNextStepsMax),
-  "expectedRevision": zod.number().int().min(saveCaseReviewBodyExpectedRevisionMin)
+  "expectedRevision": zod.int().min(saveCaseReviewBodyExpectedRevisionMin)
 })
 
 export const saveCaseReviewResponseOneFirstNameMax = 80;
@@ -768,7 +768,7 @@ export const saveCaseReviewResponseTwoLeadsItemOnePhotoOneOriginalNameMax = 255;
 
 
 export const SaveCaseReviewResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(saveCaseReviewResponseOneFirstNameMax),
   "lastName": zod.string().max(saveCaseReviewResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(saveCaseReviewResponseOneNicknameMax).optional(),
@@ -785,17 +785,17 @@ export const SaveCaseReviewResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(saveCaseReviewResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(saveCaseReviewResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(saveCaseReviewResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(saveCaseReviewResponseTwoLeadsItemOneSourceMax),
@@ -810,7 +810,7 @@ export const SaveCaseReviewResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -818,7 +818,7 @@ export const SaveCaseReviewResponse = zod.object({
 
 
 export const CreateCaseLeadParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const createCaseLeadBodyTitleMax = 160;
@@ -840,7 +840,7 @@ export const createCaseLeadBodyPhotoOneOriginalNameMax = 255;
 
 
 export const CreateCaseLeadBody = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(createCaseLeadBodyTitleMax),
   "source": zod.string().min(1).max(createCaseLeadBodySourceMax),
@@ -901,7 +901,7 @@ export const createCaseLeadResponseTwoLeadsItemOnePhotoOneOriginalNameMax = 255;
 
 
 export const CreateCaseLeadResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(createCaseLeadResponseOneFirstNameMax),
   "lastName": zod.string().max(createCaseLeadResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(createCaseLeadResponseOneNicknameMax).optional(),
@@ -918,17 +918,17 @@ export const CreateCaseLeadResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(createCaseLeadResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(createCaseLeadResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(createCaseLeadResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(createCaseLeadResponseTwoLeadsItemOneSourceMax),
@@ -943,7 +943,7 @@ export const CreateCaseLeadResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -951,8 +951,8 @@ export const CreateCaseLeadResponse = zod.object({
 
 
 export const ReviewCaseLeadParams = zod.object({
-  "id": zod.coerce.string().uuid(),
-  "leadId": zod.coerce.string().uuid()
+  "id": zod.uuid(),
+  "leadId": zod.uuid()
 })
 
 export const ReviewCaseLeadBody = zod.object({
@@ -1004,7 +1004,7 @@ export const reviewCaseLeadResponseTwoLeadsItemOnePhotoOneOriginalNameMax = 255;
 
 
 export const ReviewCaseLeadResponse = zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "firstName": zod.string().min(1).max(reviewCaseLeadResponseOneFirstNameMax),
   "lastName": zod.string().max(reviewCaseLeadResponseOneLastNameMax).optional(),
   "nickname": zod.string().max(reviewCaseLeadResponseOneNicknameMax).optional(),
@@ -1021,17 +1021,17 @@ export const ReviewCaseLeadResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "review": zod.object({
   "observations": zod.string().max(reviewCaseLeadResponseTwoReviewObservationsMax),
   "nextSteps": zod.string().max(reviewCaseLeadResponseTwoReviewNextStepsMax),
-  "revision": zod.number().int().min(1),
+  "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
 }).optional(),
   "leads": zod.array(zod.object({
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "kind": zod.enum(['photo', 'link', 'tip']),
   "title": zod.string().min(1).max(reviewCaseLeadResponseTwoLeadsItemOneTitleMax),
   "source": zod.string().min(1).max(reviewCaseLeadResponseTwoLeadsItemOneSourceMax),
@@ -1046,7 +1046,7 @@ export const ReviewCaseLeadResponse = zod.object({
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp'])
 }),zod.null()]).optional()
 }).and(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "reviewStatus": zod.enum(['needs-verification', 'relevant', 'unrelated']),
   "createdAt": zod.coerce.date()
 })))
@@ -1054,8 +1054,8 @@ export const ReviewCaseLeadResponse = zod.object({
 
 
 export const DeleteCaseLeadParams = zod.object({
-  "id": zod.coerce.string().uuid(),
-  "leadId": zod.coerce.string().uuid()
+  "id": zod.uuid(),
+  "leadId": zod.uuid()
 })
 
 export const DeleteCaseLeadResponse = zod.void()
@@ -1081,7 +1081,7 @@ export const requestUploadUrlBodySizeMax = 62914560;
 
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1).max(requestUploadUrlBodyNameMax),
-  "size": zod.number().int().min(1).max(requestUploadUrlBodySizeMax),
+  "size": zod.int().min(1).max(requestUploadUrlBodySizeMax),
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp'])
 })
 
@@ -1092,11 +1092,11 @@ export const requestUploadUrlResponseMetadataSizeMax = 62914560;
 
 
 export const RequestUploadUrlResponse = zod.object({
-  "uploadURL": zod.string().url(),
+  "uploadURL": zod.url(),
   "objectPath": zod.string(),
   "metadata": zod.object({
   "name": zod.string().min(1).max(requestUploadUrlResponseMetadataNameMax),
-  "size": zod.number().int().min(1).max(requestUploadUrlResponseMetadataSizeMax),
+  "size": zod.int().min(1).max(requestUploadUrlResponseMetadataSizeMax),
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp'])
 }).optional()
 })
@@ -1218,7 +1218,7 @@ export const listInvestigationsResponseAnalysisDetailsExifTimestampMax = 1200;
 export const ListInvestigationsResponseItem = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -1233,11 +1233,11 @@ export const ListInvestigationsResponseItem = zod.object({
   "confidence": zod.number().min(listInvestigationsResponseCandidatesItemConfidenceMin).max(listInvestigationsResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -1252,21 +1252,21 @@ export const ListInvestigationsResponseItem = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(listInvestigationsResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(listInvestigationsResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(listInvestigationsResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(listInvestigationsResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(listInvestigationsResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(listInvestigationsResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(listInvestigationsResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(listInvestigationsResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(listInvestigationsResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(listInvestigationsResponseAnalysisContributingFramesItemCandidatesItemMax)).max(listInvestigationsResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(listInvestigationsResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(listInvestigationsResponseAnalysisLatitudeMin).max(listInvestigationsResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(listInvestigationsResponseAnalysisLongitudeMin).max(listInvestigationsResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(listInvestigationsResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(listInvestigationsResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(listInvestigationsResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(listInvestigationsResponseAnalysisConfidenceMin).max(listInvestigationsResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(listInvestigationsResponseAnalysisSourceMax).optional(),
@@ -1277,7 +1277,7 @@ export const ListInvestigationsResponseItem = zod.object({
   "precision_m": zod.number().min(listInvestigationsResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(listInvestigationsResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(listInvestigationsResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(listInvestigationsResponseAnalysisSearchAreasItemLatitudeMin).max(listInvestigationsResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -1338,7 +1338,7 @@ export const createInvestigationBodyTitleMax = 120;
 
 export const CreateInvestigationBody = zod.object({
   "objectPath": zod.string().min(1),
-  "clientRequestId": zod.string().uuid(),
+  "clientRequestId": zod.uuid(),
   "originalName": zod.string().min(1).max(createInvestigationBodyOriginalNameMax),
   "contentType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/bmp', 'image/x-ms-bmp', 'image/tiff', 'image/x-tiff', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo', 'video/3gpp']),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
@@ -1454,7 +1454,7 @@ export const createInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 export const CreateInvestigationResponse = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -1469,11 +1469,11 @@ export const CreateInvestigationResponse = zod.object({
   "confidence": zod.number().min(createInvestigationResponseCandidatesItemConfidenceMin).max(createInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -1488,21 +1488,21 @@ export const CreateInvestigationResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(createInvestigationResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(createInvestigationResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(createInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(createInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(createInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(createInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(createInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(createInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(createInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(createInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(createInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(createInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(createInvestigationResponseAnalysisLatitudeMin).max(createInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(createInvestigationResponseAnalysisLongitudeMin).max(createInvestigationResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(createInvestigationResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(createInvestigationResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(createInvestigationResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(createInvestigationResponseAnalysisConfidenceMin).max(createInvestigationResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(createInvestigationResponseAnalysisSourceMax).optional(),
@@ -1513,7 +1513,7 @@ export const CreateInvestigationResponse = zod.object({
   "precision_m": zod.number().min(createInvestigationResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(createInvestigationResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(createInvestigationResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(createInvestigationResponseAnalysisSearchAreasItemLatitudeMin).max(createInvestigationResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -1661,12 +1661,12 @@ export const getInvestigationSummaryResponseLatestOneAnalysisDetailsExifTimestam
 
 
 export const GetInvestigationSummaryResponse = zod.object({
-  "total": zod.number().int(),
-  "thisMonth": zod.number().int(),
+  "total": zod.int(),
+  "thisMonth": zod.int(),
   "latest": zod.union([zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -1681,11 +1681,11 @@ export const GetInvestigationSummaryResponse = zod.object({
   "confidence": zod.number().min(getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMin).max(getInvestigationSummaryResponseLatestOneCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -1700,21 +1700,21 @@ export const GetInvestigationSummaryResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(getInvestigationSummaryResponseLatestOneAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(getInvestigationSummaryResponseLatestOneAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesItemMax)).max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(getInvestigationSummaryResponseLatestOneAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisLatitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisLongitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(getInvestigationSummaryResponseLatestOneAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(getInvestigationSummaryResponseLatestOneAnalysisMapUrlMax).optional(),
   "address": zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisAddressMax).optional(),
   "confidence": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisConfidenceMin).max(getInvestigationSummaryResponseLatestOneAnalysisConfidenceMax).optional(),
   "source": zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisSourceMax).optional(),
@@ -1725,7 +1725,7 @@ export const GetInvestigationSummaryResponse = zod.object({
   "precision_m": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(getInvestigationSummaryResponseLatestOneAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(getInvestigationSummaryResponseLatestOneAnalysisSearchAreasItemLatitudeMin).max(getInvestigationSummaryResponseLatestOneAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -1772,7 +1772,7 @@ export const GetInvestigationSummaryResponse = zod.object({
  * @summary Get one saved investigation
  */
 export const GetInvestigationParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const getInvestigationResponseCandidatesItemConfidenceMin = 0;
@@ -1880,7 +1880,7 @@ export const getInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 export const GetInvestigationResponse = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -1895,11 +1895,11 @@ export const GetInvestigationResponse = zod.object({
   "confidence": zod.number().min(getInvestigationResponseCandidatesItemConfidenceMin).max(getInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -1914,21 +1914,21 @@ export const GetInvestigationResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(getInvestigationResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(getInvestigationResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(getInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(getInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(getInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(getInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(getInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(getInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(getInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(getInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(getInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(getInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(getInvestigationResponseAnalysisLatitudeMin).max(getInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(getInvestigationResponseAnalysisLongitudeMin).max(getInvestigationResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(getInvestigationResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(getInvestigationResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(getInvestigationResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(getInvestigationResponseAnalysisConfidenceMin).max(getInvestigationResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(getInvestigationResponseAnalysisSourceMax).optional(),
@@ -1939,7 +1939,7 @@ export const GetInvestigationResponse = zod.object({
   "precision_m": zod.number().min(getInvestigationResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(getInvestigationResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(getInvestigationResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(getInvestigationResponseAnalysisSearchAreasItemLatitudeMin).max(getInvestigationResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -1985,7 +1985,7 @@ export const GetInvestigationResponse = zod.object({
  * @summary Update an investigation's title or background notes
  */
 export const UpdateInvestigationParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const updateInvestigationBodyTitleMax = 120;
@@ -2104,7 +2104,7 @@ export const updateInvestigationResponseAnalysisDetailsExifTimestampMax = 1200;
 export const UpdateInvestigationResponse = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -2119,11 +2119,11 @@ export const UpdateInvestigationResponse = zod.object({
   "confidence": zod.number().min(updateInvestigationResponseCandidatesItemConfidenceMin).max(updateInvestigationResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -2138,21 +2138,21 @@ export const UpdateInvestigationResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(updateInvestigationResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(updateInvestigationResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(updateInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(updateInvestigationResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(updateInvestigationResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(updateInvestigationResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(updateInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(updateInvestigationResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(updateInvestigationResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(updateInvestigationResponseAnalysisContributingFramesItemCandidatesItemMax)).max(updateInvestigationResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(updateInvestigationResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(updateInvestigationResponseAnalysisLatitudeMin).max(updateInvestigationResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(updateInvestigationResponseAnalysisLongitudeMin).max(updateInvestigationResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(updateInvestigationResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(updateInvestigationResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(updateInvestigationResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(updateInvestigationResponseAnalysisConfidenceMin).max(updateInvestigationResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(updateInvestigationResponseAnalysisSourceMax).optional(),
@@ -2163,7 +2163,7 @@ export const UpdateInvestigationResponse = zod.object({
   "precision_m": zod.number().min(updateInvestigationResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(updateInvestigationResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(updateInvestigationResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(updateInvestigationResponseAnalysisSearchAreasItemLatitudeMin).max(updateInvestigationResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -2209,7 +2209,7 @@ export const UpdateInvestigationResponse = zod.object({
  * @summary Delete an investigation from the library
  */
 export const DeleteInvestigationParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const DeleteInvestigationResponse = zod.void()
@@ -2219,7 +2219,7 @@ export const DeleteInvestigationResponse = zod.void()
  * @summary Find new location leads for a saved investigation
  */
 export const RefreshInvestigationCandidatesParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const refreshInvestigationCandidatesBodyExcludePlacesItemMax = 180;
@@ -2337,7 +2337,7 @@ export const refreshInvestigationCandidatesResponseAnalysisDetailsExifTimestampM
 export const RefreshInvestigationCandidatesResponse = zod.object({
   "status": zod.union([zod.literal('analyzing'),zod.literal('done'),zod.literal('failed'),zod.literal(null)]).nullish(),
   "analysisError": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "title": zod.string(),
   "desk": zod.enum(['original', 'recreation', 'fake-news']),
   "originalName": zod.string(),
@@ -2352,11 +2352,11 @@ export const RefreshInvestigationCandidatesResponse = zod.object({
   "confidence": zod.number().min(refreshInvestigationCandidatesResponseCandidatesItemConfidenceMin).max(refreshInvestigationCandidatesResponseCandidatesItemConfidenceMax),
   "rationale": zod.string(),
   "clues": zod.array(zod.string()),
-  "mapsUrl": zod.string().url(),
+  "mapsUrl": zod.url(),
   "photoReferences": zod.array(zod.object({
-  "imageUrl": zod.string().url(),
-  "thumbnailUrl": zod.string().url().nullish(),
-  "sourceUrl": zod.string().url(),
+  "imageUrl": zod.url(),
+  "thumbnailUrl": zod.url().nullish(),
+  "sourceUrl": zod.url(),
   "caption": zod.string().nullish()
 })).optional(),
   "photoSearchStatus": zod.enum(['found', 'no_results', 'unavailable']).optional()
@@ -2371,21 +2371,21 @@ export const RefreshInvestigationCandidatesResponse = zod.object({
   "video": zod.object({
   "duration_s": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoDurationSMin).optional(),
   "fps": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoFpsMin).optional(),
-  "frames_analyzed": zod.number().int().min(refreshInvestigationCandidatesResponseAnalysisVideoFramesAnalyzedMin).optional(),
+  "frames_analyzed": zod.int().min(refreshInvestigationCandidatesResponseAnalysisVideoFramesAnalyzedMin).optional(),
   "embedded_gps": zod.object({
   "latitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMin).max(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLatitudeMax),
   "longitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMin).max(refreshInvestigationCandidatesResponseAnalysisVideoEmbeddedGpsLongitudeMax)
 }).optional()
 }).optional(),
   "contributing_frames": zod.array(zod.object({
-  "index": zod.number().int().min(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemIndexMin).optional(),
+  "index": zod.int().min(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemIndexMin).optional(),
   "timestamp_s": zod.number().min(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemTimestampSMin).optional(),
   "candidates": zod.array(zod.string().max(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesItemMax)).max(refreshInvestigationCandidatesResponseAnalysisContributingFramesItemCandidatesMax).optional(),
   "clues_found": zod.boolean().optional()
 })).max(refreshInvestigationCandidatesResponseAnalysisContributingFramesMax).optional(),
   "latitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisLatitudeMin).max(refreshInvestigationCandidatesResponseAnalysisLatitudeMax).optional(),
   "longitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisLongitudeMin).max(refreshInvestigationCandidatesResponseAnalysisLongitudeMax).optional(),
-  "map_url": zod.string().url().max(refreshInvestigationCandidatesResponseAnalysisMapUrlMax).optional(),
+  "map_url": zod.url().max(refreshInvestigationCandidatesResponseAnalysisMapUrlMax).optional(),
   "address": zod.string().max(refreshInvestigationCandidatesResponseAnalysisAddressMax).optional(),
   "confidence": zod.number().min(refreshInvestigationCandidatesResponseAnalysisConfidenceMin).max(refreshInvestigationCandidatesResponseAnalysisConfidenceMax).optional(),
   "source": zod.string().max(refreshInvestigationCandidatesResponseAnalysisSourceMax).optional(),
@@ -2396,7 +2396,7 @@ export const RefreshInvestigationCandidatesResponse = zod.object({
   "precision_m": zod.number().min(refreshInvestigationCandidatesResponseAnalysisPrecisionMMin).optional(),
   "elevation_m": zod.number().optional(),
   "search_areas": zod.array(zod.object({
-  "rank": zod.number().int().min(1).optional(),
+  "rank": zod.int().min(1).optional(),
   "name": zod.string().max(refreshInvestigationCandidatesResponseAnalysisSearchAreasItemNameMax).optional(),
   "country": zod.string().max(refreshInvestigationCandidatesResponseAnalysisSearchAreasItemCountryMax).optional(),
   "latitude": zod.number().min(refreshInvestigationCandidatesResponseAnalysisSearchAreasItemLatitudeMin).max(refreshInvestigationCandidatesResponseAnalysisSearchAreasItemLatitudeMax).optional(),
@@ -2442,7 +2442,7 @@ export const RefreshInvestigationCandidatesResponse = zod.object({
  * @summary Serve the private photo attached to an investigation
  */
 export const GetInvestigationPhotoParams = zod.object({
-  "id": zod.coerce.string().uuid()
+  "id": zod.uuid()
 })
 
 export const GetInvestigationPhotoResponse = zod.unknown()
