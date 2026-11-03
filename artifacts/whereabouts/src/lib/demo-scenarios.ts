@@ -25,6 +25,12 @@ export const demoScenarios: Record<string, {
     person: { ageGroup: "child" },
     familyFacts: ["Photo taken 30 minutes ago", "Beach", "Water nearby", "30°C", "Afternoon", "Child"],
   },
+  "sample-teen-night": {
+    hoursAgo: 3,
+    scene: { setting: "urban", temperatureC: 12, timeOfDay: "night" },
+    person: { ageGroup: "teen" },
+    familyFacts: ["Photo taken 3 hours ago", "City / public street", "12°C", "Night", "Teen"],
+  },
 };
 
 export function assessDemoScenario(id: string, now = new Date()) {

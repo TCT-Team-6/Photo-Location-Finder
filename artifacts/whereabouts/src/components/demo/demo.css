@@ -1,0 +1,20 @@
+.demo-overlay { animation: demoFade .25s ease both; }
+.demo-overlay-card { animation: demoRise .4s cubic-bezier(.2,.7,.2,1) both; }
+.demo-progress-bar { transform-origin: left; animation: demoBar 5s linear both; }
+.demo-box { animation: demoFade .35s ease both; }
+.demo-pulse { animation: demoPulse 2s ease-in-out infinite; }
+@keyframes demoFade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes demoRise { from { opacity: 0; transform: translateY(14px) scale(.98) } to { opacity: 1; transform: none } }
+@keyframes demoBar { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+@keyframes demoPulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+@media (prefers-reduced-motion: reduce) {
+  .demo-overlay, .demo-overlay-card, .demo-box, .demo-pulse { animation: none; }
+}
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body * { visibility: hidden !important; }
+  .demo-print-sheet, .demo-print-sheet * { visibility: visible !important; }
+  .demo-print-sheet { position: absolute !important; inset: 0 !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; background: #fff !important; padding: 0 !important; }
+  .demo-print-hide { display: none !important; }
+  .demo-print-backdrop { background: transparent !important; position: static !important; }
+}

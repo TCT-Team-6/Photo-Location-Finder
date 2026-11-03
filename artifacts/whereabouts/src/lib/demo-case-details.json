@@ -1,0 +1,66 @@
+{
+  "sample-lost-hiker": {
+    "caseFile": { "nickname": "Alex", "ageGroup": "adult", "careNotes": "Hiking alone; warm layers and search-and-rescue support needed." },
+    "annotations": [
+      { "label": "Stone trail", "x": 26, "y": 67, "width": 43, "height": 30 },
+      { "label": "Conifers", "x": 3, "y": 17, "width": 26, "height": 43 },
+      { "label": "Rocky ridge", "x": 32, "y": 33, "width": 32, "height": 12 }
+    ],
+    "decisionTrail": [
+      { "stage": "Photo check", "result": "Sample photo has no supplied GPS; no editing flags in this prepared example." },
+      { "stage": "GPT-4o scene reading", "result": "3 clue groups: stone trail, conifers and rocky ridge.", "llm": true },
+      { "stage": "Location hypotheses", "result": "Mapped 3 mountain-park candidates from the prepared report." },
+      { "stage": "OpenStreetMap review", "result": "Prepared terrain comparison retains 3 mountain trails; 2 flat-ground alternatives rejected.", "llm": true },
+      { "stage": "Confidence fusion", "result": "Tatra National Park ranks first with a match score of 82." }
+    ]
+  },
+  "sample-grandparent": {
+    "caseFile": { "nickname": "Robin", "ageGroup": "older_adult", "careNotes": "Age 78. May wander or be confused; needs regular medication." },
+    "annotations": [
+      { "label": "Park path", "x": 34, "y": 59, "width": 41, "height": 25 },
+      { "label": "Mature trees", "x": 10, "y": 7, "width": 56, "height": 48 },
+      { "label": "Bench", "x": 78, "y": 58, "width": 17, "height": 15 },
+      { "label": "Maintained lawn", "x": 16, "y": 73, "width": 33, "height": 19 }
+    ],
+    "decisionTrail": [
+      { "stage": "Photo check", "result": "No supplied GPS; family reports the photo was taken 3 hours ago." },
+      { "stage": "GPT-4o scene reading", "result": "4 clue groups: park path, mature trees, seating and maintained lawn.", "llm": true },
+      { "stage": "Location hypotheses", "result": "Mapped 3 public parks in the prepared report." },
+      { "stage": "OpenStreetMap review", "result": "Prepared path-and-lawn comparison retains 3 parks; 2 woodland-only alternatives rejected.", "llm": true },
+      { "stage": "Confidence fusion", "result": "Golden Gate Park ranks first with a match score of 76." }
+    ]
+  },
+  "sample-child-separated": {
+    "caseFile": { "nickname": "Jamie", "ageGroup": "child", "careNotes": "Separated during a family beach outing. Check water and nearby hiding places first." },
+    "annotations": [
+      { "label": "Boardwalk", "x": 25, "y": 66, "width": 33, "height": 32 },
+      { "label": "Rope handrails", "x": 59, "y": 76, "width": 28, "height": 21 },
+      { "label": "Ocean", "x": 50, "y": 56, "width": 48, "height": 5 },
+      { "label": "Sand dunes", "x": 4, "y": 59, "width": 88, "height": 9 }
+    ],
+    "decisionTrail": [
+      { "stage": "Photo check", "result": "No supplied GPS; family reports the photo was taken 30 minutes ago." },
+      { "stage": "GPT-4o scene reading", "result": "4 clue groups: boardwalk, rope rails, dunes and ocean.", "llm": true },
+      { "stage": "Location hypotheses", "result": "Mapped 3 public beach-access candidates from the prepared report." },
+      { "stage": "OpenStreetMap review", "result": "Prepared shoreline comparison retains 3 beach access points; 2 inland alternatives rejected.", "llm": true },
+      { "stage": "Confidence fusion", "result": "Cape Henlopen State Park ranks first with a match score of 78." }
+    ]
+  },
+  "sample-teen-night": {
+    "caseFile": { "nickname": "Sam", "ageGroup": "teen", "careNotes": "Did not come home. Family reports no additional care needs." },
+    "annotations": [
+      { "label": "Public crosswalk", "x": 12, "y": 65, "width": 76, "height": 10 },
+      { "label": "Traffic signals", "x": 28, "y": 23, "width": 37, "height": 13 },
+      { "label": "30th St sign", "x": 44, "y": 30, "width": 5, "height": 4 },
+      { "label": "24-hour restaurant", "x": 65, "y": 34, "width": 14, "height": 12 },
+      { "label": "Street lighting", "x": 84, "y": 27, "width": 6, "height": 32 }
+    ],
+    "decisionTrail": [
+      { "stage": "Photo check", "result": "No supplied GPS; the prepared photo depicts a public street at night." },
+      { "stage": "GPT-4o scene reading", "result": "5 clue groups: crossing, signals, street sign, restaurant and street lighting.", "llm": true },
+      { "stage": "Location hypotheses", "result": "Mapped 3 public urban intersections in the prepared report." },
+      { "stage": "OpenStreetMap review", "result": "Prepared street-layout comparison retains 3 intersections; 2 private residential alternatives rejected.", "llm": true },
+      { "stage": "Confidence fusion", "result": "30th & Figueroa ranks first with a match score of 76." }
+    ]
+  }
+}
