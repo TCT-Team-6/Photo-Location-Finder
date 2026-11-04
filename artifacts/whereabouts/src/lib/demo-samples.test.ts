@@ -6,10 +6,10 @@ import { demoProgressStages } from "./demo-scenarios";
 import { assessUrgency } from "./urgency";
 import { urgencyInputsFromInvestigation } from "./urgency-inputs";
 
-test("demo samples include the three requested scenarios and complete result data", () => {
+test("demo samples include all four requested scenarios and complete result data", () => {
   assert.deepEqual(
     demoSamples.map((sample) => sample.scenario),
-    ["Lost hiker", "Missing grandparent", "Child separated"],
+    ["Lost hiker", "Missing grandparent", "Child separated", "Teen who didn't come home"],
   );
 
   for (const sample of demoSamples) {
@@ -46,8 +46,9 @@ test("samples match the requested mountain trail, city park and beach boardwalk"
     "Lost hiker – mountain trail",
     "Missing grandparent – city park",
     "Child separated – beach boardwalk",
+    "Teen who didn't come home – public street at night",
   ]);
-  assert.deepEqual(demoSamples.map((sample) => sample.urgencyInputs.scene.setting), ["trail", "park", "beach"]);
+  assert.deepEqual(demoSamples.map((sample) => sample.urgencyInputs.scene.setting), ["trail", "park", "beach", "urban"]);
 });
 
 test("supplied urgency module is byte-for-byte unchanged", () => {
@@ -65,12 +66,13 @@ test("demo urgency uses explicit family facts and produces the requested levels"
     assert.ok(!sample.urgency.risks.some((risk) => risk.label === "Photo time unknown"));
   }
   assert.deepEqual(demoSamples.map((sample) => [sample.urgency.level, sample.urgency.score]), [
-    ["High", 6], ["Critical", 9], ["High", 7],
+    ["High", 6], ["Critical", 9], ["High", 7], ["Moderate", 3],
   ]);
   assert.deepEqual(demoSamples.map((sample) => sample.urgencyInputs.person), [
     { ageGroup: "adult" },
     { ageGroup: "older_adult", mayWanderOrBeConfused: true, needsMedication: true },
     { ageGroup: "child" },
+    { ageGroup: "teen" },
   ]);
   assert.ok(demoSamples[1].familyFacts.includes("Age 78"));
 });
@@ -78,16 +80,17 @@ test("demo urgency uses explicit family facts and produces the requested levels"
 test("sample timestamps refresh relative to result opening, even long after page load", () => {
   const now = new Date("2030-07-01T12:00:00Z");
   const samples = demoSamples.map((sample) => refreshDemoSample(sample, now));
-  assert.deepEqual(samples.map((sample) => (now.getTime() - new Date(sample.urgencyInputs.scene.photoTakenAt!).getTime()) / 3_600_000), [5, 3, 0.5]);
+  assert.deepEqual(samples.map((sample) => (now.getTime() - new Date(sample.urgencyInputs.scene.photoTakenAt!).getTime()) / 3_600_000), [5, 3, 0.5, 3]);
   assert.deepEqual(samples.map((sample) => sample.urgency.timeSincePhoto), [
-    "about 5 hours ago", "about 3 hours ago", "less than an hour ago",
+    "about 5 hours ago", "about 3 hours ago", "less than an hour ago", "about 3 hours ago",
   ]);
   assert.deepEqual(samples.map((sample) => sample.urgencyInputs.scene), [
     { setting: "trail", terrain: "steep", temperatureC: 6, timeOfDay: "afternoon", photoTakenAt: "2030-07-01T07:00:00.000Z" },
     { setting: "park", temperatureC: 29, timeOfDay: "evening", photoTakenAt: "2030-07-01T09:00:00.000Z" },
     { setting: "beach", nearWater: true, temperatureC: 30, timeOfDay: "afternoon", photoTakenAt: "2030-07-01T11:30:00.000Z" },
+    { setting: "urban", temperatureC: 12, timeOfDay: "night", photoTakenAt: "2030-07-01T09:00:00.000Z" },
   ]);
-  assert.deepEqual(samples.map((sample) => sample.urgency.level), ["High", "Critical", "High"]);
+  assert.deepEqual(samples.map((sample) => sample.urgency.level), ["High", "Critical", "High", "Moderate"]);
   assert.notEqual(samples[0].urgencyInputs.scene, demoSamples[0].urgencyInputs.scene);
 });
 

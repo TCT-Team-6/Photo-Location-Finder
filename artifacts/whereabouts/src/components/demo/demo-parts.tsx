@@ -22,7 +22,7 @@ export function UrgencyBadge({ level, testId = 'status-demo-urgency-badge' }: { 
   return <span className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-semibold ${solidBadge[level]}`} data-testid={testId}>{level} urgency</span>;
 }
 
-export function useNow(intervalMs = 15_000) {
+export function useNow(intervalMs = 1000) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = window.setInterval(() => setNow(new Date()), intervalMs);
@@ -44,7 +44,7 @@ export function AnnotatedPhoto({ sample, compact = false }: { sample: DemoSample
     <div className="relative mx-auto inline-block max-w-full overflow-hidden rounded-xl bg-[#1f302a]" data-testid="panel-demo-annotated-photo">
       <img src={sample.imageUrl} alt={`Fictional sample photograph: ${sample.investigation.title}`} className={`block h-auto w-auto max-w-full ${compact ? 'max-h-[300px]' : 'max-h-[560px]'}`} data-testid="img-demo-result-original" />
       {show && boxes.map((box, i) => <div key={`${box.label}-${i}`} className="demo-box pointer-events-none absolute rounded-md border-2 border-[#f2c14e] shadow-[0_0_0_1px_rgba(31,48,42,.5)]" style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.width}%`, height: `${box.height}%`, animationDelay: `${i * 70}ms` }} data-testid={`box-demo-annotation-${i}`}>
-        <span className="absolute -top-px left-[-2px] -translate-y-full whitespace-nowrap rounded-t-md bg-[#f2c14e] px-1.5 py-0.5 font-data text-[9px] font-semibold uppercase tracking-[.06em] text-[#1f302a]">{box.label}</span>
+        <span style={box.x > 60 ? { right: -2 } : { left: -2 }} className="absolute -top-px -translate-y-full whitespace-nowrap rounded-t-md bg-[#f2c14e] px-1.5 py-0.5 font-data text-[9px] font-semibold uppercase tracking-[.06em] text-[#1f302a]">{box.label}</span>
       </div>)}
     </div>
     <div className="flex items-center justify-between gap-2">

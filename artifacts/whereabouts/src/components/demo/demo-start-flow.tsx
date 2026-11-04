@@ -17,11 +17,17 @@ export function DemoStartFlow({ samples, onRun }: { samples: DemoSample[]; onRun
   const [nickname, setNickname] = useState(sample?.caseFile.nickname ?? '');
   const [ageGroup, setAgeGroup] = useState<StartOverrides['ageGroup']>(sample?.caseFile.ageGroup ?? 'adult');
   const [careNotes, setCareNotes] = useState(sample?.caseFile.careNotes ?? '');
+  const [edited, setEdited] = useState({ nickname: false, ageGroup: false, careNotes: false });
   const [reason, setReason] = useState<string>('Missing person');
   const [contacted, setContacted] = useState(false);
   const [error, setError] = useState('');
 
-  const pick = (s: DemoSample) => { setSampleId(s.investigation.id); };
+  const pick = (s: DemoSample) => {
+    setSampleId(s.investigation.id);
+    if (!edited.nickname) setNickname(s.caseFile.nickname);
+    if (!edited.ageGroup) setAgeGroup(s.caseFile.ageGroup ?? 'adult');
+    if (!edited.careNotes) setCareNotes(s.caseFile.careNotes);
+  };
   const next = () => {
     if (step === 0 && !nickname.trim()) { setError('Add a nickname so the summary has a name.'); return; }
     setError(''); setStep((s) => Math.min(2, s + 1));
@@ -42,11 +48,11 @@ export function DemoStartFlow({ samples, onRun }: { samples: DemoSample[]; onRun
 
     {step === 0 && <div className="fade-up space-y-5">
       <h2 className="font-editorial text-3xl tracking-[-.03em]">Who's missing?</h2>
-      <label className="block text-xs font-semibold text-[#344b42]">Nickname<input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${field} h-12`} placeholder="What the family calls them" data-testid="input-demo-nickname" /></label>
+      <label className="block text-xs font-semibold text-[#344b42]">Nickname<input value={nickname} maxLength={60} onChange={(e) => { setNickname(e.target.value); setEdited((v) => ({ ...v, nickname: true })); }} className={`${field} h-12`} placeholder="What the family calls them" data-testid="input-demo-nickname" /></label>
       <fieldset><legend className="text-xs font-semibold text-[#344b42]">Age group</legend>
-        <div className="mt-2 flex flex-wrap gap-2">{ages.map((a) => <button type="button" key={a} onClick={() => setAgeGroup(a)} aria-pressed={ageGroup === a} data-testid={`button-demo-age-${a}`} className={`min-h-10 rounded-full border px-4 text-xs font-semibold ${ageGroup === a ? 'border-[#385e51] bg-[#385e51] text-white' : 'border-[#c9c2b3] text-[#385e51] hover:bg-[#e8e4d8]'}`}>{ageGroupLabels[a]}</button>)}</div>
+        <div className="mt-2 flex flex-wrap gap-2">{ages.map((a) => <button type="button" key={a} onClick={() => { setAgeGroup(a); setEdited((v) => ({ ...v, ageGroup: true })); }} aria-pressed={ageGroup === a} data-testid={`button-demo-age-${a}`} className={`min-h-10 rounded-full border px-4 text-xs font-semibold ${ageGroup === a ? 'border-[#385e51] bg-[#385e51] text-white' : 'border-[#c9c2b3] text-[#385e51] hover:bg-[#e8e4d8]'}`}>{ageGroupLabels[a]}</button>)}</div>
       </fieldset>
-      <label className="block text-xs font-semibold text-[#344b42]">Care notes <span className="font-normal text-[#829087]">(shown on the summary only)</span><textarea value={careNotes} onChange={(e) => setCareNotes(e.target.value)} rows={3} className={`${field} py-3`} placeholder="Medication, phone battery, what they were wearing" data-testid="input-demo-care-notes" /></label>
+      <label className="block text-xs font-semibold text-[#344b42]">Care notes <span className="font-normal text-[#829087]">(shown on the summary only)</span><textarea value={careNotes} maxLength={300} onChange={(e) => { setCareNotes(e.target.value); setEdited((v) => ({ ...v, careNotes: true })); }} rows={3} className={`${field} py-3`} placeholder="Medication, phone battery, what they were wearing" data-testid="input-demo-care-notes" /></label>
     </div>}
 
     {step === 1 && <div className="fade-up">

@@ -19,7 +19,7 @@ export function DemoPrintSummary({ sample, onClose }: { sample: DemoSample; onCl
         <div><p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · search team briefing · fictional sample</p><h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]">{sample.caseFile.nickname}</h1></div>
         <div className="text-right"><p className="text-sm font-bold">{sample.urgency.level} urgency</p><p className="font-data text-[10px]">Missing for {missing?.label ?? 'unknown'}</p></div>
       </header>
-      <div className="mt-4 grid grid-cols-[200px_1fr] gap-5">
+      <div className="demo-print-photo-row mt-4 grid gap-5 sm:grid-cols-[200px_1fr]">
         <img src={sample.imageUrl} alt="Last photo" className="w-full rounded-md object-contain" />
         <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-2 text-xs">
           <div><dt className="font-semibold">Age group</dt><dd>{ageGroupLabels[sample.caseFile.ageGroup ?? ''] ?? 'Not supplied'}</dd></div>

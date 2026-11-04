@@ -52,6 +52,10 @@ export function refreshDemoSample(sample: DemoSample, now = new Date(), override
     ...refreshed,
     caseFile: { nickname: overrides.nickname, ageGroup: overrides.ageGroup, careNotes: overrides.careNotes },
     reason: overrides.reason,
+    familyFacts: [
+      ...refreshed.familyFacts.filter((fact) => !["Adult", "Child", "Teen", "Age 78"].includes(fact)),
+      ({ child: "Child", teen: "Teen", adult: "Adult", older_adult: "Older adult" } as Record<string, string>)[overrides.ageGroup ?? ""] ?? "Age not supplied",
+    ],
     urgencyInputs: { ...refreshed.urgencyInputs, person },
     urgency: assessUrgency(scene, person, now),
   };

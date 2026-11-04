@@ -14,3 +14,9 @@ Keep demo warnings concise: one fictional-scenarios line at the top and the scor
 **Why:** The user requested a less repetitive presentation for a demo video while preserving the distinction from real searches.
 
 **How to apply:** Simplify only demo presentation; retain live-analysis safety explanations and truthful progress behavior.
+
+The expanded public demo is a fictional search-case briefing, including a teen at a public city street at night. Map “city” to the scorer's existing `urban` value; three hours, 12°C, night and teen yield Moderate without changing any rules.
+
+**Why:** The user asked for four precomputed cases, annotations, a decision trail, a walking-distance search plan, an emergency-contact-gated start flow and a printable team summary, without touching auth or live analysis.
+
+**How to apply:** Treat the search radius as an illustrative walking-distance estimate, not tracking or a bound on where someone can be. Keep prepared GPT-4o/OpenStreetMap trail statements explicitly fictional, not evidence of tool calls. Never persist names/care notes entered in the public demo or send them in analytics.

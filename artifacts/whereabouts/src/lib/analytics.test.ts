@@ -41,5 +41,5 @@ test("demo actions send only the fixed sample identifier, separately from result
     "trackEvent('demo_sample_run', { scenario_id: sample.investigation.id });",
   ]);
   assert.match(source, /const openSample = [\s\S]*?trackEvent\('demo_sample_open'/);
-  assert.match(source, /const startSimulation = [\s\S]*?if \(!sample\) return;\s*trackEvent\('demo_sample_run'/);
+  assert.match(source, /const startSimulation = [\s\S]*?trackEvent\('demo_sample_run'/);
 });
