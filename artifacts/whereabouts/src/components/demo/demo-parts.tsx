@@ -31,7 +31,8 @@ export function useNow(intervalMs = 1000) {
   return now;
 }
 
-export function formatLastSeen(iso?: string) {
+export function formatLastSeen(iso?: string, fixedTime?: string) {
+  if (fixedTime) return fixedTime;
   if (!iso) return 'Not supplied';
   const d = new Date(iso);
   return d.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
@@ -68,7 +69,7 @@ export function CaseHeader({ sample, onShare }: { sample: DemoSample; onShare: (
       <div>
         <p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Sample case / {sample.scenario}</p>
         <h1 className="mt-1 font-editorial text-[32px] leading-none tracking-[-.04em]" data-testid="text-demo-case-nickname">{sample.caseFile.nickname}</h1>
-        <p className="mt-1.5 text-xs text-[#596d61]"><span data-testid="text-demo-case-age">{ageGroupLabels[sample.caseFile.ageGroup ?? ''] ?? 'Age not supplied'}</span> · Last seen <span data-testid="text-demo-last-seen">{formatLastSeen(photoAt)}</span></p>
+        <p className="mt-1.5 text-xs text-[#596d61]"><span data-testid="text-demo-case-age">{ageGroupLabels[sample.caseFile.ageGroup ?? ''] ?? 'Age not supplied'}</span> · Last seen <span data-testid="text-demo-last-seen">{formatLastSeen(photoAt, sample.lastSeenTime)}</span></p>
         {sample.caseFile.careNotes && <p className="mt-1.5 text-xs leading-5 text-[#718078]" data-testid="text-demo-care-notes">Care notes: {sample.caseFile.careNotes}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +98,6 @@ export function DecisionTrail({ sample }: { sample: DemoSample }) {
       <div><p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">AI decision trail</p><h2 className="mt-1 font-editorial text-2xl">How this sample was reached</h2></div>
       <ChevronDown size={18} className="shrink-0 text-[#385e51] transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
     </summary>
-    <p className="-mt-2 px-5 text-[11px] leading-5 text-[#829087]">Precomputed fictional trail for this sample — illustrative only, not an actual verification run.</p>
     <ol className="mt-3 px-5 pb-5">{rows.map((row, i) => <li key={`${row.stage}-${i}`} className="grid grid-cols-[28px_1fr] gap-3 border-t border-[#e1dbce] py-3" data-testid={`row-demo-trail-${i}`}>
       <span className="grid h-7 w-7 place-items-center rounded-full bg-[#e9ede3] font-data text-[11px] text-[#385e51]">{i + 1}</span>
       <div className="min-w-0"><p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#344b42]">{row.stage}{row.llm && <span className="rounded-full bg-[#6d4fc2] px-2 py-0.5 font-data text-[9px] font-semibold tracking-[.08em] text-white" data-testid={`chip-demo-trail-llm-${i}`}>LLM</span>}</p><p className="mt-0.5 text-xs leading-5 text-[#66796e]">{row.result}</p></div>

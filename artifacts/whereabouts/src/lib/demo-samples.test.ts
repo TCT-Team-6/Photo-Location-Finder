@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { demoSamples, getDemoSample, refreshDemoSample } from "./demo-samples";
-import { demoProgressStages } from "./demo-scenarios";
+import { assessDemoUrgency, demoProgressDurationMs, demoProgressStageDurationMs, demoProgressStages } from "./demo-scenarios";
 import { assessUrgency } from "./urgency";
 import { urgencyInputsFromInvestigation } from "./urgency-inputs";
 
@@ -61,20 +61,30 @@ test("supplied urgency module is byte-for-byte unchanged", () => {
 test("demo urgency uses explicit family facts and produces the requested levels", () => {
   for (const sample of demoSamples) {
     const { scene, person } = sample.urgencyInputs;
-    assert.deepEqual(assessUrgency({ ...scene, photoTakenAt: new Date(scene.photoTakenAt!) }, person, new Date(sample.urgencyAssessedAt)), sample.urgency);
+    assert.deepEqual(assessDemoUrgency({ ...scene, photoTakenAt: new Date(scene.photoTakenAt!) }, person, new Date(sample.urgencyAssessedAt)), sample.urgency);
     assert.equal(scene.weather, undefined);
     assert.ok(!sample.urgency.risks.some((risk) => risk.label === "Photo time unknown"));
   }
   assert.deepEqual(demoSamples.map((sample) => [sample.urgency.level, sample.urgency.score]), [
-    ["High", 6], ["Critical", 9], ["High", 7], ["Moderate", 3],
+    ["High", 6], ["Critical", 9], ["High", 7], ["Moderate", 5],
   ]);
   assert.deepEqual(demoSamples.map((sample) => sample.urgencyInputs.person), [
     { ageGroup: "adult" },
     { ageGroup: "older_adult", mayWanderOrBeConfused: true, needsMedication: true },
     { ageGroup: "child" },
-    { ageGroup: "teen" },
+    { ageGroup: "teen", needsMedication: false, mayWanderOrBeConfused: false, phoneUnreachable: true },
   ]);
   assert.ok(demoSamples[1].familyFacts.includes("Age 78"));
+  const sam = demoSamples[3];
+  assert.ok(sam.familyFacts.includes("Phone unreachable"));
+  assert.deepEqual(sam.urgency.risks.find((risk) => risk.label === "Phone unreachable — can't call for help"), {
+    label: "Phone unreachable — can't call for help", reason: "No phone contact is available.", points: 2, category: "person",
+  });
+  assert.equal(assessUrgency({ ...sam.urgencyInputs.scene, photoTakenAt: new Date(sam.urgencyInputs.scene.photoTakenAt!) }, {
+    ageGroup: "teen", needsMedication: false, mayWanderOrBeConfused: false,
+  }, new Date(sam.urgencyAssessedAt)).score, 3);
+  assert.equal(sam.urgency.score, 5);
+  assert.equal(sam.urgency.level, "Moderate");
 });
 
 test("sample timestamps refresh relative to result opening, even long after page load", () => {
@@ -91,11 +101,14 @@ test("sample timestamps refresh relative to result opening, even long after page
     { setting: "urban", temperatureC: 12, timeOfDay: "night", photoTakenAt: "2030-07-01T09:00:00.000Z" },
   ]);
   assert.deepEqual(samples.map((sample) => sample.urgency.level), ["High", "Critical", "High", "Moderate"]);
+  assert.deepEqual(samples.map((sample) => sample.lastSeenTime), ["2:00 PM", "6:30 PM", "1:30 PM", "10:00 PM"]);
   assert.notEqual(samples[0].urgencyInputs.scene, demoSamples[0].urgencyInputs.scene);
 });
 
 test("demo walkthrough has exactly five named stages", () => {
   assert.equal(demoProgressStages.length, 5);
+  assert.equal(demoProgressStageDurationMs, 1_000);
+  assert.equal(demoProgressDurationMs, 5_000);
   assert.equal(demoProgressStages[0], "Checking photo metadata & authenticity");
   assert.equal(demoProgressStages[2], "Generating location hypotheses");
 });

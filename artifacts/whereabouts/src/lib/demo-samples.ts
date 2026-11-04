@@ -1,9 +1,9 @@
 import type { Investigation } from "@workspace/api-client-react";
-import { assessUrgency, type PersonFactors, type SceneClues, type UrgencyResult } from "./urgency";
+import { type PersonFactors, type SceneClues, type UrgencyResult } from "./urgency";
 import records from "./demo-cases.json";
 import teenRecord from "./demo-teen-case.json";
 import caseDetails from "./demo-case-details.json";
-import { assessDemoScenario } from "./demo-scenarios";
+import { assessDemoScenario, assessDemoUrgency, type DemoPersonFactors } from "./demo-scenarios";
 
 export type DemoOverrides = {
   nickname: string;
@@ -22,12 +22,13 @@ export type DemoSample = {
   caseFile: { nickname: string; ageGroup: PersonFactors["ageGroup"]; careNotes: string };
   annotations: Array<{ label: string; x: number; y: number; width: number; height: number }>;
   decisionTrail: Array<{ stage: string; result: string; llm?: boolean }>;
+  lastSeenTime: string;
   reason?: string;
   familyFacts: string[];
   urgencyAssessedAt: string;
   urgencyInputs: {
     scene: Omit<SceneClues, "photoTakenAt"> & { photoTakenAt?: string };
-    person: PersonFactors;
+    person: DemoPersonFactors;
   };
   urgency: UrgencyResult;
 };
@@ -57,7 +58,7 @@ export function refreshDemoSample(sample: DemoSample, now = new Date(), override
       ({ child: "Child", teen: "Teen", adult: "Adult", older_adult: "Older adult" } as Record<string, string>)[overrides.ageGroup ?? ""] ?? "Age not supplied",
     ],
     urgencyInputs: { ...refreshed.urgencyInputs, person },
-    urgency: assessUrgency(scene, person, now),
+    urgency: assessDemoUrgency(scene, person, now),
   };
 }
 

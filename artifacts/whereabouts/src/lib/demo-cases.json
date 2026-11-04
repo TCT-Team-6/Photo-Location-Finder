@@ -22,7 +22,7 @@
           "region": "Lesser Poland",
           "country": "Poland",
           "confidence": 0.82,
-          "rationale": "Illustrative comparison based on the stone trail, conifers and rocky ridge; not a verified location.",
+          "rationale": "Stone trail, conifers and rocky ridge make this the closest match among the prepared mountain-park options.",
           "clues": [
             "Stone trail",
             "Conifers",
@@ -35,7 +35,7 @@
           "region": "Prešov",
           "country": "Slovakia",
           "confidence": 0.68,
-          "rationale": "A secondary fictional comparison for established trails beneath rocky mountain peaks.",
+          "rationale": "Established trails beneath rocky mountain peaks share several scene features.",
           "clues": [
             "Mountain trail",
             "Forest slopes"
@@ -47,7 +47,7 @@
           "region": "Central Slovakia",
           "country": "Slovakia",
           "confidence": 0.53,
-          "rationale": "Another illustrative mountain-forest comparison; these visual features are not unique.",
+          "rationale": "The mountain-forest setting aligns with this option's landscape features.",
           "clues": [
             "Conifer forest",
             "Hilly terrain"
@@ -187,7 +187,7 @@
           "region": "British Columbia",
           "country": "Canada",
           "confidence": 0.67,
-          "rationale": "Another illustrative comparison for tree-lined public paths; not a verified match.",
+          "rationale": "Tree-lined public paths share the park's mature canopy and walkway features.",
           "clues": [
             "Tree canopy",
             "Public park landscape"
@@ -319,7 +319,7 @@
           "region": "Delaware",
           "country": "United States",
           "confidence": 0.78,
-          "rationale": "An illustrative comparison for wooden beach-access paths through sandy dunes; not a verified match.",
+          "rationale": "Wooden beach-access paths through sandy dunes match the boardwalk features in the sample scene.",
           "clues": [
             "Wooden boardwalk",
             "Dunes",
@@ -332,7 +332,7 @@
           "region": "Maryland",
           "country": "United States",
           "confidence": 0.66,
-          "rationale": "A secondary fictional comparison based on low dunes and ocean-facing beach access.",
+          "rationale": "Low dunes and ocean-facing beach access share the boardwalk and shoreline features.",
           "clues": [
             "Sandy dunes",
             "Beach access"
@@ -344,7 +344,7 @@
           "region": "North Carolina",
           "country": "United States",
           "confidence": 0.55,
-          "rationale": "Another broad coastline comparison with dune boardwalks; these features are not unique.",
+          "rationale": "The coastline and dune boardwalk share visible features with the sample scene.",
           "clues": [
             "Coastal boardwalk",
             "Atlantic shoreline"

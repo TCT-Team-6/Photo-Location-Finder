@@ -23,7 +23,7 @@ export function DemoPrintSummary({ sample, onClose }: { sample: DemoSample; onCl
         <img src={sample.imageUrl} alt="Last photo" className="w-full rounded-md object-contain" />
         <dl className="grid grid-cols-2 content-start gap-x-4 gap-y-2 text-xs">
           <div><dt className="font-semibold">Age group</dt><dd>{ageGroupLabels[sample.caseFile.ageGroup ?? ''] ?? 'Not supplied'}</dd></div>
-          <div><dt className="font-semibold">Last seen (photo)</dt><dd>{formatLastSeen(photoAt)}</dd></div>
+          <div><dt className="font-semibold">Last seen (photo)</dt><dd>{formatLastSeen(photoAt, sample.lastSeenTime)}</dd></div>
           <div className="col-span-2"><dt className="font-semibold">Care notes</dt><dd>{sample.caseFile.careNotes || 'None supplied'}</dd></div>
           <div className="col-span-2"><dt className="font-semibold">Possible search area</dt><dd>{area.radiusKm.toFixed(1)} km radius around {inv.candidates[0]?.place ?? 'top place'} ({area.speedKmh} km/h for {area.hours.toFixed(1)}h)</dd></div>
           <div className="col-span-2"><dt className="font-semibold">Top risks</dt><dd>{sample.urgency.risks.slice(0, 3).map((r) => r.label).join('; ') || 'None in supplied inputs'}</dd></div>

@@ -80,7 +80,7 @@ test("each demo card renders family-based urgency with one disclaimer", () => {
     assert.equal(html.split(DISCLAIMER).length - 1, 1);
     assert.ok(!html.includes("A Low result does not mean someone is safe"));
     assert.ok(!html.includes("Always contact emergency services."));
-    for (const risk of sample.urgency.risks) assert.ok(html.includes(risk.label));
+    for (const risk of sample.urgency.risks) assert.ok(html.includes(risk.label.replaceAll("'", "&#x27;")));
   }
 });
 

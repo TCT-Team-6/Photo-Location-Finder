@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ImagePlus, LoaderCircle } from 'lucide-react';
 import type { DemoSample } from '@/lib/demo-samples';
-import { demoProgressStages } from '@/lib/demo-scenarios';
+import { demoProgressDurationMs, demoProgressStageDurationMs, demoProgressStages } from '@/lib/demo-scenarios';
 import type { PersonFactors } from '@/lib/urgency';
 import { ageGroupLabels } from './demo-parts';
 
@@ -89,8 +89,8 @@ export function DemoProgressOverlay({ sample, onDone }: { sample: DemoSample; on
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
   useEffect(() => {
-    const iv = window.setInterval(() => setStage((s) => Math.min(s + 1, demoProgressStages.length - 1)), 1000);
-    const t = window.setTimeout(() => doneRef.current(), 5000);
+    const iv = window.setInterval(() => setStage((s) => Math.min(s + 1, demoProgressStages.length - 1)), demoProgressStageDurationMs);
+    const t = window.setTimeout(() => doneRef.current(), demoProgressDurationMs);
     return () => { window.clearInterval(iv); window.clearTimeout(t); };
   }, []);
   return <div className="demo-overlay fixed inset-0 z-50 grid place-items-center bg-[#1f302a]/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Analyzing sample photo">
