@@ -5,11 +5,17 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { InvestigationAnalysis } from './investigationAnalysis';
 import type { InvestigationDesk } from './investigationDesk';
+import type { InvestigationStatus } from './investigationStatus';
 import type { LocationCandidate } from './locationCandidate';
 import type { VisualClue } from './visualClue';
 
 export interface Investigation {
+  /** @nullable */
+  status?: InvestigationStatus;
+  /** @nullable */
+  analysisError?: string | null;
   id: string;
   title: string;
   desk: InvestigationDesk;
@@ -22,6 +28,7 @@ export interface Investigation {
   summary: string;
   candidates: LocationCandidate[];
   clues: VisualClue[];
+  analysis?: InvestigationAnalysis | null;
   createdAt: Date;
   updatedAt: Date;
 }

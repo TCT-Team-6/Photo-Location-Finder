@@ -38,7 +38,7 @@ export type InvestigationPhotoUploadOptions = {
   createInvestigation: (variables: {
     data: InvestigationInput;
   }) => Promise<Pick<SavedInvestigationPhoto, "id" | "title">>;
-  onProgress?: (message: string) => void;
+  onProgress?: (message: string, slotId: PhotoUploadSlotId) => void;
   onSaved?: (slotId: PhotoUploadSlotId) => void;
 };
 
@@ -99,13 +99,13 @@ export async function processInvestigationPhotoUploads({
     }
 
     try {
-      onProgress?.(`Uploading ${index + 1} of ${selected.length}: ${slot.label}`);
+      onProgress?.(`Uploading ${index + 1} of ${selected.length}: ${slot.label}`, slot.id);
       const upload = await requestUploadUrl({
         data: { name: file.name, size: file.size, contentType },
       });
       await retryOnce(() => uploadFile(upload.uploadURL, file, contentType));
 
-      onProgress?.(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`);
+      onProgress?.(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`, slot.id);
       const fileTitle = file.name
         .replace(/\.[^.]+$/, "")
         .replace(/[_-]+/g, " ")

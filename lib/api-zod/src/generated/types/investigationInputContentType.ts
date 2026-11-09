@@ -21,4 +21,10 @@ export const InvestigationInputContentType = {
   'image/x-tiff': 'image/x-tiff',
   'image/heic': 'image/heic',
   'image/heif': 'image/heif',
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+  'video/x-matroska': 'video/x-matroska',
+  'video/x-msvideo': 'video/x-msvideo',
+  'video/3gpp': 'video/3gpp',
 } as const;

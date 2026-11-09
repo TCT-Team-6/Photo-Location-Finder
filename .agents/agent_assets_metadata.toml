@@ -1,0 +1,58 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "B44yfjNqUI63pOmgJtBeC"
+uri = "file://attached_assets/generated_images/whereabouts-challenge-thumbnail.png"
+type = "image"
+title = "Whereabouts — App Challenge Thumbnail"
+description = "A submission-ready PNG featuring Whereabouts branding and a photo-to-map illustration, with the tagline “Discover the place behind the photo.”"
+logical_id = "a0e6044b-01c5-48e7-891a-2608e508758e"
+content_hash = "sha256:bbeb41c8c5f05fa32a48040162f2bc0a159fb564ab09cc85c7233671664880e6"
+size = 1460673
+mtime_ms = 1793005846341
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/a0e6044b-01c5-48e7-891a-2608e508758e/efd45341-869e-4b59-b352-6771dad8d05e"
+storage_version_token = "1793005898962459"
+content_type = "image/png"
+
+[[outputs]]
+id = "fhvhJRkqAX9_sgI47yR1a"
+uri = "file://attached_assets/generated_images/whereabouts-investigation-thumbnail.png"
+type = "image"
+title = "Whereabouts — Investigative Thumbnail"
+description = "Revised App Challenge thumbnail highlighting missing-person search leads, geographic clues in photos, and possible search areas."
+logical_id = "dd3d03d5-2d50-4b60-bad1-01ca0654229f"
+content_hash = "sha256:f2741648787ae0c0e103b7575b0d76a5dc54a26839b5a9a1cfcb4201a598bcb6"
+size = 1528212
+mtime_ms = 1793006155877
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/dd3d03d5-2d50-4b60-bad1-01ca0654229f/d1e87d92-98cf-4de4-8f07-75634380bc64"
+storage_version_token = "1793006171975768"
+content_type = "image/png"
+
+[[outputs]]
+id = "_bNzlLJarTlWut2MDvsGH"
+uri = "file://attached_assets/generated_images/whereabouts-rescue-investigation-thumbnail.png"
+type = "image"
+title = "Whereabouts — Rescue Theme Thumbnail"
+description = "1024 × 1024 PNG in the Rescue demo palette, featuring missing-person investigation imagery and the five-stage photo investigation pipeline."
+logical_id = "99b57e0d-18b4-46fa-aa52-c8e1f712d17c"
+content_hash = "sha256:3ba49f8b115ff13c2ed6420dd6fd1c0adab8243a165b319168af37bc5b0887d2"
+size = 960163
+mtime_ms = 1793037741078
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/99b57e0d-18b4-46fa-aa52-c8e1f712d17c/9fd1e289-f3c3-4385-a220-de71491dac7c"
+storage_version_token = "1793037749541461"
+content_type = "image/png"
+
+[[outputs]]
+id = "IBlLuEGBubAl8AO-LTwGd"
+uri = "file://attached_assets/generated_images/whereabouts-tech-stack.png"
+type = "image"
+title = "Whereabouts — Technology Stack"
+description = "Presentation-ready 1920 × 1080 PNG in the Rescue palette, showing the frontend, application API, Python AI service, authentication, database, storage, and maps."
+logical_id = "2057ee85-3056-4f4b-916d-f42de35fbf75"
+content_hash = "sha256:f6bb7819d11fbf28a54de8f3ff34021b46241aecf7c16431fec46cd6ed9ed350"
+size = 359818
+mtime_ms = 1793306141537
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/2057ee85-3056-4f4b-916d-f42de35fbf75/51e6c7b0-1241-4626-9413-aef73e06b778"
+storage_version_token = "1793306150358447"
+content_type = "image/png"

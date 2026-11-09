@@ -15,6 +15,156 @@ tags:
   - name: Investigations
     description: Photo location investigations and the user's saved library.
 paths:
+  /locator-health:
+    get:
+      operationId: getLocatorHealth
+      summary: Check Image Locator video availability
+      responses:
+        "200":
+          description: Current capabilities, with unavailable video disabled
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [video_enabled]
+                properties:
+                  video_enabled:
+                    type: boolean
+  /investigations/{id}/retry-analysis:
+    post:
+      operationId: retryInvestigationAnalysis
+      summary: Retry a failed saved video analysis
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Saved investigation queued for analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Investigation"
+  /cases:
+    get:
+      operationId: listMissingPersonCases
+      tags: [Cases]
+      responses:
+        "200":
+          description: Private cases owned by the signed-in user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MissingPersonCase" }
+    post:
+      operationId: createMissingPersonCase
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MissingPersonCaseInput" }
+      responses:
+        "201":
+          description: Private case saved, or previously saved request returned.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+  /cases/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    get:
+      operationId: getMissingPersonCase
+      tags: [Cases]
+      responses:
+        "200":
+          description: Private case and its submitted leads.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    put:
+      operationId: updateMissingPersonCase
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MissingPersonCaseInput" }
+      responses:
+        "200":
+          description: Case details updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    delete:
+      operationId: deleteMissingPersonCase
+      tags: [Cases]
+      responses:
+        "204": { description: Case and leads deleted. }
+  /cases/{id}/review:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    patch:
+      operationId: saveCaseReview
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseReviewInput" }
+      responses:
+        "200":
+          description: Private manual review saved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+        "409":
+          description: A newer review exists. Keep the draft and reload the saved version before merging.
+  /cases/{id}/leads:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+    post:
+      operationId: createCaseLead
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseLeadInput" }
+      responses:
+        "201":
+          description: Lead saved without external fetching or analysis.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+  /cases/{id}/leads/{leadId}:
+    parameters:
+      - $ref: "#/components/parameters/InvestigationId"
+      - name: leadId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: reviewCaseLead
+      tags: [Cases]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseLeadReviewInput" }
+      responses:
+        "200":
+          description: Responder's relevance assessment saved; not an independent verification.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissingPersonCase" }
+    delete:
+      operationId: deleteCaseLead
+      tags: [Cases]
+      responses:
+        "204": { description: Lead deleted. }
   /healthz:
     get:
       operationId: healthCheck
@@ -255,6 +405,91 @@ components:
         type: string
         format: uuid
   schemas:
+    CaseReviewInput:
+      type: object
+      required: [observations, nextSteps, expectedRevision]
+      properties:
+        observations: { type: string, maxLength: 10000 }
+        nextSteps: { type: string, maxLength: 10000 }
+        expectedRevision: { type: integer, minimum: 0 }
+    CaseReview:
+      type: object
+      required: [observations, nextSteps, revision, updatedAt]
+      properties:
+        observations: { type: string, maxLength: 10000 }
+        nextSteps: { type: string, maxLength: 10000 }
+        revision: { type: integer, minimum: 1 }
+        updatedAt: { type: string, format: date-time }
+    CaseLeadReviewInput:
+      type: object
+      required: [reviewStatus]
+      properties:
+        reviewStatus: { type: string, enum: [needs-verification, relevant, unrelated] }
+    CasePhoto:
+      type: object
+      required: [objectPath, originalName, contentType]
+      properties:
+        objectPath: { type: string, pattern: "^/objects/uploads/[a-f0-9-]+$", maxLength: 200 }
+        originalName: { type: string, minLength: 1, maxLength: 255 }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+    MissingPersonCaseInput:
+      type: object
+      required: [clientRequestId, firstName, responderRole, privacyAcknowledged]
+      properties:
+        clientRequestId: { type: string, format: uuid }
+        firstName: { type: string, minLength: 1, maxLength: 80 }
+        lastName: { type: string, maxLength: 80 }
+        nickname: { type: string, maxLength: 80 }
+        ageDescription: { type: string, maxLength: 40 }
+        lastKnownDate: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        lastKnownArea: { type: string, maxLength: 160 }
+        responderRole: { type: string, enum: [family-or-guardian, authorized-responder, other] }
+        officialReference: { type: string, maxLength: 120 }
+        notes: { type: string, maxLength: 3000 }
+        privacyAcknowledged: { type: boolean, enum: [true] }
+        headshot:
+          anyOf:
+            - $ref: "#/components/schemas/CasePhoto"
+            - { type: "null" }
+    CaseLeadInput:
+      type: object
+      required: [clientRequestId, kind, title, source, permissionGranted]
+      properties:
+        clientRequestId: { type: string, format: uuid }
+        kind: { type: string, enum: [photo, link, tip] }
+        title: { type: string, minLength: 1, maxLength: 160 }
+        source: { type: string, minLength: 1, maxLength: 200 }
+        sourceUrl: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 3000 }
+        reportedTakenOn: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        postedOn: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        permissionGranted: { type: boolean, enum: [true] }
+        photo:
+          anyOf:
+            - $ref: "#/components/schemas/CasePhoto"
+            - { type: "null" }
+    CaseLead:
+      allOf:
+        - $ref: "#/components/schemas/CaseLeadInput"
+        - type: object
+          required: [id, reviewStatus, createdAt]
+          properties:
+            id: { type: string, format: uuid }
+            reviewStatus: { type: string, enum: [needs-verification, relevant, unrelated] }
+            createdAt: { type: string, format: date-time }
+    MissingPersonCase:
+      allOf:
+        - $ref: "#/components/schemas/MissingPersonCaseInput"
+        - type: object
+          required: [id, createdAt, updatedAt, leads]
+          properties:
+            id: { type: string, format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            review: { $ref: "#/components/schemas/CaseReview" }
+            leads:
+              type: array
+              items: { $ref: "#/components/schemas/CaseLead" }
     HealthStatus:
       type: object
       properties:
@@ -279,7 +514,7 @@ components:
         size:
           type: integer
           minimum: 1
-          maximum: 26214400
+          maximum: 62914560
         contentType:
           type: string
           enum:
@@ -294,6 +529,12 @@ components:
             - image/x-tiff
             - image/heic
             - image/heif
+            - video/mp4
+            - video/quicktime
+            - video/webm
+            - video/x-matroska
+            - video/x-msvideo
+            - video/3gpp
     UploadUrlResponse:
       type: object
       required: [uploadURL, objectPath]
@@ -360,6 +601,194 @@ components:
           type: string
         significance:
           type: string
+    InvestigationAnalysis:
+      type: [object, "null"]
+      description: Optional sanitized Image Locator metadata. Provider claims are not independent verification.
+      additionalProperties: false
+      properties:
+        media_type:
+          type: string
+          enum: [video, image]
+        video:
+          type: object
+          additionalProperties: false
+          properties:
+            duration_s: { type: number, minimum: 0 }
+            fps: { type: number, minimum: 0 }
+            frames_analyzed: { type: integer, minimum: 0 }
+            embedded_gps:
+              type: object
+              additionalProperties: false
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number, minimum: -90, maximum: 90 }
+                longitude: { type: number, minimum: -180, maximum: 180 }
+        contributing_frames:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              index: { type: integer, minimum: 0 }
+              timestamp_s: { type: number, minimum: 0 }
+              candidates:
+                type: array
+                maxItems: 10
+                items: { type: string, maxLength: 1200 }
+              clues_found: { type: boolean }
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        map_url:
+          type: string
+          format: uri
+          maxLength: 2000
+        address:
+          type: string
+          maxLength: 1200
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        source:
+          type: string
+          maxLength: 1200
+        verified:
+          type: string
+          maxLength: 1200
+        warning:
+          type: string
+          maxLength: 1200
+        meets_defined_radius:
+          type: boolean
+        defined_radius_km:
+          type: number
+          minimum: 0
+        precision_m:
+          type: number
+          minimum: 0
+        elevation_m:
+          type: number
+        search_areas:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              rank:
+                type: integer
+                minimum: 1
+              name:
+                type: string
+                maxLength: 1200
+              country:
+                type: string
+                maxLength: 1200
+              latitude:
+                type: number
+                minimum: -90
+                maximum: 90
+              longitude:
+                type: number
+                minimum: -180
+                maximum: 180
+              search_radius_km:
+                type: number
+                minimum: 0
+              score:
+                type: number
+                minimum: 0
+                maximum: 1
+              map_status:
+                type: string
+                maxLength: 1200
+        rejected:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+                maxLength: 1200
+              reason:
+                type: string
+                maxLength: 1200
+        nearby_places:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              title:
+                type: string
+                maxLength: 1200
+              distance_km:
+                type: number
+                minimum: 0
+        forensics:
+          type: object
+          additionalProperties: false
+          properties:
+            has_gps:
+              type: boolean
+            authenticity:
+              type: string
+              maxLength: 1200
+            edited:
+              type: boolean
+            is_screenshot:
+              type: boolean
+            metadata_stripped:
+              type: boolean
+            notes:
+              type: array
+              maxItems: 10
+              items:
+                type: string
+                maxLength: 1200
+        reasoning_trace:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              stage:
+                type: string
+                maxLength: 1200
+              details:
+                type: array
+                maxItems: 10
+                items:
+                  type: string
+                  maxLength: 1200
+              step:
+                type: string
+                maxLength: 1200
+              detail:
+                type: string
+                maxLength: 1200
+        details:
+          type: object
+          additionalProperties: false
+          properties:
+            exif:
+              type: object
+              additionalProperties: false
+              properties:
+                timestamp:
+                  type: string
+                  maxLength: 1200
     Investigation:
       type: object
       required:
@@ -376,6 +805,11 @@ components:
         - createdAt
         - updatedAt
       properties:
+        status:
+          type: [string, "null"]
+          enum: [analyzing, done, failed, null]
+        analysisError:
+          type: [string, "null"]
         id:
           type: string
           format: uuid
@@ -403,6 +837,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/VisualClue"
+        analysis:
+          $ref: "#/components/schemas/InvestigationAnalysis"
         createdAt:
           type: string
           format: date-time
@@ -437,6 +873,12 @@ components:
             - image/x-tiff
             - image/heic
             - image/heif
+            - video/mp4
+            - video/quicktime
+            - video/webm
+            - video/x-matroska
+            - video/x-msvideo
+            - video/3gpp
         desk:
           type: string
           enum: [original, recreation, fake-news]

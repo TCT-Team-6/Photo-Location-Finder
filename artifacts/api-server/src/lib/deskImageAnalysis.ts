@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import type { LocationCandidate, VisualClue } from "@workspace/db";
-import { parseLocationPhotoReferences } from "./locationPhotoSearch";
 
 export type DeskImageAnalysis = {
   summary: string;
@@ -12,13 +11,9 @@ export async function analyzeDeskImage(
   client: OpenAI,
   image: Buffer,
   contentType: string,
-  desk: "recreation" | "fake-news",
+  desk: "fake-news",
   question?: string,
 ): Promise<DeskImageAnalysis> {
-  if (desk === "recreation") {
-    return analyzeRecreationImage(client, image, contentType);
-  }
-
   const review = await analyzeJournalismImage(
     client,
     image,
@@ -26,63 +21,6 @@ export async function analyzeDeskImage(
     question,
   );
   return { ...review, candidates: [] };
-}
-
-const sourceImageSearchTool = {
-  type: "web_search" as const,
-  external_web_access: true,
-  search_context_size: "high" as const,
-  search_content_types: ["image"],
-  image_settings: { max_results: 5, caption: true },
-};
-
-export async function analyzeRecreationImage(
-  client: OpenAI,
-  image: Buffer,
-  contentType: string,
-): Promise<DeskImageAnalysis> {
-  const dataUrl = `data:${contentType};base64,${image.toString("base64")}`;
-  const response = await client.responses.create({
-    model: process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini",
-    tools: [sourceImageSearchTool],
-    tool_choice: "required",
-    include: ["web_search_call.results"],
-    max_output_tokens: 700,
-    input: [{
-      role: "user",
-      content: [
-        {
-          type: "input_text",
-          text: [
-            "Find possible original/source images that this recreation, redraw, staged copy, or edited image may be based on.",
-            "Inspect the supplied image, describe distinctive visual elements, and search public image sources for likely source-image matches.",
-            "Do not search for the real-world location. Do not claim a result is the original unless the source page or image is an unmistakable match.",
-            "Return image search results and their public source pages. If no plausible match is found, say so plainly.",
-          ].join(" "),
-        },
-        { type: "input_image", image_url: dataUrl, detail: "high" },
-      ],
-    }],
-  });
-  const references = parseLocationPhotoReferences(response.output);
-  const candidates = references.map((reference, index) => ({
-    place: reference.caption?.trim() || `Possible source image ${index + 1}`,
-    region: null,
-    country: null,
-    confidence: 0,
-    rationale: reference.caption?.trim() || "Possible public source image found by visual web search.",
-    clues: [],
-    mapsUrl: reference.sourceUrl,
-    photoReferences: [reference],
-    photoSearchStatus: "found" as const,
-  }));
-  return {
-    summary: candidates.length
-      ? `Source-image search found ${candidates.length} possible public match${candidates.length === 1 ? "" : "es"}. Compare each image and its source; none is confirmed as the original.`
-      : "No plausible original source image was found in the public image search. The search may miss private, removed, or poorly indexed images.",
-    candidates,
-    clues: [],
-  };
 }
 
 type JournalismReview = {

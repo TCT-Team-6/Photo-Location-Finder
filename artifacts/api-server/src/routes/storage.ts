@@ -1,16 +1,17 @@
 import { RequestUploadUrlBody, RequestUploadUrlResponse } from "@workspace/api-zod";
-import { db, pendingPhotoUploadsTable } from "@workspace/db";
+import { casePhotosTable, db, pendingPhotoUploadsTable } from "@workspace/db";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, lte } from "drizzle-orm";
 import { getAuth } from "@clerk/express";
 import { ObjectPermission } from "../lib/objectAcl";
+import { isVideo, mediaValidationError } from "../lib/locatorMedia";
+import { locatorHealth } from "../lib/imageLocationAnalysis";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { requireUser } from "../middlewares/requireUser";
 import { Readable } from "node:stream";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 router.use(requireUser);
 
@@ -24,8 +25,13 @@ router.post(
     }
 
     const { name, size, contentType } = parsed.data;
-    if (size > MAX_UPLOAD_BYTES || !contentType.startsWith("image/")) {
-      res.status(400).json({ error: "Choose a supported image under 25 MB." });
+    const validationError = mediaValidationError(name, contentType, size);
+    if (validationError) {
+      res.status(400).json({ error: validationError });
+      return;
+    }
+    if (isVideo(contentType) && !(await locatorHealth()).video_enabled) {
+      res.status(503).json({ error: "Video is not available right now. You can still upload photos." });
       return;
     }
 
@@ -75,6 +81,11 @@ router.get("/storage/objects/*path", async (req: Request, res: Response): Promis
   try {
     const rawPath = req.params.path;
     const path = Array.isArray(rawPath) ? rawPath.join("/") : rawPath;
+    const [casePhoto] = await db.select().from(casePhotosTable).where(eq(casePhotosTable.objectPath, `/objects/${path}`)).limit(1);
+    if (casePhoto && (!casePhoto.active || !casePhoto.caseId || casePhoto.userId !== userId)) {
+      res.status(404).json({ error: "Photo not found." });
+      return;
+    }
     const file = await objectStorageService.getObjectEntityFile(`/objects/${path}`);
     const permitted = await objectStorageService.canAccessObjectEntity({
       userId,
@@ -89,6 +100,8 @@ router.get("/storage/objects/*path", async (req: Request, res: Response): Promis
     const response = await objectStorageService.downloadObject(file);
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
+    if (casePhoto) res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
     if (response.body) {
       Readable.fromWeb(response.body as ReadableStream<Uint8Array>).pipe(res);
     } else {

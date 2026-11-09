@@ -1,0 +1,69 @@
+{
+  "scenario": "Teen who didn't come home",
+  "imageUrl": "demo-samples/teen-night.jpg",
+  "sourceImageUrl": "https://images.unsplash.com/photo-1687153098767-95299d5df006",
+  "sourceName": "Unsplash",
+  "licenseUrl": "https://unsplash.com/license",
+  "investigation": {
+    "id": "sample-teen-night",
+    "title": "Teen who didn't come home – public street at night",
+    "desk": "original",
+    "originalName": "public-street-night-sample.jpg",
+    "contentType": "image/jpeg",
+    "context": "Sam's family reports a photo from 3 hours ago on a public city street, around 12°C at night. They are checking nearby crossings, open businesses and transit stops.",
+    "shotAt": null,
+    "summary": "A lit public intersection has a broad crosswalk, traffic signals, a 30th St sign and a 24-hour restaurant. These clues form the prepared location comparison.",
+    "status": "done",
+    "candidates": [
+      {
+        "place": "30th & Figueroa",
+        "region": "Los Angeles, California",
+        "country": "United States",
+        "confidence": 0.76,
+        "rationale": "The 30th St sign, broad crossing and late-night restaurant frontage support this first prepared comparison.",
+        "clues": ["30th St sign", "Public crosswalk", "24-hour restaurant"],
+        "mapsUrl": "https://www.google.com/maps/search/?api=1&query=34.0234%2C-118.2784"
+      },
+      {
+        "place": "30th & Vermont",
+        "region": "Los Angeles, California",
+        "country": "United States",
+        "confidence": 0.51,
+        "rationale": "A nearby public commercial corridor offers a similar crossing layout but a weaker frontage match.",
+        "clues": ["Street lighting", "Commercial frontage"],
+        "mapsUrl": "https://www.google.com/maps/search/?api=1&query=34.0263%2C-118.2915"
+      },
+      {
+        "place": "Jefferson & Figueroa",
+        "region": "Los Angeles, California",
+        "country": "United States",
+        "confidence": 0.43,
+        "rationale": "A broad lit intersection in the same general area, with a weaker street-sign match.",
+        "clues": ["Traffic signals", "Public crosswalk"],
+        "mapsUrl": "https://www.google.com/maps/search/?api=1&query=34.0212%2C-118.2800"
+      }
+    ],
+    "clues": [
+      { "label": "Crosswalk", "observation": "A broad striped public crossing spans the street.", "significance": "Start with major public intersections rather than private homes." },
+      { "label": "Traffic signals", "observation": "Several overhead traffic lights control the intersection.", "significance": "The signal layout narrows the prepared street comparison." },
+      { "label": "Street sign", "observation": "A 30th St sign is visible above the intersection.", "significance": "This is the most specific visible text clue." },
+      { "label": "Restaurant", "observation": "An illuminated restaurant sign says open 24 hours.", "significance": "An open public business could provide a nearby contact point." },
+      { "label": "Lighting", "observation": "Streetlights and illuminated signs stand out against a dark sky.", "significance": "The family also reports nighttime conditions." }
+    ],
+    "analysis": {
+      "media_type": "image",
+      "latitude": 34.0234,
+      "longitude": -118.2784,
+      "confidence": 0.76,
+      "source": "Precomputed fictional sample case",
+      "verified": "Prepared example, not a live verification",
+      "search_areas": [
+        { "rank": 1, "name": "30th & Figueroa", "country": "United States", "latitude": 34.0234, "longitude": -118.2784, "search_radius_km": 4.5, "score": 0.76, "map_status": "Coordinates" },
+        { "rank": 2, "name": "30th & Vermont", "country": "United States", "latitude": 34.0263, "longitude": -118.2915, "search_radius_km": 4.5, "score": 0.51, "map_status": "Coordinates" },
+        { "rank": 3, "name": "Jefferson & Figueroa", "country": "United States", "latitude": 34.0212, "longitude": -118.2800, "search_radius_km": 4.5, "score": 0.43, "map_status": "Coordinates" }
+      ]
+    },
+    "createdAt": "2026-11-03T12:00:00.000Z",
+    "updatedAt": "2026-11-03T12:00:00.000Z"
+  }
+}

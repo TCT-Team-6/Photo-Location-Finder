@@ -681,3 +681,169 @@
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   "Rescue" theme — high-energy look for demos and video.
+   Night navy + signal orange + search blue on a cool, bright paper.
+   Works like the other themes: it re-colors the app's hex classes.
+   ------------------------------------------------------------------ */
+[data-app-theme="rescue"] {
+  --paper: #f2f5fb; --ink: #0b1a2e; --moss: #2350e8; --clay: #ff6a13; --line: #d3dcea;
+}
+/* Page + card surfaces */
+[data-app-theme="rescue"] [class~="bg-[#f4f0e6]"],
+[data-app-theme="rescue"] [class~="bg-[#f4f0e6]/95"],
+[data-app-theme="rescue"] .clerk-frame { background-color: #f2f5fb !important; }
+[data-app-theme="rescue"] [class~="bg-[#f8f5ec]"],
+[data-app-theme="rescue"] [class~="bg-[#fbf9f3]"],
+[data-app-theme="rescue"] [class~="bg-[#faf7ee]"],
+[data-app-theme="rescue"] [class~="bg-[#f7f3e9]/85"] { background-color: #ffffff !important; }
+[data-app-theme="rescue"] [class~="bg-[#eee9dc]"],
+[data-app-theme="rescue"] [class~="bg-[#e5e3d6]"],
+[data-app-theme="rescue"] [class~="bg-[#e8e9df]"],
+[data-app-theme="rescue"] [class~="bg-[#e2e4d9]"] { background-color: #e6ecf6 !important; }
+[data-app-theme="rescue"] [class~="bg-[#e9ede3]"],
+[data-app-theme="rescue"] [class~="bg-[#edf1e7]"],
+[data-app-theme="rescue"] [class~="bg-[#edf2e9]"] { background-color: #e8efff !important; }
+[data-app-theme="rescue"] [class~="hover:bg-[#ebe9de]"]:hover,
+[data-app-theme="rescue"] [class~="hover:bg-[#e8e4d8]"]:hover,
+[data-app-theme="rescue"] [class~="hover:bg-[#f0ece2]"]:hover { background-color: #e8eef9 !important; }
+
+/* Night navy: sidebar, footer, dark panels */
+[data-app-theme="rescue"] [class~="bg-[#263d36]"] { background-color: #0b1a2e !important; }
+[data-app-theme="rescue"] [class~="bg-[#3b5d50]"] { background-color: #1d3557 !important; }
+[data-app-theme="rescue"] [class~="border-[#52695d]"],
+[data-app-theme="rescue"] [class~="border-[#5c7465]"],
+[data-app-theme="rescue"] [class~="border-[#597064]"] { border-color: #2a4366 !important; }
+[data-app-theme="rescue"] [class~="text-[#c1cdbf]"],
+[data-app-theme="rescue"] [class~="text-[#d0d9ce]"],
+[data-app-theme="rescue"] [class~="text-[#c4d0c2]"],
+[data-app-theme="rescue"] [class~="text-[#bdc9bd]"],
+[data-app-theme="rescue"] [class~="text-[#a9b8aa]"],
+[data-app-theme="rescue"] [class~="text-[#a8b8a9]"] { color: #c9d6ea !important; }
+[data-app-theme="rescue"] [class~="text-[#9aaf9d]"] { color: #8fa6c7 !important; }
+[data-app-theme="rescue"] [class~="text-[#f4f0e6]"],
+[data-app-theme="rescue"] [class~="text-[#f5f0e5]"] { color: #f5f8ff !important; }
+
+/* Search blue: primary buttons, links, focus */
+[data-app-theme="rescue"] [class~="bg-[#385e51]"] { background-color: #2350e8 !important; box-shadow: 0 8px 22px rgba(35, 80, 232, .28); }
+[data-app-theme="rescue"] [class~="hover:bg-[#2e5044]"]:hover,
+[data-app-theme="rescue"] [class~="hover:bg-[#2d5045]"]:hover { background-color: #1a3fc2 !important; }
+[data-app-theme="rescue"] [class~="text-[#385e51]"] { color: #1d47d1 !important; }
+[data-app-theme="rescue"] [class~="ring-[#385e51]/10"],
+[data-app-theme="rescue"] [class~="focus:ring-[#385e51]/10"]:focus { --tw-ring-color: rgba(35, 80, 232, .18) !important; }
+[data-app-theme="rescue"] [class~="focus:border-[#668675]"]:focus,
+[data-app-theme="rescue"] [class~="border-[#668675]"] { border-color: #2350e8 !important; }
+[data-app-theme="rescue"] [class~="border-[#385e51]"] { border-color: #2350e8 !important; }
+
+/* Signal orange: call-to-action, pins, highlights */
+[data-app-theme="rescue"] [class~="bg-[#d78b5a]"] { background-color: #ff7a1a !important; box-shadow: 0 8px 24px rgba(255, 106, 19, .35); }
+[data-app-theme="rescue"] [class~="hover:bg-[#e29b6d]"]:hover { background-color: #ff9142 !important; }
+[data-app-theme="rescue"] [class~="text-[#233b35]"],
+[data-app-theme="rescue"] [class~="text-[#243b34]"] { color: #0b1a2e !important; }
+[data-app-theme="rescue"] [class~="bg-[#c8794d]"] { background-color: #ff6a13 !important; }
+[data-app-theme="rescue"] [class~="text-[#d78b5a]"],
+[data-app-theme="rescue"] [class~="text-[#e3a274]"] { color: #ff8a3d !important; }
+[data-app-theme="rescue"] [class~="text-[#c8794d]"] { color: #e2550a !important; }
+[data-app-theme="rescue"] [class~="text-[#9c6d4e]"],
+[data-app-theme="rescue"] [class~="text-[#9d6c4d]"],
+[data-app-theme="rescue"] [class~="text-[#a36a47]"],
+[data-app-theme="rescue"] [class~="text-[#b47751]"],
+[data-app-theme="rescue"] [class~="text-[#a56e4b]"] { color: #c2410c !important; }
+
+/* Text */
+[data-app-theme="rescue"] [class~="text-[#263d36]"],
+[data-app-theme="rescue"] [class~="text-[#344b42]"],
+[data-app-theme="rescue"] [class~="text-[#334b3f]"] { color: #0b1a2e !important; }
+[data-app-theme="rescue"] [class~="text-[#718078]"],
+[data-app-theme="rescue"] [class~="text-[#738078]"],
+[data-app-theme="rescue"] [class~="text-[#62756c]"],
+[data-app-theme="rescue"] [class~="text-[#596d61]"],
+[data-app-theme="rescue"] [class~="text-[#66796e]"],
+[data-app-theme="rescue"] [class~="text-[#465c50]"],
+[data-app-theme="rescue"] [class~="text-[#53695d]"],
+[data-app-theme="rescue"] [class~="text-[#476450]"],
+[data-app-theme="rescue"] [class~="text-[#65766c]"],
+[data-app-theme="rescue"] [class~="text-[#627569]"],
+[data-app-theme="rescue"] [class~="text-[#557363]"] { color: #44556d !important; }
+[data-app-theme="rescue"] [class~="text-[#758477]"],
+[data-app-theme="rescue"] [class~="text-[#76857a]"],
+[data-app-theme="rescue"] [class~="text-[#859187]"],
+[data-app-theme="rescue"] [class~="text-[#87938a]"],
+[data-app-theme="rescue"] [class~="text-[#89948a]"],
+[data-app-theme="rescue"] [class~="text-[#929b90]"],
+[data-app-theme="rescue"] [class~="text-[#97a095]"],
+[data-app-theme="rescue"] [class~="text-[#96a095]"],
+[data-app-theme="rescue"] [class~="text-[#829087]"],
+[data-app-theme="rescue"] [class~="text-[#849087]"],
+[data-app-theme="rescue"] [class~="text-[#839086]"],
+[data-app-theme="rescue"] [class~="text-[#a1a79d]"],
+[data-app-theme="rescue"] [class~="text-[#68796e]"],
+[data-app-theme="rescue"] [class~="text-[#6f7f76]"],
+[data-app-theme="rescue"] [class~="text-[#657d6f]"],
+[data-app-theme="rescue"] [class~="text-[#627d6d]"],
+[data-app-theme="rescue"] [class~="text-[#78897b]"],
+[data-app-theme="rescue"] [class~="text-[#899589]"] { color: #5a6a82 !important; }
+
+/* Lines */
+[data-app-theme="rescue"] [class~="border-[#d8d1c2]"],
+[data-app-theme="rescue"] [class~="border-[#d4cdbd]"],
+[data-app-theme="rescue"] [class~="border-[#d6cfbf]"] { border-color: #d3dcea !important; }
+[data-app-theme="rescue"] [class~="border-[#e1dbce]"],
+[data-app-theme="rescue"] [class~="border-[#e4dfd2]"] { border-color: #e3e8f1 !important; }
+[data-app-theme="rescue"] [class~="border-[#c9c3b4]"],
+[data-app-theme="rescue"] [class~="border-[#c9c7b7]"],
+[data-app-theme="rescue"] [class~="border-[#b8c4b5]"],
+[data-app-theme="rescue"] [class~="border-[#b5c1b1]"],
+[data-app-theme="rescue"] [class~="border-[#c9d0c2]"],
+[data-app-theme="rescue"] [class~="border-[#9eaf9f]"],
+[data-app-theme="rescue"] [class~="border-[#b9c4b5]"],
+[data-app-theme="rescue"] [class~="border-[#a4ad9a]"],
+[data-app-theme="rescue"] [class~="border-[#9aa697]"] { border-color: #b9c6da !important; }
+
+/* Alerts stay warm so problems are easy to spot */
+[data-app-theme="rescue"] [class~="bg-[#f9eee6]"] { background-color: #fff1ec !important; }
+[data-app-theme="rescue"] [class~="border-[#dfc6b6]"] { border-color: #ffc8b3 !important; }
+[data-app-theme="rescue"] [class~="text-[#875545]"],
+[data-app-theme="rescue"] [class~="text-[#704f3d]"] { color: #a3270b !important; }
+
+/* Map art + patterns */
+[data-app-theme="rescue"] .paper-grid {
+  background-color: #f2f5fb;
+  background-image: linear-gradient(rgba(35, 80, 232, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(35, 80, 232, .06) 1px, transparent 1px);
+}
+[data-app-theme="rescue"] .landing-map {
+  background-color: #0e2340;
+  background-image: radial-gradient(ellipse at 57% 58%, rgba(255, 106, 19, .28), transparent 30%), repeating-linear-gradient(28deg, transparent 0 50px, rgba(120, 165, 255, .18) 51px 52px, transparent 53px 96px), repeating-linear-gradient(115deg, transparent 0 68px, rgba(120, 165, 255, .12) 69px 70px, transparent 71px 118px);
+}
+[data-app-theme="rescue"] .contour {
+  background-image: repeating-radial-gradient(ellipse at 52% 46%, transparent 0 17px, rgba(120, 165, 255, .22) 18px 19px, transparent 20px 35px);
+}
+[data-app-theme="rescue"] .map-pin { box-shadow: 0 0 0 0 rgba(255, 106, 19, .6); animation: rescuePing 2.2s ease-out infinite; }
+@keyframes rescuePing {
+  0% { box-shadow: 0 0 0 0 rgba(255, 106, 19, .55); }
+  70% { box-shadow: 0 0 0 26px rgba(255, 106, 19, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 106, 19, 0); }
+}
+[data-app-theme="rescue"] .photo-frame { box-shadow: 0 22px 50px rgba(11, 26, 46, .16); }
+[data-app-theme="rescue"] .investigation-theme {
+  --desk-accent: #2350e8;
+  --desk-accent-strong: #1a3fc2;
+  --desk-accent-soft: #e8efff;
+  --desk-accent-line: #bccbf5;
+  --desk-accent-muted: #3f5577;
+  --desk-drop-surface: #eef3ff;
+  --desk-icon-surface: #dde7ff;
+  --desk-panel-surface: #ffffff;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-app-theme="rescue"] .map-pin { animation: none; }
+}
+
+/* Analysis progress + best-guess card (all themes) */
+.progress-step-dot { width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; flex: none; }
+.best-guess-card { background: linear-gradient(135deg, #0b1a2e 0%, #1d3557 100%); }
+[data-app-theme="field"] .best-guess-card { background: linear-gradient(135deg, #263d36 0%, #3b5d50 100%); }
+[data-app-theme="sunset"] .best-guess-card { background: linear-gradient(135deg, #57392f 0%, #8b4939 100%); }
+[data-app-theme="ocean"] .best-guess-card { background: linear-gradient(135deg, #183c4a 0%, #23617a 100%); }
+[data-app-theme="mono"] .best-guess-card { background: #111; }

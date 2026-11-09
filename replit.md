@@ -28,6 +28,31 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 
 _Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
 
+### Demo analytics collector
+
+Whereabouts uses Replit-hosted Project Analytics, not a separately configured
+Umami installation. Replit's publishing proxy injects the tracker into published
+website HTML when analytics is enabled. The app only calls the injected
+`window.umami.track` through its failure-safe helper; do not add a script,
+website ID, analytics environment variables, or a second collector.
+
+Source: https://docs.replit.com/features/publishing/project-analytics
+("Replit adds the analytics tracker to your published app. You do not need to add
+a tracking script, website ID, or analytics environment variable.")
+The project-analytics skill documents the injected `window.umami.track` contract.
+Analytics access was checked and returned `authorized` during instrumentation.
+This establishes access, not that a published release has analytics enabled.
+
+`demo_sample_open` counts direct sample-result opens; `demo_sample_run` counts
+starts of the simulated flow, not live analyses or completions. Their only custom
+property is the fixed sample `scenario_id`.
+
+Development previews intentionally have no collector. Tests verify forwarding
+to the injected interface and safe behavior when it is absent, throws, or rejects;
+they do not prove delivery to a published report. After merging, a release with
+Enable analytics turned on is required for collection. Nothing should be
+published from a task fork solely to test analytics.
+
 ## Product
 
 _Describe the high-level user-facing capabilities of this app once they exist._

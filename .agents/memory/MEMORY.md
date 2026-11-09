@@ -2,3 +2,11 @@
 - [Demo and account privacy](product-experience.md) — Demo projects are not saved; display names differ from login identity; personal key overrides are temporary.
 - [React and Vite cache](react-vite-cache.md) — If React versions match but the browser reports a mismatch, check Vite's cached prebundle before changing packages again.
 - [pnpm workspace manifest](pnpm-workspace-install.md) — Review shared workspace config after package adds; the installed pnpm version may rewrite unrelated formatting and comments.
+- [Private case scope](private-case-scope.md) — Missing-person intake organizes authorized evidence; no social crawling, face matching, or automatic location analysis.
+- [Loading progress integrity](progress-integrity.md) — Pipeline animation is illustrative unless backed by real stage events; never fabricate completion or percentages.
+- [Image Locator rollout](image-locator-rollout.md) — User requests one reviewed step at a time, preserving working UI and using nullable-only database additions.
+- [Recreation purpose](recreation-purpose.md) — Recreation means personal and leisure use, not re-creating photos or reverse-image search.
+- [Locator model choice](locator-model-choice.md) — User reports choosing GPT-4o vision after testing GAEA and other Qwen-based geolocation models.
+- [Preview process lifecycle](preview-process-lifecycle.md) — Direct Node startup avoids orphaned Vite children; managed service commands run from the artifact directory.
+- [ProseMirror dependency alignment](prosemirror-alignment.md) — Align the pinned model with a patched view before changing editor code to resolve schema-type errors.
+- [Demo family scenarios](demo-family-scenarios.md) — Fictional family inputs drive sample urgency; keep relative times and demo-only presentation separate from live analysis.

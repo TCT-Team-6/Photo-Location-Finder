@@ -50,11 +50,13 @@ function MapViewController({ points, selectedIndex, mapKey }: {
   return null;
 }
 
-export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLead }: {
+export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLead, popupActionLabel = "Click marker to open location report", scoreLabel = "Model score" }: {
   candidates: Lead[];
   selectedIndex: number;
   onSelect: (index: number) => void;
   onOpenLead: (index: number) => void;
+  popupActionLabel?: string;
+  scoreLabel?: string;
 }) {
   const points = useMemo(
     () => candidates.flatMap((lead, index) => {
@@ -88,7 +90,7 @@ export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLea
           eventHandlers={{ click: () => { onSelect(index); onOpenLead(index); } }}
         >
           <Tooltip direction="top" offset={[0, -8]}>{index + 1}. {lead.place}<br />Lat {position[0].toFixed(5)} · Lon {position[1].toFixed(5)}</Tooltip>
-          <Popup><strong>{lead.place}</strong><br />Model score: {modelScore(lead.confidence)} / 100<br />Click marker to open location report</Popup>
+          <Popup><strong>{lead.place}</strong><br />{scoreLabel}: {modelScore(lead.confidence)} / 100<br />{popupActionLabel}</Popup>
         </CircleMarker>;
       })}
     </MapContainer> : <div className="grid h-[210px] place-items-center px-6 text-center text-sm leading-6 text-[#718078]" data-testid="map-no-coordinates">The analyzer did not return map coordinates for these leads. Open a lead’s map link to explore its location.</div>}

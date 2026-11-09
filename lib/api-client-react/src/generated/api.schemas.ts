@@ -5,6 +5,162 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface CaseReviewInput {
+  /** @maxLength 10000 */
+  observations: string;
+  /** @maxLength 10000 */
+  nextSteps: string;
+  /** @minimum 0 */
+  expectedRevision: number;
+}
+
+export interface CaseReview {
+  /** @maxLength 10000 */
+  observations: string;
+  /** @maxLength 10000 */
+  nextSteps: string;
+  /** @minimum 1 */
+  revision: number;
+  updatedAt: string;
+}
+
+export type CaseLeadReviewInputReviewStatus = typeof CaseLeadReviewInputReviewStatus[keyof typeof CaseLeadReviewInputReviewStatus];
+
+
+export const CaseLeadReviewInputReviewStatus = {
+  'needs-verification': 'needs-verification',
+  relevant: 'relevant',
+  unrelated: 'unrelated',
+} as const;
+
+export interface CaseLeadReviewInput {
+  reviewStatus: CaseLeadReviewInputReviewStatus;
+}
+
+export type CasePhotoContentType = typeof CasePhotoContentType[keyof typeof CasePhotoContentType];
+
+
+export const CasePhotoContentType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+} as const;
+
+export interface CasePhoto {
+  /**
+     * @maxLength 200
+     * @pattern ^/objects/uploads/[a-f0-9-]+$
+     */
+  objectPath: string;
+  /**
+     * @minLength 1
+     * @maxLength 255
+     */
+  originalName: string;
+  contentType: CasePhotoContentType;
+}
+
+export type MissingPersonCaseInputResponderRole = typeof MissingPersonCaseInputResponderRole[keyof typeof MissingPersonCaseInputResponderRole];
+
+
+export const MissingPersonCaseInputResponderRole = {
+  'family-or-guardian': 'family-or-guardian',
+  'authorized-responder': 'authorized-responder',
+  other: 'other',
+} as const;
+
+export interface MissingPersonCaseInput {
+  clientRequestId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  firstName: string;
+  /** @maxLength 80 */
+  lastName?: string;
+  /** @maxLength 80 */
+  nickname?: string;
+  /** @maxLength 40 */
+  ageDescription?: string;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  lastKnownDate?: string | null;
+  /** @maxLength 160 */
+  lastKnownArea?: string;
+  responderRole: MissingPersonCaseInputResponderRole;
+  /** @maxLength 120 */
+  officialReference?: string;
+  /** @maxLength 3000 */
+  notes?: string;
+  privacyAcknowledged: true;
+  headshot?: CasePhoto | null;
+}
+
+export type CaseLeadInputKind = typeof CaseLeadInputKind[keyof typeof CaseLeadInputKind];
+
+
+export const CaseLeadInputKind = {
+  photo: 'photo',
+  link: 'link',
+  tip: 'tip',
+} as const;
+
+export interface CaseLeadInput {
+  clientRequestId: string;
+  kind: CaseLeadInputKind;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  source: string;
+  /** @maxLength 2000 */
+  sourceUrl?: string;
+  /** @maxLength 3000 */
+  notes?: string;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  reportedTakenOn?: string | null;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  postedOn?: string | null;
+  permissionGranted: true;
+  photo?: CasePhoto | null;
+}
+
+export type CaseLeadReviewStatus = typeof CaseLeadReviewStatus[keyof typeof CaseLeadReviewStatus];
+
+
+export const CaseLeadReviewStatus = {
+  'needs-verification': 'needs-verification',
+  relevant: 'relevant',
+  unrelated: 'unrelated',
+} as const;
+
+export type CaseLead = CaseLeadInput & {
+  id: string;
+  reviewStatus: CaseLeadReviewStatus;
+  createdAt: string;
+};
+
+export type MissingPersonCase = MissingPersonCaseInput & {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  review?: CaseReview;
+  leads: CaseLead[];
+};
+
 export interface HealthStatus {
   status: string;
 }
@@ -28,6 +184,12 @@ export const UploadUrlRequestContentType = {
   'image/x-tiff': 'image/x-tiff',
   'image/heic': 'image/heic',
   'image/heif': 'image/heif',
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+  'video/x-matroska': 'video/x-matroska',
+  'video/x-msvideo': 'video/x-msvideo',
+  'video/3gpp': 'video/3gpp',
 } as const;
 
 export interface UploadUrlRequest {
@@ -38,7 +200,7 @@ export interface UploadUrlRequest {
   name: string;
   /**
      * @minimum 1
-     * @maximum 26214400
+     * @maximum 62914560
      */
   size: number;
   contentType: UploadUrlRequestContentType;
@@ -92,6 +254,193 @@ export interface VisualClue {
   significance: string;
 }
 
+export type InvestigationAnalysisMediaType = typeof InvestigationAnalysisMediaType[keyof typeof InvestigationAnalysisMediaType];
+
+
+export const InvestigationAnalysisMediaType = {
+  video: 'video',
+  image: 'image',
+} as const;
+
+export type InvestigationAnalysisVideoEmbeddedGps = {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+};
+
+export type InvestigationAnalysisVideo = {
+  /** @minimum 0 */
+  duration_s?: number;
+  /** @minimum 0 */
+  fps?: number;
+  /** @minimum 0 */
+  frames_analyzed?: number;
+  embedded_gps?: InvestigationAnalysisVideoEmbeddedGps;
+};
+
+export type InvestigationAnalysisContributingFramesItem = {
+  /** @minimum 0 */
+  index?: number;
+  /** @minimum 0 */
+  timestamp_s?: number;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  candidates?: string[];
+  clues_found?: boolean;
+};
+
+export type InvestigationAnalysisSearchAreasItem = {
+  /** @minimum 1 */
+  rank?: number;
+  /** @maxLength 1200 */
+  name?: string;
+  /** @maxLength 1200 */
+  country?: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+  /** @minimum 0 */
+  search_radius_km?: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  score?: number;
+  /** @maxLength 1200 */
+  map_status?: string;
+};
+
+export type InvestigationAnalysisRejectedItem = {
+  /** @maxLength 1200 */
+  name?: string;
+  /** @maxLength 1200 */
+  reason?: string;
+};
+
+export type InvestigationAnalysisNearbyPlacesItem = {
+  /** @maxLength 1200 */
+  title?: string;
+  /** @minimum 0 */
+  distance_km?: number;
+};
+
+export type InvestigationAnalysisForensics = {
+  has_gps?: boolean;
+  /** @maxLength 1200 */
+  authenticity?: string;
+  edited?: boolean;
+  is_screenshot?: boolean;
+  metadata_stripped?: boolean;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  notes?: string[];
+};
+
+export type InvestigationAnalysisReasoningTraceItem = {
+  /** @maxLength 1200 */
+  stage?: string;
+  /**
+     * @maxItems 10
+     * @items.maxLength 1200
+     */
+  details?: string[];
+  /** @maxLength 1200 */
+  step?: string;
+  /** @maxLength 1200 */
+  detail?: string;
+};
+
+export type InvestigationAnalysisDetailsExif = {
+  /** @maxLength 1200 */
+  timestamp?: string;
+};
+
+export type InvestigationAnalysisDetails = {
+  exif?: InvestigationAnalysisDetailsExif;
+};
+
+/**
+ * Optional sanitized Image Locator metadata. Provider claims are not independent verification.
+ * @nullable
+ */
+export type InvestigationAnalysis = {
+  media_type?: InvestigationAnalysisMediaType;
+  video?: InvestigationAnalysisVideo;
+  /** @maxItems 10 */
+  contributing_frames?: InvestigationAnalysisContributingFramesItem[];
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+  /** @maxLength 2000 */
+  map_url?: string;
+  /** @maxLength 1200 */
+  address?: string;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  confidence?: number;
+  /** @maxLength 1200 */
+  source?: string;
+  /** @maxLength 1200 */
+  verified?: string;
+  /** @maxLength 1200 */
+  warning?: string;
+  meets_defined_radius?: boolean;
+  /** @minimum 0 */
+  defined_radius_km?: number;
+  /** @minimum 0 */
+  precision_m?: number;
+  elevation_m?: number;
+  /** @maxItems 10 */
+  search_areas?: InvestigationAnalysisSearchAreasItem[];
+  /** @maxItems 10 */
+  rejected?: InvestigationAnalysisRejectedItem[];
+  /** @maxItems 10 */
+  nearby_places?: InvestigationAnalysisNearbyPlacesItem[];
+  forensics?: InvestigationAnalysisForensics;
+  /** @maxItems 10 */
+  reasoning_trace?: InvestigationAnalysisReasoningTraceItem[];
+  details?: InvestigationAnalysisDetails;
+} | null;
+
+/**
+ * @nullable
+ */
+export type InvestigationStatus = typeof InvestigationStatus[keyof typeof InvestigationStatus] | null;
+
+
+export const InvestigationStatus = {
+  analyzing: 'analyzing',
+  done: 'done',
+  failed: 'failed',
+} as const;
+
 export type InvestigationDesk = typeof InvestigationDesk[keyof typeof InvestigationDesk];
 
 
@@ -102,6 +451,10 @@ export const InvestigationDesk = {
 } as const;
 
 export interface Investigation {
+  /** @nullable */
+  status?: InvestigationStatus;
+  /** @nullable */
+  analysisError?: string | null;
   id: string;
   title: string;
   desk: InvestigationDesk;
@@ -114,6 +467,7 @@ export interface Investigation {
   summary: string;
   candidates: LocationCandidate[];
   clues: VisualClue[];
+  analysis?: InvestigationAnalysis | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -133,6 +487,12 @@ export const InvestigationInputContentType = {
   'image/x-tiff': 'image/x-tiff',
   'image/heic': 'image/heic',
   'image/heif': 'image/heif',
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+  'video/x-matroska': 'video/x-matroska',
+  'video/x-msvideo': 'video/x-msvideo',
+  'video/3gpp': 'video/3gpp',
 } as const;
 
 export type InvestigationInputDesk = typeof InvestigationInputDesk[keyof typeof InvestigationInputDesk];
@@ -197,6 +557,10 @@ export interface InvestigationSummary {
   thisMonth: number;
   latest: Investigation | null;
 }
+
+export type GetLocatorHealth200 = {
+  video_enabled: boolean;
+};
 
 export type ListInvestigationsParams = {
 /**
