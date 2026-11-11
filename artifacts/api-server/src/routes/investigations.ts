@@ -317,11 +317,13 @@ router.post(
       let clues: VisualClue[];
       let analysisCandidates: LocationCandidate[];
       let analysisMetadata: InvestigationAnalysis | null = null;
+      let isVisionFallback = false;
       if (parsed.data.desk === "original" || parsed.data.desk === "recreation") {
         const analysis = await analyzeImageLocation(buffer, contentType, originalName);
         summary = analysis.summary;
         clues = analysis.clues;
         analysisCandidates = analysis.candidates;
+        isVisionFallback = analysis.analysis.source === "Replit AI vision fallback";
         analysisMetadata = parsed.data.desk === "recreation"
           ? { ...analysis.analysis, media_type: "image" }
           : analysis.analysis;
@@ -344,6 +346,9 @@ router.post(
         ? await Promise.all(
         analysisCandidates.map(
           async (candidate): Promise<LocationCandidate> => {
+            if (isVisionFallback) {
+              return { ...candidate, photoReferences: [] };
+            }
             if (!openAIClient) {
               return {
                 ...candidate,
@@ -559,7 +564,10 @@ router.post(
       }
       const apiKey = process.env.OPENAI_API_KEY;
       const openAIClient = apiKey ? new OpenAI({ apiKey }) : null;
+      const isVisionFallback =
+        analysis.analysis.source === "Replit AI vision fallback";
       const candidates = await Promise.all(newLeads.map(async (candidate): Promise<LocationCandidate> => {
+        if (isVisionFallback) return { ...candidate, photoReferences: [] };
         if (!openAIClient) return { ...candidate, photoReferences: [], photoSearchStatus: "unavailable" };
         try {
           const photoReferences = await searchLocationPhotoReferences(openAIClient, candidate);

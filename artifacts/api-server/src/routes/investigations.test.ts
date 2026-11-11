@@ -89,6 +89,7 @@ let videoAvailable = true;
 let downloadCalls = 0;
 let originalAnalyzerCalls = 0;
 let uploadContentType = "image/jpeg";
+let photoSearchCalls = 0;
 
 const mockDb = {
   select: () => ({
@@ -202,7 +203,10 @@ mock.module("../lib/deskImageAnalysis.js", {
 });
 mock.module("../lib/locationPhotoSearch.js", {
   namedExports: {
-    searchLocationPhotoReferences: async () => [sourceImageMatch],
+    searchLocationPhotoReferences: async () => {
+      photoSearchCalls += 1;
+      return [sourceImageMatch];
+    },
   },
 });
 
@@ -235,6 +239,48 @@ test("create investigation persists and returns the Original desk analysis", asy
       photoSearchStatus: "found",
     }],
   });
+});
+
+test("fallback guesses skip public photo search and stay labeled unverified", async () => {
+  const previous = analyses.original;
+  const callsBefore = photoSearchCalls;
+  const fallbackAnalysis: Analysis = {
+    summary:
+      "The primary location service could not identify a place. A secondary AI suggests these low-confidence visual guesses; they are not verified.",
+    analysis: {
+      source: "Replit AI vision fallback",
+      verified: "unverified",
+      warning: "Low-confidence visual guesses; not verified.",
+    },
+    candidates: [{
+      place: "Possible coastal region",
+      region: "North Coast",
+      country: "Exampleland",
+      confidence: 0.25,
+      rationale: "Low-confidence visual guess; not verified.",
+      clues: ["A rocky coastline"],
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Possible+coastal+region",
+    }],
+    clues: [{
+      label: "Coastline",
+      observation: "A rocky shoreline is visible.",
+      significance: "This visual clue does not verify a location.",
+    }],
+  };
+  analyses.original = fallbackAnalysis;
+
+  try {
+    await assertDeskReportMatches("original", fallbackAnalysis, {
+      ...fallbackAnalysis,
+      candidates: [{
+        ...fallbackAnalysis.candidates[0]!,
+        photoReferences: [],
+      }],
+    });
+    assert.equal(photoSearchCalls, callsBefore);
+  } finally {
+    analyses.original = previous;
+  }
 });
 
 test("Recreation uses Image Locator for personal-photo locations, not source-image matches", async () => {

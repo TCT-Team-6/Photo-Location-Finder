@@ -14,3 +14,9 @@ Video analysis uses persisted background work rather than a browser request that
 **Why:** The user approved background video jobs and an always-on hosting requirement after being told that Autoscale is request-based and Reserved VM hosting may change costs. A six-minute upstream timeout is not a guarantee that a browser or hosting proxy will keep the request alive.
 
 **How to apply:** Preserve job recovery and per-record access controls, resume status checking after reloads, and obtain separate approval before changing production hosting. Do not describe video processing as reliable on idle Autoscale merely because jobs are persisted.
+
+For ordinary Original/Recreation photo-location analyses, use the Replit AI vision fallback billed to Replit credits only when the primary locator returns no usable place. Label its output as low-confidence and unverified. Keep this fallback out of missing-person case evidence and videos.
+
+**Why:** The user explicitly preferred uncertain visual guesses over no result and chose Replit AI credits for this fallback.
+
+**How to apply:** Run the secondary model only when the primary response has no named location. Do not rerun or send saved photos to the fallback without a user action, and never present its guesses as verified matches.

@@ -1,10 +1,25 @@
 import type { InvestigationAnalysis, LocationCandidate, VisualClue } from "@workspace/db";
 import { extractImageLocationMetadata } from "./imageLocationMetadata";
+import {
+  generateLocationVisionFallback,
+  isGenericUnknownPlace,
+  type LocationVisionFallback,
+} from "./imageLocationFallback";
 import { isVideo } from "./locatorMedia";
+import { logger } from "./logger";
 
 const DEFAULT_IMAGE_LOCATOR_URL =
   "https://mit-app-inventor-backend.onrender.com";
 const MAX_ANALYZER_RESPONSE_BYTES = 2 * 1024 * 1024;
+const FALLBACK_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const FALLBACK_SOURCE = "Replit AI vision fallback";
+const FALLBACK_WARNING =
+  "These are low-confidence visual guesses, not verified locations. Scores show relative ranking, not probability.";
 
 export class LocatorError extends Error {
   constructor(message: string, public status: number) { super(message); }
@@ -30,6 +45,11 @@ export type ImageLocationAnalysis = {
   clues: VisualClue[];
   analysis: InvestigationAnalysis;
 };
+
+type FallbackAnalyzer = (
+  image: Buffer,
+  contentType: string,
+) => Promise<LocationVisionFallback>;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -159,6 +179,53 @@ function visualClues(vision: JsonRecord | null, body: JsonRecord): VisualClue[] 
       },
     ];
   });
+}
+
+function applyLocationFallback(
+  primary: ImageLocationAnalysis,
+  fallback: LocationVisionFallback,
+): ImageLocationAnalysis {
+  const {
+    address: _address,
+    latitude: _latitude,
+    longitude: _longitude,
+    map_url: _mapUrl,
+    confidence: _confidence,
+    source: _source,
+    verified: _verified,
+    warning: _warning,
+    search_areas: _searchAreas,
+    nearby_places: _nearbyPlaces,
+    rejected: _rejected,
+    reasoning_trace: _reasoningTrace,
+    ...nonLocationMetadata
+  } = primary.analysis;
+
+  return {
+    summary:
+      "The primary location service could not identify a place. A secondary AI suggests these low-confidence visual guesses; they are not verified.",
+    candidates: fallback.candidates,
+    clues: fallback.clues.length ? fallback.clues : primary.clues,
+    analysis: {
+      ...nonLocationMetadata,
+      source: FALLBACK_SOURCE,
+      confidence: fallback.candidates[0]?.confidence,
+      verified: "unverified",
+      warning: FALLBACK_WARNING,
+      reasoning_trace: [
+        {
+          stage: "Primary locator",
+          details: ["No usable location candidate was returned."],
+        },
+        {
+          stage: "Secondary vision fallback",
+          details: [
+            "Generated ranked visual guesses. They have not been independently verified.",
+          ],
+        },
+      ],
+    },
+  };
 }
 
 export function normalizeImageLocationResponse(
@@ -318,6 +385,7 @@ export async function analyzeImageLocation(
   image: Buffer,
   contentType: string,
   originalName: string,
+  fallbackAnalyzer: FallbackAnalyzer = generateLocationVisionFallback,
 ): Promise<ImageLocationAnalysis> {
   const form = new FormData();
   const imageBlob = new Blob([new Uint8Array(image)], { type: contentType });
@@ -361,5 +429,24 @@ export async function analyzeImageLocation(
     throw new Error("The Image Locator service returned invalid JSON.");
   }
 
-  return normalizeImageLocationResponse(parsed);
+  const analysis = normalizeImageLocationResponse(parsed);
+  const hasUsableLocation = analysis.candidates.some(
+    (candidate) => !isGenericUnknownPlace(candidate.place),
+  );
+  if (video || hasUsableLocation || !FALLBACK_IMAGE_TYPES.has(contentType)) {
+    return analysis;
+  }
+
+  try {
+    const fallback = await fallbackAnalyzer(image, contentType);
+    return fallback.candidates.length
+      ? applyLocationFallback(analysis, fallback)
+      : analysis;
+  } catch (error) {
+    logger.warn(
+      { errorType: error instanceof Error ? error.name : "unknown" },
+      "Secondary location vision fallback failed",
+    );
+    return analysis;
+  }
 }

@@ -165,7 +165,14 @@ test("request uses configurable service URL, original multipart bytes, and exist
   for (const configuredUrl of [undefined, "https://locator.example/", "https://locator.example/analyze/"]) {
     if (configuredUrl === undefined) delete process.env.IMAGE_LOCATOR_URL;
     else process.env.IMAGE_LOCATOR_URL = configuredUrl;
-    const result = await analyzeImageLocation(Buffer.from("original image bytes"), "image/jpeg", "photo.jpg");
+    const result = await analyzeImageLocation(
+      Buffer.from("original image bytes"),
+      "image/jpeg",
+      "photo.jpg",
+      async () => {
+        assert.fail("fallback must not run when the primary service returns a named place");
+      },
+    );
     assert.deepEqual(result.analysis, fullMetadata);
   }
   assert.deepEqual(requestedUrls, [
@@ -174,6 +181,112 @@ test("request uses configurable service URL, original multipart bytes, and exist
     "https://locator.example/analyze",
   ]);
   assert.deepEqual(timeouts, [180_000, 180_000, 180_000]);
+});
+
+test("uses the vision fallback only when the primary service has no usable location", async (t) => {
+  const oldUrl = process.env.IMAGE_LOCATOR_URL;
+  t.after(() => {
+    if (oldUrl === undefined) delete process.env.IMAGE_LOCATOR_URL;
+    else process.env.IMAGE_LOCATOR_URL = oldUrl;
+  });
+  process.env.IMAGE_LOCATOR_URL = "https://locator.example";
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    success: true,
+    location_name: "Unknown location",
+    address: "Unknown location",
+    confidence: 0,
+    source: "Could not determine",
+    verified: "skipped",
+    summary: "Location could not be determined from this image.",
+    reasoning_trace: [{ stage: "Conclusion", details: ["Location could not be determined."] }],
+    forensics: { has_gps: false, notes: ["Metadata stripped."] },
+  }));
+  let fallbackCalls = 0;
+
+  const result = await analyzeImageLocation(
+    Buffer.from("original image bytes"),
+    "image/jpeg",
+    "photo.jpg",
+    async (image, contentType) => {
+      fallbackCalls += 1;
+      assert.equal(image.toString(), "original image bytes");
+      assert.equal(contentType, "image/jpeg");
+      return {
+        candidates: [{
+          place: "Possible coastal region",
+          region: "North Coast",
+          country: "Exampleland",
+          confidence: 0.25,
+          rationale: "The shoreline and terrain offer a broad visual match.",
+          clues: ["A rocky coastline"],
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Possible+coastal+region",
+        }],
+        clues: [{
+          label: "Coastline",
+          observation: "Rocky shoreline is visible.",
+          significance: "Visual fallback observation; not location verification.",
+        }],
+      };
+    },
+  );
+
+  assert.equal(fallbackCalls, 1);
+  assert.equal(result.candidates[0]?.place, "Possible coastal region");
+  assert.equal(result.analysis.source, "Replit AI vision fallback");
+  assert.equal(result.analysis.verified, "unverified");
+  assert.match(result.analysis.warning ?? "", /not verified/i);
+  assert.equal(result.analysis.address, undefined);
+  assert.equal(result.clues[0]?.observation, "Rocky shoreline is visible.");
+  assert.match(result.summary, /low-confidence visual guesses/i);
+});
+
+test("keeps the primary unknown result if the fallback fails or cannot guess", async (t) => {
+  const oldUrl = process.env.IMAGE_LOCATOR_URL;
+  t.after(() => {
+    if (oldUrl === undefined) delete process.env.IMAGE_LOCATOR_URL;
+    else process.env.IMAGE_LOCATOR_URL = oldUrl;
+  });
+  process.env.IMAGE_LOCATOR_URL = "https://locator.example";
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    success: true,
+    location_name: "Unknown location",
+    confidence: 0,
+    source: "Could not determine",
+    verified: "skipped",
+    summary: "Location could not be determined.",
+  }));
+
+  const result = await analyzeImageLocation(
+    Buffer.from("image"),
+    "image/jpeg",
+    "photo.jpg",
+    async () => {
+      throw new Error("provider unavailable");
+    },
+  );
+  assert.equal(result.candidates[0]?.place, "Unknown location");
+  assert.equal(result.analysis.source, "Could not determine");
+});
+
+test("does not send unsupported formats or videos to vision fallback", async (t) => {
+  const responses: Array<{ contentType: string; response: unknown }> = [
+    { contentType: "image/heic", response: { success: true, location_name: "Unknown location" } },
+    { contentType: "video/mp4", response: { success: true, media_type: "video" } },
+  ];
+  let fallbackCalls = 0;
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json(responses.shift()?.response),
+  );
+  for (const [contentType, name] of [
+    ["image/heic", "photo.heic"],
+    ["video/mp4", "clip.mp4"],
+  ]) {
+    await analyzeImageLocation(Buffer.from("media"), contentType, name, async () => {
+      fallbackCalls += 1;
+      return { candidates: [], clues: [] };
+    });
+  }
+  assert.equal(fallbackCalls, 0);
 });
 
 test("keeps upstream success flag, HTTP, invalid JSON, and response-size protections", async (t) => {
