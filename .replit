@@ -20,7 +20,7 @@ path = "scripts/post-merge.sh"
 timeoutMs = 20000
 
 [objectStorage]
-defaultBucketID = "replit-objstore-6d1046b7-220e-4a57-af7a-85e88eab12e7"
+defaultBucketID = "replit-objstore-015ea289-3511-4447-bbde-ab8bb50b42bc"
 
 [nix]
 channel = "stable-25_05"
