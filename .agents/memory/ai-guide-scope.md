@@ -14,3 +14,9 @@ The Alex and Grandpa Joe guided demos use saved data and show location results a
 **Why:** The user requested deterministic fictional demonstrations, clearly distinguished from live cases.
 
 **How to apply:** Do not call live AI or save demo cases. Preserve the label through conversation, progress, results and print views.
+
+For photo-storage repairs, do not set up any new paid service. Reuse the regular investigation flow's storage method and keep photos private. If that flow also needs App Storage, stop and tell the user rather than setting it up.
+
+**Why:** The user explicitly required this boundary before any storage configuration changes.
+
+**How to apply:** Inspect the existing upload path first; do not provision App Storage under the current authorization.
