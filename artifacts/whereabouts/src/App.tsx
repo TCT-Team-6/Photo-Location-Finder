@@ -46,6 +46,10 @@ import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
 import CaseDetailPage from '@/features/cases/case-detail-page';
 import CaseReviewPage from '@/features/cases/case-review-page';
+import { GuideCasePage, GuideStartPage } from '@/features/guide/guide-live-page';
+import GuideDemoPage from '@/features/guide/guide-demo-page';
+import { GuideEntry } from '@/features/guide/guide-entry';
+import { GuideDraftProvider, useGuideDraft } from '@/features/guide/guide-ui';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -193,7 +197,7 @@ function LandingPage() {
         <Mark />
         <nav className="flex items-center gap-3">
           <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
-          <ActionLink href="/demo" testId="link-get-started">Start a search <ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/start" testId="link-get-started">Start a search <ArrowRight size={16} /></ActionLink>
         </nav>
       </header>
       <section className="relative mx-auto grid max-w-[1440px] items-center gap-10 px-6 pb-20 pt-10 md:grid-cols-[1.02fr_.98fr] md:px-12 md:pb-28 md:pt-16">
@@ -202,7 +206,7 @@ function LandingPage() {
           <h1 className="font-editorial text-[clamp(3.65rem,8.5vw,7.6rem)] leading-[.88] tracking-[-.065em]">Every hour matters.<br /><em className="font-normal text-[#c8794d]">Every photo is a clue.</em></h1>
           <p className="mt-8 max-w-[520px] text-lg leading-8 text-[#62756c] md:text-xl">When someone vulnerable goes missing, their last photo often holds the best clue to where they are. Whereabouts uses AI to read that photo and point searchers to the most likely places, in minutes instead of hours.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <ActionLink href="/demo" testId="link-start-search">Start a search <ArrowRight size={16} /></ActionLink>
+            <ActionLink href="/start" testId="link-start-search">Start a search <ArrowRight size={16} /></ActionLink>
             <ActionLink href="/demo" secondary testId="link-see-sample-case">See a sample case</ActionLink>
           </div>
           <div className="mt-8 flex items-center gap-4 border-t border-[#d8d1c2] pt-5">
@@ -238,6 +242,9 @@ function LandingPage() {
             </div>
           </div>
         </div>
+      </section>
+      <section className="px-4 pb-16 md:px-12" id="tell-us">
+        <div className="mx-auto max-w-[860px]"><GuideEntry signedIn={false} /></div>
       </section>
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto max-w-[1180px]">
@@ -303,7 +310,7 @@ function LandingPage() {
             <h2 className="font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">When every hour counts, start with what you have.</h2>
             <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">A blurry trail sign. A storefront in the background. The angle of the afternoon sun. Whereabouts turns those small details into a place to start looking.</p>
           </div>
-          <ActionLink href="/demo" testId="link-closing-start-search">Start a search <ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/start" testId="link-closing-start-search">Start a search <ArrowRight size={16} /></ActionLink>
         </div>
       </section>
       <footer className="flex flex-col items-center justify-between gap-4 bg-[#263d36] px-6 py-6 text-[#c1cbbd] md:flex-row md:px-12">
@@ -359,6 +366,9 @@ function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const client = useQueryClient();
   const { setApiKey } = useApiKey();
+  const { reset: resetGuideDraft } = useGuideDraft();
+  const resetDraftRef = useRef(resetGuideDraft);
+  resetDraftRef.current = resetGuideDraft;
   useEffect(() => {
     let prior: string | null | undefined;
     return addListener(({ user }) => {
@@ -366,6 +376,8 @@ function ClerkQueryClientCacheInvalidator() {
       if (prior !== undefined && prior !== current) {
         client.clear();
         setApiKey('');
+        // Keep an anonymous draft through sign-in; drop it on sign-out or account switch.
+        if (prior !== null) resetDraftRef.current();
       }
       prior = current;
     });
@@ -389,6 +401,10 @@ function ClerkProviderWithRoutes() {
     <Switch>
       <Route path="/" component={HomeRedirect} />
       <Route path="/demo" component={DemoRoute} />
+      <Route path="/start" component={StartSearchRoute} />
+      <Route path="/guide" component={GuideStartRoute} />
+      <Route path="/guide/:id" component={GuideCaseRoute} />
+      <Route path="/guide-demo/:sample" component={GuideDemoPage} />
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/user-portal" component={PortalRoute} />
@@ -413,6 +429,8 @@ function Protected({ children }: { children: ReactNode }) {
 
 function PortalRoute() { return <Protected><AppShell><DashboardPage /></AppShell></Protected>; }
 function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></AppShell></Protected>; }
+function GuideStartRoute() { return <Protected><AppShell><GuideStartPage /></AppShell></Protected>; }
+function GuideCaseRoute() { return <Protected><AppShell><GuideCasePage /></AppShell></Protected>; }
 function CasesRoute() { return <Protected><AppShell><CasesPage /></AppShell></Protected>; }
 function NewCaseRoute() { return <Protected><AppShell><NewCasePage /></AppShell></Protected>; }
 function CaseDetailRoute() { return <Protected><AppShell><CaseDetailPage /></AppShell></Protected>; }
@@ -422,6 +440,10 @@ function SettingsRoute() { return <Protected><AppShell><SettingsPage /></AppShel
 function FieldDeskRoute() { return <Protected><AppShell><FieldDeskPage /></AppShell></Protected>; }
 function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppShell></Protected>; }
 function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
+
+function StartSearchRoute() {
+  return <><Show when="signed-in"><Protected><AppShell><div className="fade-up mx-auto max-w-3xl"><GuideEntry signedIn tone="panel" /></div></AppShell></Protected></Show><Show when="signed-out"><main className="min-h-[100dvh] bg-[#f4f0e6] px-4 py-5 text-[#263d36]"><div className="mx-auto max-w-3xl"><div className="mb-6 flex items-center justify-between"><Mark /><Link href="/demo" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#385e51]" data-testid="link-start-see-samples">See sample cases</Link></div><GuideEntry signedIn={false} /></div></main></Show></>;
+}
 
 function DemoRoute() { return <DemoExperience />; }
 
@@ -443,6 +465,7 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
     { href: '/cases', label: 'Cases', icon: <ShieldCheck size={17} /> },
+    { href: '/start', label: 'AI Guide', icon: <Sparkles size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
@@ -514,6 +537,7 @@ function DashboardPage() {
     <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your field desk.</h1><p className="mt-3 text-sm text-[#718078]">A little further along the trail.</p></div>
       <div className="flex flex-wrap gap-3"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
+      <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><Sparkles size={16} />AI Guide</Link>
       <Link href="/investigate" data-testid="button-start-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:-translate-y-0.5 hover:bg-[#2e5044]"><ImagePlus size={16} />Start an investigation <ArrowRight size={16} /></Link></div>
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
@@ -1313,7 +1337,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <WouterRouter base={basePath}>
-            <RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary>
+            <GuideDraftProvider><RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary></GuideDraftProvider>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

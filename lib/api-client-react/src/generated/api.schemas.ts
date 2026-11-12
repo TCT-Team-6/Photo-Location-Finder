@@ -5,6 +5,148 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface GuideIntakeInput {
+  caseId: string;
+  /**
+     * @minLength 1
+     * @maxLength 6000
+     */
+  text: string;
+  /** @minimum 0 */
+  revision: number;
+}
+
+export interface GuidePlanInput {
+  caseId: string;
+}
+
+/**
+ * @nullable
+ */
+export type GuideFactsAgeGroup = typeof GuideFactsAgeGroup[keyof typeof GuideFactsAgeGroup] | null;
+
+
+export const GuideFactsAgeGroup = {
+  child: 'child',
+  teen: 'teen',
+  adult: 'adult',
+  older_adult: 'older_adult',
+} as const;
+
+export type GuideFactsPurpose = typeof GuideFactsPurpose[keyof typeof GuideFactsPurpose];
+
+
+export const GuideFactsPurpose = {
+  find_missing_person: 'find_missing_person',
+  unclear: 'unclear',
+  tracking_concern: 'tracking_concern',
+} as const;
+
+export type GuideFactsMissingFieldsItem = typeof GuideFactsMissingFieldsItem[keyof typeof GuideFactsMissingFieldsItem];
+
+
+export const GuideFactsMissingFieldsItem = {
+  safetyReason: 'safetyReason',
+  lastSeenTime: 'lastSeenTime',
+  lastSeenPlace: 'lastSeenPlace',
+} as const;
+
+export interface GuideFacts {
+  /** @nullable */
+  ageGroup: GuideFactsAgeGroup;
+  /** @nullable */
+  mayWanderOrBeConfused: boolean | null;
+  /** @nullable */
+  needsMedication: boolean | null;
+  /** @nullable */
+  limitedMobility: boolean | null;
+  /** @nullable */
+  nonverbal: boolean | null;
+  /**
+     * @maxLength 160
+     * @nullable
+     */
+  lastSeenTime: string | null;
+  /**
+     * @maxLength 160
+     * @nullable
+     */
+  lastSeenPlace: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  clothing: string | null;
+  /** @nullable */
+  called911: boolean | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  safetyReason: string | null;
+  purpose: GuideFactsPurpose;
+  missingFields: GuideFactsMissingFieldsItem[];
+}
+
+export type GuideLogEntryRole = typeof GuideLogEntryRole[keyof typeof GuideLogEntryRole];
+
+
+export const GuideLogEntryRole = {
+  user: 'user',
+  assistant: 'assistant',
+  gate: 'gate',
+  note: 'note',
+} as const;
+
+export interface GuideLogEntry {
+  role: GuideLogEntryRole;
+  text: string;
+  at: string;
+}
+
+export type GuideStateGate = typeof GuideStateGate[keyof typeof GuideStateGate];
+
+
+export const GuideStateGate = {
+  allowed: 'allowed',
+  needs_clarification: 'needs_clarification',
+  blocked: 'blocked',
+} as const;
+
+export interface GuideState {
+  facts: GuideFacts;
+  gate: GuideStateGate;
+  emergency: boolean;
+  /** @nullable */
+  question: string | null;
+  questionsAsked: number;
+  revision: number;
+  log: GuideLogEntry[];
+}
+
+export type GuideActionKind = typeof GuideActionKind[keyof typeof GuideActionKind];
+
+
+export const GuideActionKind = {
+  call_911: 'call_911',
+  share_report: 'share_report',
+  print_summary: 'print_summary',
+} as const;
+
+export interface GuideAction {
+  kind: GuideActionKind;
+  sourceId: string;
+  sourceLabel: string;
+  /** @nullable */
+  confidence: number | null;
+  reason: string;
+}
+
+export interface GuidePlan {
+  summary: string;
+  actions: GuideAction[];
+}
+
 export interface CaseReviewInput {
   /** @maxLength 10000 */
   observations: string;
@@ -158,6 +300,7 @@ export type MissingPersonCase = MissingPersonCaseInput & {
   createdAt: string;
   updatedAt: string;
   review?: CaseReview;
+  guide?: GuideState;
   leads: CaseLead[];
 };
 

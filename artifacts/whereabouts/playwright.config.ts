@@ -14,6 +14,10 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL,
+    // Replit provides Chromium separately; CI can still use Playwright's bundle.
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+      ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+      : {},
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

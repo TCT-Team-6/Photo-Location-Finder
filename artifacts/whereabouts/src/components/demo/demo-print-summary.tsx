@@ -16,7 +16,7 @@ export function DemoPrintSummary({ sample, onClose }: { sample: DemoSample; onCl
     </div>
     <article className="demo-print-sheet demo-overlay-card mx-auto max-w-[800px] rounded-xl bg-[#fdfcf8] p-8 text-[#1f302a] shadow-2xl" data-testid="panel-demo-print-summary">
       <header className="flex items-start justify-between gap-4 border-b-2 border-[#1f302a] pb-3">
-        <div><p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · search team briefing · fictional sample</p><h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]">{sample.caseFile.nickname}</h1></div>
+        <div><p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · search team briefing · fictional sample</p><p className="mt-1 font-data text-[10px] uppercase tracking-[.14em]" data-testid="label-sample-case-print">Sample case, fictional data</p><h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]">{sample.caseFile.nickname}</h1></div>
         <div className="text-right"><p className="text-sm font-bold">{sample.urgency.level} urgency</p><p className="font-data text-[10px]">Missing for {missing?.label ?? 'unknown'}</p></div>
       </header>
       <div className="demo-print-photo-row mt-4 grid gap-5 sm:grid-cols-[200px_1fr]">

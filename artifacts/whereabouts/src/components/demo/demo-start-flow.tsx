@@ -98,6 +98,7 @@ export function DemoProgressOverlay({ sample, onDone }: { sample: DemoSample; on
       <div className="relative h-32 overflow-hidden"><img src={sample.imageUrl} alt="" className="h-full w-full object-cover opacity-80" /><div className="absolute inset-0 bg-gradient-to-t from-[#f8f5ec] to-transparent" /></div>
       <div className="px-6 pb-6">
         <p className="font-data text-[9px] uppercase tracking-[.16em] text-[#9c6d4e]">Sample walkthrough · no upload</p>
+        <p className="mt-1 font-data text-[10px] uppercase tracking-[.14em] text-[#874d34]" data-testid="label-sample-case-overlay">Sample case, fictional data</p>
         <div className="mt-2 flex items-center gap-3"><LoaderCircle size={18} className="shrink-0 animate-spin text-[#385e51] motion-reduce:animate-none" aria-hidden="true" /><p className="font-editorial text-xl" data-testid="text-demo-progress-stage">{demoProgressStages[stage]}</p></div>
         <div className="mt-4 h-1 overflow-hidden rounded-full bg-[#e1dbce]"><div className="demo-progress-bar h-full bg-[#385e51]" /></div>
         <ol className="mt-4 space-y-1">{demoProgressStages.map((s, i) => <li key={s} aria-current={i === stage ? 'step' : undefined} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 text-xs ${i === stage ? 'font-semibold text-[#263d36]' : i < stage ? 'text-[#718078]' : 'text-[#aab3ac]'}`}>

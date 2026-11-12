@@ -7,6 +7,7 @@
  */
 import type { CaseLead } from './caseLead';
 import type { CaseReview } from './caseReview';
+import type { GuideState } from './guideState';
 import type { MissingPersonCaseInput } from './missingPersonCaseInput';
 
 export type MissingPersonCase = MissingPersonCaseInput & {
@@ -14,5 +15,6 @@ export type MissingPersonCase = MissingPersonCaseInput & {
   createdAt: Date;
   updatedAt: Date;
   review?: CaseReview;
+  guide?: GuideState;
   leads: CaseLead[];
 };

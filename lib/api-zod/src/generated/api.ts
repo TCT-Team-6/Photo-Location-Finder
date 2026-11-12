@@ -8,6 +8,122 @@
 import * as zod from 'zod';
 
 
+export const guideIntakeBodyTextMax = 6000;
+
+export const guideIntakeBodyRevisionMin = 0;
+
+
+
+export const GuideIntakeBody = zod.object({
+  "caseId": zod.uuid(),
+  "text": zod.string().min(1).max(guideIntakeBodyTextMax),
+  "revision": zod.int().min(guideIntakeBodyRevisionMin)
+})
+
+export const guideIntakeResponseFactsLastSeenTimeMax = 160;
+
+export const guideIntakeResponseFactsLastSeenPlaceMax = 160;
+
+export const guideIntakeResponseFactsClothingMax = 500;
+
+export const guideIntakeResponseFactsSafetyReasonMax = 1000;
+
+
+
+export const GuideIntakeResponse = zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(guideIntakeResponseFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(guideIntakeResponseFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(guideIntakeResponseFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(guideIntakeResponseFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
+})
+
+
+export const guideNoteBodyTextMax = 6000;
+
+export const guideNoteBodyRevisionMin = 0;
+
+
+
+export const GuideNoteBody = zod.object({
+  "caseId": zod.uuid(),
+  "text": zod.string().min(1).max(guideNoteBodyTextMax),
+  "revision": zod.int().min(guideNoteBodyRevisionMin)
+})
+
+export const guideNoteResponseFactsLastSeenTimeMax = 160;
+
+export const guideNoteResponseFactsLastSeenPlaceMax = 160;
+
+export const guideNoteResponseFactsClothingMax = 500;
+
+export const guideNoteResponseFactsSafetyReasonMax = 1000;
+
+
+
+export const GuideNoteResponse = zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(guideNoteResponseFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(guideNoteResponseFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(guideNoteResponseFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(guideNoteResponseFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
+})
+
+
+export const GuidePlanBody = zod.object({
+  "caseId": zod.uuid()
+})
+
+export const GuidePlanResponse = zod.object({
+  "summary": zod.string(),
+  "actions": zod.array(zod.object({
+  "kind": zod.enum(['call_911', 'share_report', 'print_summary']),
+  "sourceId": zod.string(),
+  "sourceLabel": zod.string(),
+  "confidence": zod.number().nullable(),
+  "reason": zod.string()
+}))
+})
+
+
 /**
  * @summary Check Image Locator video availability
  */
@@ -255,6 +371,14 @@ export const listMissingPersonCasesResponseTwoReviewObservationsMax = 10000;
 export const listMissingPersonCasesResponseTwoReviewNextStepsMax = 10000;
 
 
+export const listMissingPersonCasesResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const listMissingPersonCasesResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const listMissingPersonCasesResponseTwoGuideFactsClothingMax = 500;
+
+export const listMissingPersonCasesResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const listMissingPersonCasesResponseTwoLeadsItemOneTitleMax = 160;
 
 export const listMissingPersonCasesResponseTwoLeadsItemOneSourceMax = 200;
@@ -299,6 +423,32 @@ export const ListMissingPersonCasesResponseItem = zod.object({
   "nextSteps": zod.string().max(listMissingPersonCasesResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(listMissingPersonCasesResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(listMissingPersonCasesResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(listMissingPersonCasesResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(listMissingPersonCasesResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -392,6 +542,14 @@ export const createMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
 export const createMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
 
 
+export const createMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const createMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const createMissingPersonCaseResponseTwoGuideFactsClothingMax = 500;
+
+export const createMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const createMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const createMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -436,6 +594,32 @@ export const CreateMissingPersonCaseResponse = zod.object({
   "nextSteps": zod.string().max(createMissingPersonCaseResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(createMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(createMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(createMissingPersonCaseResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(createMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -490,6 +674,14 @@ export const getMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
 export const getMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
 
 
+export const getMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const getMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const getMissingPersonCaseResponseTwoGuideFactsClothingMax = 500;
+
+export const getMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const getMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const getMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -534,6 +726,32 @@ export const GetMissingPersonCaseResponse = zod.object({
   "nextSteps": zod.string().max(getMissingPersonCaseResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(getMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(getMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(getMissingPersonCaseResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(getMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -630,6 +848,14 @@ export const updateMissingPersonCaseResponseTwoReviewObservationsMax = 10000;
 export const updateMissingPersonCaseResponseTwoReviewNextStepsMax = 10000;
 
 
+export const updateMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const updateMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const updateMissingPersonCaseResponseTwoGuideFactsClothingMax = 500;
+
+export const updateMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const updateMissingPersonCaseResponseTwoLeadsItemOneTitleMax = 160;
 
 export const updateMissingPersonCaseResponseTwoLeadsItemOneSourceMax = 200;
@@ -674,6 +900,32 @@ export const UpdateMissingPersonCaseResponse = zod.object({
   "nextSteps": zod.string().max(updateMissingPersonCaseResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(updateMissingPersonCaseResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(updateMissingPersonCaseResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(updateMissingPersonCaseResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(updateMissingPersonCaseResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -749,6 +1001,14 @@ export const saveCaseReviewResponseTwoReviewObservationsMax = 10000;
 export const saveCaseReviewResponseTwoReviewNextStepsMax = 10000;
 
 
+export const saveCaseReviewResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const saveCaseReviewResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const saveCaseReviewResponseTwoGuideFactsClothingMax = 500;
+
+export const saveCaseReviewResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const saveCaseReviewResponseTwoLeadsItemOneTitleMax = 160;
 
 export const saveCaseReviewResponseTwoLeadsItemOneSourceMax = 200;
@@ -793,6 +1053,32 @@ export const SaveCaseReviewResponse = zod.object({
   "nextSteps": zod.string().max(saveCaseReviewResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(saveCaseReviewResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(saveCaseReviewResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(saveCaseReviewResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(saveCaseReviewResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -882,6 +1168,14 @@ export const createCaseLeadResponseTwoReviewObservationsMax = 10000;
 export const createCaseLeadResponseTwoReviewNextStepsMax = 10000;
 
 
+export const createCaseLeadResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const createCaseLeadResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const createCaseLeadResponseTwoGuideFactsClothingMax = 500;
+
+export const createCaseLeadResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const createCaseLeadResponseTwoLeadsItemOneTitleMax = 160;
 
 export const createCaseLeadResponseTwoLeadsItemOneSourceMax = 200;
@@ -926,6 +1220,32 @@ export const CreateCaseLeadResponse = zod.object({
   "nextSteps": zod.string().max(createCaseLeadResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(createCaseLeadResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(createCaseLeadResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(createCaseLeadResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(createCaseLeadResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),
@@ -985,6 +1305,14 @@ export const reviewCaseLeadResponseTwoReviewObservationsMax = 10000;
 export const reviewCaseLeadResponseTwoReviewNextStepsMax = 10000;
 
 
+export const reviewCaseLeadResponseTwoGuideFactsLastSeenTimeMax = 160;
+
+export const reviewCaseLeadResponseTwoGuideFactsLastSeenPlaceMax = 160;
+
+export const reviewCaseLeadResponseTwoGuideFactsClothingMax = 500;
+
+export const reviewCaseLeadResponseTwoGuideFactsSafetyReasonMax = 1000;
+
 export const reviewCaseLeadResponseTwoLeadsItemOneTitleMax = 160;
 
 export const reviewCaseLeadResponseTwoLeadsItemOneSourceMax = 200;
@@ -1029,6 +1357,32 @@ export const ReviewCaseLeadResponse = zod.object({
   "nextSteps": zod.string().max(reviewCaseLeadResponseTwoReviewNextStepsMax),
   "revision": zod.int().min(1),
   "updatedAt": zod.coerce.date()
+}).optional(),
+  "guide": zod.object({
+  "facts": zod.object({
+  "ageGroup": zod.union([zod.literal('child'),zod.literal('teen'),zod.literal('adult'),zod.literal('older_adult'),zod.literal(null)]).nullable(),
+  "mayWanderOrBeConfused": zod.boolean().nullable(),
+  "needsMedication": zod.boolean().nullable(),
+  "limitedMobility": zod.boolean().nullable(),
+  "nonverbal": zod.boolean().nullable(),
+  "lastSeenTime": zod.string().max(reviewCaseLeadResponseTwoGuideFactsLastSeenTimeMax).nullable(),
+  "lastSeenPlace": zod.string().max(reviewCaseLeadResponseTwoGuideFactsLastSeenPlaceMax).nullable(),
+  "clothing": zod.string().max(reviewCaseLeadResponseTwoGuideFactsClothingMax).nullable(),
+  "called911": zod.boolean().nullable(),
+  "safetyReason": zod.string().max(reviewCaseLeadResponseTwoGuideFactsSafetyReasonMax).nullable(),
+  "purpose": zod.enum(['find_missing_person', 'unclear', 'tracking_concern']),
+  "missingFields": zod.array(zod.enum(['safetyReason', 'lastSeenTime', 'lastSeenPlace']))
+}),
+  "gate": zod.enum(['allowed', 'needs_clarification', 'blocked']),
+  "emergency": zod.boolean(),
+  "question": zod.string().nullable(),
+  "questionsAsked": zod.int(),
+  "revision": zod.int(),
+  "log": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant', 'gate', 'note']),
+  "text": zod.string(),
+  "at": zod.string()
+}))
 }).optional(),
   "leads": zod.array(zod.object({
   "clientRequestId": zod.uuid(),

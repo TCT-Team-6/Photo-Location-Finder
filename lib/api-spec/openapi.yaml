@@ -15,6 +15,50 @@ tags:
   - name: Investigations
     description: Photo location investigations and the user's saved library.
 paths:
+  /guide/intake:
+    post:
+      operationId: guideIntake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuideIntakeInput" }
+      responses:
+        "200":
+          description: Saved guide facts and safety decision.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuideState" }
+        "409":
+          description: Case changed; reload before retrying.
+  /guide/note:
+    post:
+      operationId: guideNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuideIntakeInput" }
+      responses:
+        "200":
+          description: Optional answer saved without interpretation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuideState" }
+  /guide/plan:
+    post:
+      operationId: guidePlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuidePlanInput" }
+      responses:
+        "200":
+          description: Responder summary of reported facts, never inferred locations.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuidePlan" }
   /locator-health:
     get:
       operationId: getLocatorHealth
@@ -405,6 +449,74 @@ components:
         type: string
         format: uuid
   schemas:
+    GuideIntakeInput:
+      type: object
+      required: [caseId, text, revision]
+      properties:
+        caseId: { type: string, format: uuid }
+        text: { type: string, minLength: 1, maxLength: 6000 }
+        revision: { type: integer, minimum: 0 }
+    GuidePlanInput:
+      type: object
+      required: [caseId]
+      properties:
+        caseId: { type: string, format: uuid }
+    GuideFacts:
+      type: object
+      additionalProperties: false
+      required: [ageGroup, mayWanderOrBeConfused, needsMedication, limitedMobility, nonverbal, lastSeenTime, lastSeenPlace, clothing, called911, safetyReason, purpose, missingFields]
+      properties:
+        ageGroup: { type: ["string", "null"], enum: [child, teen, adult, older_adult, null] }
+        mayWanderOrBeConfused: { type: ["boolean", "null"] }
+        needsMedication: { type: ["boolean", "null"] }
+        limitedMobility: { type: ["boolean", "null"] }
+        nonverbal: { type: ["boolean", "null"] }
+        lastSeenTime: { type: ["string", "null"], maxLength: 160 }
+        lastSeenPlace: { type: ["string", "null"], maxLength: 160 }
+        clothing: { type: ["string", "null"], maxLength: 500 }
+        called911: { type: ["boolean", "null"] }
+        safetyReason: { type: ["string", "null"], maxLength: 1000 }
+        purpose: { type: string, enum: [find_missing_person, unclear, tracking_concern] }
+        missingFields:
+          type: array
+          items: { type: string, enum: [safetyReason, lastSeenTime, lastSeenPlace] }
+    GuideLogEntry:
+      type: object
+      required: [role, text, at]
+      properties:
+        role: { type: string, enum: [user, assistant, gate, note] }
+        text: { type: string }
+        at: { type: string }
+    GuideState:
+      type: object
+      required: [facts, gate, emergency, question, questionsAsked, revision, log]
+      properties:
+        facts: { $ref: "#/components/schemas/GuideFacts" }
+        gate: { type: string, enum: [allowed, needs_clarification, blocked] }
+        emergency: { type: boolean }
+        question: { type: ["string", "null"] }
+        questionsAsked: { type: integer }
+        revision: { type: integer }
+        log:
+          type: array
+          items: { $ref: "#/components/schemas/GuideLogEntry" }
+    GuideAction:
+      type: object
+      required: [kind, sourceId, sourceLabel, confidence, reason]
+      properties:
+        kind: { type: string, enum: [call_911, share_report, print_summary] }
+        sourceId: { type: string }
+        sourceLabel: { type: string }
+        confidence: { type: ["number", "null"] }
+        reason: { type: string }
+    GuidePlan:
+      type: object
+      required: [summary, actions]
+      properties:
+        summary: { type: string }
+        actions:
+          type: array
+          items: { $ref: "#/components/schemas/GuideAction" }
     CaseReviewInput:
       type: object
       required: [observations, nextSteps, expectedRevision]
@@ -487,6 +599,7 @@ components:
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
             review: { $ref: "#/components/schemas/CaseReview" }
+            guide: { $ref: "#/components/schemas/GuideState" }
             leads:
               type: array
               items: { $ref: "#/components/schemas/CaseLead" }

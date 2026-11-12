@@ -16,6 +16,8 @@ export type PrivateCaseData = {
   notes?: string;
   privacyAcknowledged: true;
   headshot?: CasePhotoData | null;
+  // Optional guide state is validated at the API boundary; no schema migration.
+  guide?: unknown;
   review?: {
     observations: string;
     nextSteps: string;

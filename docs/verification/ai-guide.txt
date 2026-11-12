@@ -1,0 +1,117 @@
+Whereabouts AI Guide — implementation and verification
+
+Approved scope
+Live cases organize user-reported facts and reference evidence, with no photo
+analysis, face matching or inferred whereabouts. Every call, copy, download,
+share and print action requires a user tap. Existing upload/analysis screens,
+urgency.ts and the five-stage analysis pipeline were not modified.
+
+Implemented
+- Home and Start a search entry: typed input, optional voice input with typed
+  fallback, photo attachment, three examples and the regular-form link.
+- Private authenticated intake using GPT-4o strict structured output.
+- Missing-fact followups bounded to three, emergency instruction and Call 911.
+- Persisted safety decisions, case transcript, reported facts and optional notes.
+- Regular case fields synchronized with guide facts; revision conflict protection.
+- Reference photos use the existing private case-evidence upload flow.
+- Responder summaries use canonical reported data, not speculative AI prose.
+  Live summaries do not assign invented confidence values.
+- Alex and Grandpa Joe demos use saved replies/results and a fixed scoring clock.
+  Every demo screen and printable output says "Sample case, fictional data".
+- Grounded cards, Why this disclosures, map links, checked-place reordering,
+  summary sharing/printing, and a fictional sample flyer.
+- Demo 911 buttons simulate a call; only live-case buttons use tel:911.
+
+Verification
+- All runnable unit/API test scripts: 138 passed (69 frontend, 69 API).
+- Browser regression suite: 5 passed, including both guided demos, offline/no
+  write behavior, grounding, checked-place reordering and phone-width layout.
+- Workspace-wide typecheck: passed.
+- Preview screenshot: guided Grandpa Joe page rendered on a phone viewport.
+- Signed-in browser test: created a private case with consent and verified
+  failure handling and deletion. The live extraction was blocked by provider
+  quota before followups, correction synchronization or summary could be tested.
+- Direct provider diagnostic returned HTTP 429, credit_balance_exhausted,
+  insufficient_quota. The app now displays a specific no-credits explanation.
+  No replacement provider, secrets or account settings were changed.
+- Ownership, gate persistence, concurrent-edit protection, note persistence,
+  summary grounding and quota failure are covered by API/unit tests.
+
+Commands
+pnpm -r --if-present run test
+pnpm --filter @workspace/api-server run test
+pnpm run typecheck
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/repl/tools/bin/chromium pnpm --filter @workspace/whereabouts run test:e2e
+
+The initial local browser run lacked Playwright's downloaded browser. Tests now
+support an optional executable-path environment variable and were run with the
+installed Chromium. The existing demo browser test excludes the preview-only
+platform banner, which otherwise covered its dialog close control.
+
+Remaining external blocker
+Restore credits for the configured AI provider before verifying live intake,
+followups, corrections and responder-summary creation end to end. Demos require
+no provider calls. Nothing was published.
+
+Files added or changed
+
+Backend:
+artifacts/api-server/src/lib/guide-ai.ts
+artifacts/api-server/src/lib/guide.ts
+artifacts/api-server/src/lib/guide.test.ts
+artifacts/api-server/src/routes/guide.ts
+artifacts/api-server/src/routes/guide.test.ts
+artifacts/api-server/src/routes/cases.ts
+artifacts/api-server/src/routes/index.ts
+
+Frontend:
+artifacts/whereabouts/src/App.tsx
+artifacts/whereabouts/src/index.css
+artifacts/whereabouts/src/features/guide/guide-entry.tsx
+artifacts/whereabouts/src/features/guide/guide-live-page.tsx
+artifacts/whereabouts/src/features/guide/guide-demo-page.tsx
+artifacts/whereabouts/src/features/guide/guide-chat.tsx
+artifacts/whereabouts/src/features/guide/guide-ui.tsx
+artifacts/whereabouts/src/features/guide/case-guide-panel.tsx
+artifacts/whereabouts/src/features/guide/responder-summary.tsx
+artifacts/whereabouts/src/features/cases/case-detail-page.tsx
+artifacts/whereabouts/src/components/demo-experience.tsx
+artifacts/whereabouts/src/components/demo/demo-start-flow.tsx
+artifacts/whereabouts/src/components/demo/demo-print-summary.tsx
+artifacts/whereabouts/src/lib/guide-demos.ts
+artifacts/whereabouts/src/lib/guide-grounding.ts
+artifacts/whereabouts/src/lib/guide-state.ts
+artifacts/whereabouts/src/lib/guide.test.ts
+artifacts/whereabouts/tests/guide-demo.spec.ts
+artifacts/whereabouts/tests/demo-flow.spec.ts
+artifacts/whereabouts/playwright.config.ts
+
+API contract and storage type:
+lib/api-spec/openapi.yaml
+lib/db/src/schema/private-cases.ts
+(Guide state uses the existing case JSON column; no database migration.)
+
+Generated API client and validators:
+lib/api-client-react/src/generated/api.ts
+lib/api-client-react/src/generated/api.schemas.ts
+lib/api-zod/src/generated/api.ts
+lib/api-zod/src/generated/types/index.ts
+lib/api-zod/src/generated/types/missingPersonCase.ts
+lib/api-zod/src/generated/types/guideAction.ts
+lib/api-zod/src/generated/types/guideActionKind.ts
+lib/api-zod/src/generated/types/guideFacts.ts
+lib/api-zod/src/generated/types/guideFactsAgeGroup.ts
+lib/api-zod/src/generated/types/guideFactsMissingFieldsItem.ts
+lib/api-zod/src/generated/types/guideFactsPurpose.ts
+lib/api-zod/src/generated/types/guideIntakeInput.ts
+lib/api-zod/src/generated/types/guideLogEntry.ts
+lib/api-zod/src/generated/types/guideLogEntryRole.ts
+lib/api-zod/src/generated/types/guidePlan.ts
+lib/api-zod/src/generated/types/guidePlanInput.ts
+lib/api-zod/src/generated/types/guideState.ts
+lib/api-zod/src/generated/types/guideStateGate.ts
+
+Project guidance and this report:
+.agents/memory/MEMORY.md
+.agents/memory/ai-guide-scope.md
+docs/verification/ai-guide.txt

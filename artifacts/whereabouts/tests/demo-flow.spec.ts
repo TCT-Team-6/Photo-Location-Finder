@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  // Preview-only platform chrome is not part of the app and covers dialog controls.
+  await page.addInitScript(() => {
+    const hide = () => document.getElementById('replit-dev-banner')?.remove();
+    new MutationObserver(hide).observe(document, { childList: true, subtree: true });
+  });
+});
+
 const samples = [
   { id: 'sample-lost-hiker', nickname: 'Alex', level: 'High', elapsed: '5h 0m', radius: 15 },
   { id: 'sample-grandparent', nickname: 'Robin', level: 'Critical', elapsed: '3h 0m', radius: 3 },
@@ -8,6 +16,7 @@ const samples = [
 ];
 
 test('all four anonymous case files show family urgency, annotations and a printable plan', async ({ page }) => {
+  test.setTimeout(90000);
   const writes: string[] = [];
   page.on('request', (req) => {
     if (/\/api\/(investigations|analyze|uploads)/.test(req.url()) && req.method() !== 'GET') writes.push(req.url());

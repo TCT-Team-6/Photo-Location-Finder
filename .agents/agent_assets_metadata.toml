@@ -56,3 +56,17 @@ mtime_ms = 1793306141537
 storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:1baa4b95-63b7-4998-ae63-8f1f8919b701/2057ee85-3056-4f4b-916d-f42de35fbf75/51e6c7b0-1241-4626-9413-aef73e06b778"
 storage_version_token = "1793306150358447"
 content_type = "image/png"
+
+[[outputs]]
+id = "7A5lOF-9YqAQxPgD-80ww"
+uri = "file://docs/verification/ai-guide.txt"
+type = "text"
+title = "AI Guide — changed files and test results"
+description = "Complete file list, verification results, and the live AI provider-credit blocker."
+logical_id = "fff655cf-4fbd-4655-a9a5-671f391ba0bb"
+content_hash = "sha256:6f663a461eaa531e8a184bace831d5f329f68c331da83cc2ffe3771d189edd8f"
+size = 5714
+mtime_ms = 1794521922942
+storage_uri = "gcs://replit-rams-assets-reed/rams/assets/repl:27057670-8899-4941-87ee-84873641109d/fff655cf-4fbd-4655-a9a5-671f391ba0bb/0e1fd95f-4d35-4f27-8a49-4b8c9ea0f8bc"
+storage_version_token = "1794521931940507"
+content_type = "text/plain"

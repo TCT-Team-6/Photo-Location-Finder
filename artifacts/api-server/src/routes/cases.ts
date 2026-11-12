@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
+import { syncGuideForm } from "../lib/guide";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { GetMissingPersonCaseParams, GetMissingPersonCaseResponse, ListMissingPersonCasesResponse, ReviewCaseLeadBody, SaveCaseReviewBody } from "@workspace/api-zod";
 import { caseLeadsTable, casePhotosTable, db, pendingPhotoUploadsTable, privateCasesTable, type CasePhotoData } from "@workspace/db";
@@ -137,7 +138,7 @@ router.put("/cases/:id", action(async (req, res) => {
     if (previousPath && nextPath !== previousPath) {
       await tx.update(casePhotosTable).set({ active: false }).where(eq(casePhotosTable.objectPath, previousPath));
     }
-    await tx.update(privateCasesTable).set({ data: { ...data, clientRequestId: old.clientRequestId, review: old.data.review }, updatedAt: new Date() }).where(eq(privateCasesTable.id, id));
+    await tx.update(privateCasesTable).set({ data: syncGuideForm(old.data, { ...data, clientRequestId: old.clientRequestId, review: old.data.review }), updatedAt: new Date() }).where(eq(privateCasesTable.id, id));
   });
   res.json(await caseResponse(id, userId));
   void cleanupDeletedCasePhotos();

@@ -12,6 +12,7 @@ import { LeadForm } from './lead-form';
 import { displayName } from './cases-page';
 import { ConfirmDialog, ErrorBanner, PrivacyNotice, Skeleton, errorMessage, ghostBtn, photoUrl } from './shared';
 import { useDirtyGuard } from './use-dirty-guard';
+import { CaseGuidePanel } from '@/features/guide/case-guide-panel';
 
 const roleLabel = { 'family-or-guardian': 'Family or guardian', 'authorized-responder': 'Authorized responder', other: 'Other' } as const;
 const statuses: { v: CaseLeadReviewStatus; l: string }[] = [{ v: 'needs-verification', l: 'Needs verification' }, { v: 'relevant', l: 'Relevant' }, { v: 'unrelated', l: 'Unrelated' }];
@@ -81,6 +82,7 @@ export default function CaseDetailPage() {
       </div>
     </section>}
 
+    {!editing && <CaseGuidePanel c={c} />}
     {!editing && <Link href={`/cases/${id}/review`} data-testid="link-continue-review" className="mt-8 flex items-center justify-between gap-4 rounded-2xl bg-[#385e51] p-5 text-[#f4f0e6] transition hover:bg-[#2e5044]"><span><span className="block font-editorial text-2xl">Continue case review</span><span className="mt-1 block text-xs text-[#d6e0d3]">{c.review ? 'Pick up your observations, follow-up notes and timeline.' : 'Start your manual observations, follow-up notes and timeline.'}</span></span><ArrowRight size={20} /></Link>}
 
     <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_300px]">

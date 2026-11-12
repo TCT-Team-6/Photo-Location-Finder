@@ -10,3 +10,4 @@
 - [Preview process lifecycle](preview-process-lifecycle.md) — Direct Node startup avoids orphaned Vite children; managed service commands run from the artifact directory.
 - [ProseMirror dependency alignment](prosemirror-alignment.md) — Align the pinned model with a patched view before changing editor code to resolve schema-type errors.
 - [Demo family scenarios](demo-family-scenarios.md) — Fictional family inputs drive sample urgency; keep relative times and demo-only presentation separate from live analysis.
+- [AI Guide scope](ai-guide-scope.md) — Live guide organizes evidence, never infers whereabouts; guided demos use saved fictional data and explicit labels.

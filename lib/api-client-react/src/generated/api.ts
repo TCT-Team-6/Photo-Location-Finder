@@ -25,6 +25,10 @@ import type {
   CaseReviewInput,
   ErrorEnvelope,
   GetLocatorHealth200,
+  GuideIntakeInput,
+  GuidePlan,
+  GuidePlanInput,
+  GuideState,
   HealthStatus,
   Investigation,
   InvestigationInput,
@@ -64,6 +68,252 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGuideIntakeUrl = () => {
+
+
+
+
+  return `/api/guide/intake`
+}
+
+export const guideIntake = async (guideIntakeInput: GuideIntakeInput, options?: Parameters<typeof customFetch>[1]): Promise<GuideState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GuideState>(getGuideIntakeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guideIntakeInput)
+  }
+);}
+
+
+
+
+
+export const getGuideIntakeMutationKey = () => ['guideIntake'] as const;
+
+export const getGuideIntakeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guideIntake>>, TError,GuideIntakeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof guideIntake>>, TError,GuideIntakeMutationVariables, TContext> => {
+
+const mutationKey = getGuideIntakeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof guideIntake>>, GuideIntakeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  guideIntake(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GuideIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof guideIntake>>>
+    export type GuideIntakeMutationBody = BodyType<GuideIntakeInput>
+    export type GuideIntakeMutationError = ErrorType<void>
+    export type GuideIntakeMutationVariables = {data: BodyType<GuideIntakeInput>}
+
+    export const useGuideIntake = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guideIntake>>, TError,GuideIntakeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof guideIntake>>,
+        TError,
+        GuideIntakeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGuideIntakeMutationOptions(options));
+    }
+
+export const getGuideNoteUrl = () => {
+
+
+
+
+  return `/api/guide/note`
+}
+
+export const guideNote = async (guideIntakeInput: GuideIntakeInput, options?: Parameters<typeof customFetch>[1]): Promise<GuideState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GuideState>(getGuideNoteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guideIntakeInput)
+  }
+);}
+
+
+
+
+
+export const getGuideNoteMutationKey = () => ['guideNote'] as const;
+
+export const getGuideNoteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guideNote>>, TError,GuideNoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof guideNote>>, TError,GuideNoteMutationVariables, TContext> => {
+
+const mutationKey = getGuideNoteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof guideNote>>, GuideNoteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  guideNote(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GuideNoteMutationResult = NonNullable<Awaited<ReturnType<typeof guideNote>>>
+    export type GuideNoteMutationBody = BodyType<GuideIntakeInput>
+    export type GuideNoteMutationError = ErrorType<unknown>
+    export type GuideNoteMutationVariables = {data: BodyType<GuideIntakeInput>}
+
+    export const useGuideNote = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guideNote>>, TError,GuideNoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof guideNote>>,
+        TError,
+        GuideNoteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGuideNoteMutationOptions(options));
+    }
+
+export const getGuidePlanUrl = () => {
+
+
+
+
+  return `/api/guide/plan`
+}
+
+export const guidePlan = async (guidePlanInput: GuidePlanInput, options?: Parameters<typeof customFetch>[1]): Promise<GuidePlan> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GuidePlan>(getGuidePlanUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guidePlanInput)
+  }
+);}
+
+
+
+
+
+export const getGuidePlanMutationKey = () => ['guidePlan'] as const;
+
+export const getGuidePlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guidePlan>>, TError,GuidePlanMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof guidePlan>>, TError,GuidePlanMutationVariables, TContext> => {
+
+const mutationKey = getGuidePlanMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof guidePlan>>, GuidePlanMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  guidePlan(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GuidePlanMutationResult = NonNullable<Awaited<ReturnType<typeof guidePlan>>>
+    export type GuidePlanMutationBody = BodyType<GuidePlanInput>
+    export type GuidePlanMutationError = ErrorType<unknown>
+    export type GuidePlanMutationVariables = {data: BodyType<GuidePlanInput>}
+
+    export const useGuidePlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof guidePlan>>, TError,GuidePlanMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof guidePlan>>,
+        TError,
+        GuidePlanMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGuidePlanMutationOptions(options));
+    }
 
 export const getGetLocatorHealthUrl = () => {
 

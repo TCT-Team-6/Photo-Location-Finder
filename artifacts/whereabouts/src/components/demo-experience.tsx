@@ -6,6 +6,7 @@ import { trackEvent } from '@/lib/analytics';
 import { DemoResult } from './demo/demo-result';
 import { DemoStartFlow, DemoProgressOverlay } from './demo/demo-start-flow';
 import { scoreLabel } from './demo/demo-parts';
+import { SampleLabel } from '@/features/guide/guide-ui';
 import './demo/demo.css';
 
 type DemoView = 'overview' | 'investigate' | 'library';
@@ -65,6 +66,7 @@ export function DemoExperience() {
     </aside>
     <main className="min-w-0 flex-1 px-4 py-4 md:px-7 md:py-5">
       <div className="mb-3 flex items-center justify-between gap-3"><p className="font-data text-[9px] uppercase tracking-wider text-[#829087]">Whereabouts / Demo</p><Link href="/" data-testid="link-demo-home" className="text-xs text-[#62756c]">Back to home</Link></div>
+      <SampleLabel className="mb-2" />
       <p className="mb-4 text-xs leading-5 text-[#718078]" data-testid="notice-demo-boundary">Sample cases with fictional scenarios. Real searches run the full AI pipeline.</p>
       <nav className="mb-4 flex gap-2 overflow-x-auto md:hidden" aria-label="Demo navigation">{navigation.map(({ id, label }) => <button type="button" key={id} onClick={() => chooseView(id)} data-testid={`button-demo-mobile-nav-${id}`} aria-current={view === id ? 'page' : undefined} className={`shrink-0 rounded-full px-3 py-2 text-xs ${view === id ? 'bg-[#385e51] text-white' : 'border border-[#d8d1c2]'}`}>{label}</button>)}</nav>
       {active ? <>
@@ -78,6 +80,7 @@ export function DemoExperience() {
           <div><p className="font-data text-[9px] uppercase tracking-wider text-[#9c6d4e]">Four search briefings</p><h1 className="mt-2 font-editorial text-5xl tracking-[-.04em]">{view === 'library' ? 'My library.' : 'Sample cases'}</h1><p className="mt-3 text-sm text-[#718078]">Open a case file to explore its clues, likely places and search plan.</p></div>
           <button type="button" onClick={() => chooseView('investigate')} data-testid="button-overview-new-investigation" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-white">New investigation <ArrowRight size={14} /></button>
         </div>
+        <div className="mb-5 flex flex-wrap gap-2"><Link href="/guide-demo/alex" data-testid="link-guide-demo-alex" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#385e51] px-4 text-xs font-semibold text-[#385e51]">AI Guide sample: Alex <ArrowRight size={14} /></Link><Link href="/guide-demo/joe" data-testid="link-guide-demo-joe" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#385e51] px-4 text-xs font-semibold text-[#385e51]">AI Guide sample: Grandpa Joe <ArrowRight size={14} /></Link></div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{demoSamples.map((sample) => <SampleCard key={sample.investigation.id} sample={sample} onOpen={openSample} />)}</div>
         {view === 'overview' && <button type="button" onClick={() => chooseView('library')} data-testid="button-overview-open-library" className="mt-5 text-xs font-semibold text-[#385e51]">Browse library →</button>}
       </>}
