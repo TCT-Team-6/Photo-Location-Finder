@@ -26,7 +26,7 @@ export default function NewCasePage() {
     },
   });
   const leave = () => { if (confirmLeave()) { setDirty(false); nav('/cases'); } };
-  return <div className="fade-up mx-auto max-w-4xl">
+  return <div className="wa-case-workspace fade-up mx-auto max-w-4xl">
     <button type="button" onClick={leave} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]" data-testid="link-back-cases"><ArrowLeft size={14} />Back to cases</button>
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / intake</p>
     <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Open a case.</h1>

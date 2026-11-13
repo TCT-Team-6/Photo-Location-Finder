@@ -58,7 +58,7 @@ export default function CaseDetailPage() {
   const c = q.data;
   const leads = [...c.leads].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  return <div className="fade-up mx-auto max-w-5xl">
+  return <div className="wa-case-workspace fade-up mx-auto max-w-5xl">
     {back}
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / {roleLabel[c.responderRole]} (self-declared)</p>
     {editing ? <div className="mt-4">

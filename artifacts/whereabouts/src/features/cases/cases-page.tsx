@@ -10,7 +10,7 @@ export function displayName(c: { firstName: string; lastName?: string; nickname?
 export default function CasesPage() {
   const q = useListMissingPersonCases();
   const rows = q.data ?? [];
-  return <div className="fade-up">
+  return <div className="wa-case-list fade-up">
     <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private cases</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Case files.</h1><p className="mt-3 max-w-lg text-sm text-[#718078]">A careful place to organize authorized photos, links and tips. Visible only to you.</p></div>
       <Link href="/cases/new" data-testid="button-new-case" className={primaryBtn}><FolderPlus size={16} />Open a case</Link>

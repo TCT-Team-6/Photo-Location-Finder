@@ -54,7 +54,8 @@ export function GuideEntry({ signedIn, tone = 'light' }: { signedIn: boolean; to
   }
   const signInHref = `/sign-in?redirect_url=${encodeURIComponent(`${window.location.origin}${basePath}/guide`)}`;
 
-  return <section className={`rounded-[28px] border border-[#d8d1c2] ${tone === 'panel' ? 'bg-[#fbf9f3]' : 'bg-[#f8f5ec]/95'} p-4 shadow-[0_18px_50px_rgba(38,61,54,.08)] sm:p-6`} aria-labelledby="guide-entry-h" data-testid="panel-guide-entry">
+  return <section className={`wa-guide-entry border border-[#d8d1c2] ${tone === 'panel' ? 'bg-[#fbf9f3]' : 'bg-[#f8f5ec]/95'} p-4 sm:p-7`} aria-labelledby="guide-entry-h" data-testid="panel-guide-entry">
+    <p className="wa-eyebrow mb-4">Private evidence organization / AI Guide</p>
     <label id="guide-entry-h" htmlFor="guide-entry-text" className="block font-editorial text-3xl tracking-[-.03em] text-[#263d36] sm:text-4xl">Tell us what happened.</label>
     <p className="mt-1 text-sm text-[#62756c]">In your own words. The AI Guide asks only what is missing, then helps you prepare a summary for responders.</p>
     <div className="mt-4 rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] focus-within:border-[#668675] focus-within:ring-4 focus-within:ring-[#385e51]/10">

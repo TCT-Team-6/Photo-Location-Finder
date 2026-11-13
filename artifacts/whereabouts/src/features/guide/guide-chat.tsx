@@ -6,7 +6,7 @@ const roleName = { user: 'You', assistant: 'AI Guide', gate: 'AI Guide', note: '
 
 export function GuideChat({ messages, pending = false }: { messages: ChatMessage[]; pending?: boolean }) {
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [messages.length, pending]);
+  useEffect(() => { end.current?.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }, [messages.length, pending]);
   const lastAi = [...messages].reverse().find((m) => m.role === 'assistant' || m.role === 'gate');
   const older = messages.filter((m) => m !== lastAi);
   const renderMsg = (m: ChatMessage, live: boolean) => {
@@ -19,7 +19,7 @@ export function GuideChat({ messages, pending = false }: { messages: ChatMessage
       </div>
     </li>;
   };
-  return <div>
+  return <div className="wa-guide-chat">
     <ol className="space-y-3" aria-label="Conversation with the AI Guide">{older.map((m) => renderMsg(m, false))}</ol>
     <div aria-live="polite" aria-atomic="true" className="mt-3" data-testid="region-guide-latest">
       {lastAi && <ol>{renderMsg(lastAi, true)}</ol>}

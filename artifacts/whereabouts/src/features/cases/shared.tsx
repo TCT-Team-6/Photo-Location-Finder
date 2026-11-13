@@ -32,7 +32,7 @@ export function validatePhoto(f: File): string | null {
 }
 
 export function Field({ label, hint, error, children, id }: { label: string; hint?: string; error?: string; children: ReactNode; id: string }) {
-  return <div>
+  return <div className="wa-field">
     <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-[#344b42]">{label}</label>
     {children}
     {hint && !error && <p className="mt-1.5 text-xs text-[#718078]">{hint}</p>}
@@ -48,7 +48,7 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 }
 
 export function PrivacyNotice({ compact = false }: { compact?: boolean }) {
-  return <aside className="rounded-2xl border border-[#d8d1c2] bg-[#e9ede3] p-5" data-testid="notice-privacy">
+  return <aside className="wa-case-privacy border border-[#d8d1c2] bg-[#e9ede3] p-5" data-testid="notice-privacy">
     <p className="flex items-center gap-2 font-data text-[10px] uppercase tracking-[.16em] text-[#385e51]"><ShieldCheck size={14} />Private workspace</p>
     <ul className="mt-3 space-y-2 text-xs leading-5 text-[#465c50]">
       <li>This is not an emergency service. If someone is in danger or missing, contact your local emergency number or police first.</li>

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, MapPin, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -41,6 +41,7 @@ import { readPhotoTakenDate } from '@/lib/photo-date';
 import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
 import { DemoExperience } from '@/components/demo-experience';
+import { PhotoInstrument } from '@/components/photo-instrument';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
@@ -125,14 +126,14 @@ const clerkAppearance = {
     logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
   },
   variables: {
-    colorPrimary: '#385e51',
-    colorForeground: '#263d36',
-    colorMutedForeground: '#718078',
+    colorPrimary: 'hsl(var(--primary))',
+    colorForeground: 'hsl(var(--foreground))',
+    colorMutedForeground: 'hsl(var(--muted-foreground))',
     colorDanger: '#a64e43',
-    colorBackground: '#f8f5ed',
-    colorInput: '#fbf9f3',
-    colorInputForeground: '#263d36',
-    colorNeutral: '#d8d1c2',
+    colorBackground: 'hsl(var(--card))',
+    colorInput: 'hsl(var(--card))',
+    colorInputForeground: 'hsl(var(--foreground))',
+    colorNeutral: 'hsl(var(--border))',
     fontFamily: 'DM Sans, sans-serif',
     borderRadius: '12px',
   },
@@ -169,18 +170,18 @@ const clerkAppearance = {
 
 function Mark({ inverse = false }: { inverse?: boolean }) {
   return (
-    <Link href="/" className={`inline-flex items-center gap-3 ${inverse ? 'text-[#f5f0e5]' : 'text-[#263d36]'}`} data-testid="link-brand-home">
-      <span className={`grid h-10 w-10 place-items-center rounded-full ${inverse ? 'bg-[#d78b5a] text-[#243b34]' : 'bg-[#385e51] text-[#f5f0e5]'}`}>
+    <Link href="/" className={`wa-brand inline-flex items-center gap-3 ${inverse ? 'wa-brand-inverse' : ''}`} data-testid="link-brand-home">
+      <span className="wa-brand-icon">
         <Crosshair size={22} strokeWidth={1.7} />
       </span>
-      <span className="font-editorial text-[25px] leading-none tracking-[-.04em]">whereabouts</span>
+      <span className="font-editorial text-[25px] leading-none tracking-[-.055em]">whereabouts</span>
     </Link>
   );
 }
 
 function ActionLink({ href, children, secondary = false, testId }: { href: string; children: ReactNode; secondary?: boolean; testId: string }) {
   return (
-    <Link href={href} data-testid={testId} className={`inline-flex min-h-12 min-w-max items-center justify-center gap-2 whitespace-nowrap rounded-full px-6 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ${secondary ? 'border border-[#b9c4b5] bg-transparent text-[#385e51] hover:bg-[#e8e4d8]' : 'bg-[#d78b5a] text-[#233b35] hover:bg-[#e29b6d]'}`}>
+    <Link href={href} data-testid={testId} className={`wa-action inline-flex min-w-max items-center justify-center gap-2 whitespace-nowrap px-6 text-sm font-semibold ${secondary ? 'wa-action-secondary' : ''}`}>
       {children}
     </Link>
   );
@@ -192,76 +193,57 @@ function HomeRedirect() {
 
 function LandingPage() {
   return (
-    <main className="min-h-[100dvh] overflow-hidden bg-[#f4f0e6] text-[#263d36]">
-      <header className="relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
+    <main className="wa-landing min-h-[100dvh] overflow-hidden">
+      <header className="wa-landing-header relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
         <Mark />
         <nav className="flex items-center gap-3">
           <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
           <ActionLink href="/start" testId="link-get-started">Start a search <ArrowRight size={16} /></ActionLink>
         </nav>
       </header>
-      <section className="relative mx-auto grid max-w-[1440px] items-center gap-10 px-6 pb-20 pt-10 md:grid-cols-[1.02fr_.98fr] md:px-12 md:pb-28 md:pt-16">
-        <div className="fade-up relative z-10 max-w-[670px]">
-          <p className="mb-7 inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.2em] text-[#657d6f]"><span className="h-2 w-2 rounded-full bg-[#c8794d]" />A search tool for families and rescue teams</p>
-          <h1 className="font-editorial text-[clamp(3.65rem,8.5vw,7.6rem)] leading-[.88] tracking-[-.065em]">Every hour matters.<br /><em className="font-normal text-[#c8794d]">Every photo is a clue.</em></h1>
-          <p className="mt-8 max-w-[520px] text-lg leading-8 text-[#62756c] md:text-xl">When someone vulnerable goes missing, their last photo often holds the best clue to where they are. Whereabouts uses AI to read that photo and point searchers to the most likely places, in minutes instead of hours.</p>
+      <section className="wa-hero">
+        <div className="fade-up relative z-10">
+          <p className="wa-eyebrow mb-7">Whereabouts / A private exploration instrument</p>
+          <h1>A little closer<br />to <span>somewhere.</span></h1>
+          <p className="wa-hero-description">Look beyond the photograph. Explore the places an image might hold, or keep an authorized missing-person case organized in a separate, private workspace.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <ActionLink href="/start" testId="link-start-search">Start a search <ArrowRight size={16} /></ActionLink>
-            <ActionLink href="/demo" secondary testId="link-see-sample-case">See a sample case</ActionLink>
+            <ActionLink href="/start" testId="link-start-search">Open your workspace <ArrowRight size={16} /></ActionLink>
+            <ActionLink href="/demo" secondary testId="link-see-sample-case">Explore the samples</ActionLink>
           </div>
-          <div className="mt-8 flex items-center gap-4 border-t border-[#d8d1c2] pt-5">
-            <ShieldCheck size={18} className="text-[#627d6d]" />
-            <p className="text-sm text-[#6f7f76]">Private by default. Built for safety, never for tracking.</p>
+          <div className="wa-hero-footer">
+            <ShieldCheck size={18} className="mt-0.5 shrink-0" />
+            <p>Private by default. Estimates, never proof.<br />If someone is in danger, contact emergency services first.</p>
           </div>
         </div>
-        <div className="fade-up-delay relative mx-auto w-full max-w-[590px]">
-          <div className="landing-map relative aspect-[.97] overflow-hidden rounded-[44%_44%_46%_44%] border border-[#d4cdbd] shadow-[0_34px_80px_rgba(42,58,48,.15)]">
-            <div className="contour absolute inset-[-8%] opacity-75" />
-            <svg className="absolute inset-0 h-full w-full opacity-65" viewBox="0 0 600 600" fill="none" aria-hidden="true">
-              <path d="M-10 338C83 294 123 347 206 304s132-116 221-91 108 29 197-17" stroke="#728c76" strokeWidth="2" strokeDasharray="6 8" />
-              <path d="M48 72c87 22 94 113 171 125 73 11 117-61 190-45s93 105 173 98" stroke="#b8835d" strokeWidth="1.6" />
-              <path d="M49 514c63-73 126-38 188-79s86-108 165-87 95 72 170 22" stroke="#718a78" strokeWidth="2" strokeDasharray="3 7" />
-              <path d="M320 0c-25 115-22 148 41 222s16 148-10 207 7 113 90 188" stroke="#8a9b81" strokeWidth="1.5" />
-              <path d="M0 238c66-14 91-36 113-94s57-82 132-99" stroke="#8a9b81" strokeWidth="1.5" />
-            </svg>
-            <div className="absolute left-[18%] top-[19%] rotate-[-5deg] rounded-sm bg-[#faf7ee] p-2.5 pb-8 shadow-xl">
-              <div className="h-[190px] w-[145px] bg-[#d3d0c2]">
-                <div className="relative h-full overflow-hidden bg-[linear-gradient(155deg,#839687_0%,#c9c6ae_43%,#ba8c6d_44%,#d1aa80_56%,#8c9b82_57%)]">
-                  <div className="absolute left-[45%] top-0 h-full w-2 rotate-[11deg] bg-[#e9dfc7]/80" />
-                  <div className="absolute bottom-0 left-[-15%] h-[56%] w-[140%] rounded-[50%_50%_0_0] bg-[#728477]/70" />
-                  <div className="absolute bottom-[18%] left-[18%] h-10 w-12 rotate-[-5deg] border-2 border-[#665f4b]/70" />
-                  <div className="absolute right-[15%] top-[13%] h-9 w-9 rounded-full bg-[#e1ba7c]/75" />
-                </div>
-              </div>
-            </div>
-            <div className="absolute right-[8%] top-[18%] rounded-full border border-[#a4ad9a] bg-[#f5f0e4]/90 px-4 py-2 font-data text-[9px] uppercase tracking-[.14em] text-[#58705f]">Trail marker spotted</div>
-            <div className="map-pin absolute left-[57%] top-[58%] grid h-12 w-12 place-items-center rounded-full bg-[#c8794d] text-[#fff7e9]"><MapPin size={22} /></div>
-            <div className="absolute bottom-[16%] right-[9%] rotate-[4deg] rounded-sm border border-[#d6cfbf] bg-[#faf7ee]/95 px-5 py-4 shadow-lg">
-              <p className="font-data text-[9px] uppercase tracking-[.18em] text-[#a36a47]">Urgency: High</p>
-              <p className="mt-1 font-editorial text-xl text-[#334b3f]">Sunset in about 2 hours</p>
-            </div>
-          </div>
+        <div className="fade-up-delay min-w-0"><PhotoInstrument /></div>
+      </section>
+      <div className="wa-index-strip"><span>01 / Observe the image</span><span>02 / Keep the context</span><span>03 / Review the possibilities</span></div>
+      <section className="wa-workflows">
+        <div><p className="wa-eyebrow">Two workspaces. Clear boundaries.</p><h2>The right tool<br />for the next step.</h2></div>
+        <div>
+          <div className="wa-workflow"><span className="wa-eyebrow">01</span><div><h3>Explore a photograph.</h3><p>For image investigations, personal travel photos, and journalism. Inspect visual clues and possible locations. A suggested place is a lead to review, not a confirmed location.</p></div><Crosshair size={22} /></div>
+          <div className="wa-workflow"><span className="wa-eyebrow">02</span><div><h3>Organize a private case.</h3><p>Keep authorized missing-person evidence, links, and tips together. The AI Guide helps organize reported facts for responders. Private case evidence is not automatically sent for location analysis.</p></div><ShieldCheck size={22} /></div>
         </div>
       </section>
-      <section className="px-4 pb-16 md:px-12" id="tell-us">
+      <section className="wa-guide-section" id="tell-us">
         <div className="mx-auto max-w-[860px]"><GuideEntry signedIn={false} /></div>
       </section>
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto max-w-[1180px]">
           <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Who it helps</p>
           <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Built for the people who search first.</h2>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="wa-audiences mt-10">
             <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
               <h3 className="font-editorial text-2xl">Caregivers &amp; families</h3>
               <p className="mt-4 text-sm leading-6 text-[#65766c]">A parent with dementia walked out the door. A child with autism wandered from a park. You have a recent photo and no idea where to start. Whereabouts gives you a starting point to share with police and searchers.</p>
             </article>
             <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
               <h3 className="font-editorial text-2xl">Search &amp; rescue volunteers</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">Turn a photo from social media into a ranked list of likely locations, with the terrain, landmarks and conditions that matter for your team's safety and plan.</p>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">Keep authorized photos, links and tips in one private case. Review each lead yourself and prepare the facts for the people coordinating the response.</p>
             </article>
             <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
               <h3 className="font-editorial text-2xl">Hikers &amp; outdoor groups</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">When a friend stops answering, the last trail photo they posted can narrow a search from a whole park to a single trailhead.</p>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">Compare terrain, signs and landmarks in a photograph with possible places. Treat every suggestion as a starting point to check, never a verified trailhead.</p>
             </article>
           </div>
         </div>
@@ -269,25 +251,25 @@ function LandingPage() {
       <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
         <div className="mx-auto grid max-w-[1240px] gap-10 md:grid-cols-[.75fr_1.25fr] md:gap-24">
           <div>
-            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">From photo to search plan</p>
-            <h2 className="mt-5 font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">One photo. Three steps.<br /><em className="font-normal text-[#d78b5a]">A smarter search.</em></h2>
+            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">A considered way forward</p>
+            <h2 className="mt-5 font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Less scattered.<br /><span className="text-[#d78b5a]">More considered.</span></h2>
           </div>
-          <div className="grid gap-8 sm:grid-cols-3">
-            <Feature number="01" icon={<ImagePlus size={18} />} title="Upload their last photo." text="Add the most recent photo of the missing person, plus anything you already know: when they left, what they were wearing, places they like to go." />
-            <Feature number="02" icon={<Crosshair size={18} />} title="AI reads the scene." text="Whereabouts checks the photo's hidden data, spots landmarks, terrain, signs and light, and compares likely places, the way an experienced investigator would." />
-            <Feature number="03" icon={<BookOpen size={18} />} title="Get a search plan." text="See likely locations ranked by confidence, plus a health-risk summary that shows how urgent the search is and what searchers should bring." />
+          <div className="wa-process">
+            <Feature number="01" icon={<ImagePlus size={18} />} title="Choose your workspace." text="Explore a scene in an image investigation, or keep authorized missing-person evidence in a private case. The two workflows stay separate." />
+            <Feature number="02" icon={<Crosshair size={18} />} title="Keep the context." text="An image investigation inspects scene clues. A private case holds the facts and evidence you provide; the AI Guide organizes those reported facts, not a person's location." />
+            <Feature number="03" icon={<BookOpen size={18} />} title="Review, then act." text="Compare suggested places carefully. For a missing-person case, review your facts and prepare a summary for responders. No AI output independently confirms a lead." />
           </div>
         </div>
       </section>
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto max-w-[1180px]">
-          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Healthy &amp; smart living</p>
-          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Finding someone fast keeps them healthy.</h2>
-          <p className="mt-6 max-w-[760px] text-base leading-7 text-[#65766c]">For a person with dementia, a young child, or an injured hiker, every hour outside brings new risks: cold or heat, dehydration, darkness, and missed medication. Whereabouts flags those risks on every search, so families and rescuers know what to prioritize and what to bring.</p>
-          <div className="mt-9 grid gap-5 md:grid-cols-3">
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Exposure risk</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">cold, heat, water and darkness, checked automatically</p></article>
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Urgency level</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Low, Moderate, High or Critical, explained in plain words</p></article>
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Next steps</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">what to search first and what searchers should carry</p></article>
+          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Keep the person in mind</p>
+          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Context matters.<br />Especially in a hurry.</h2>
+          <p className="mt-6 max-w-[760px] text-base leading-7 text-[#65766c]">For a person with dementia, a young child, or an injured hiker, time outside can bring serious risks: exposure, dehydration, darkness, and missed medication. Keep those concerns visible for responders. Whereabouts is not medical advice or a substitute for professional assessment.</p>
+          <div className="wa-context-list mt-9">
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Exposure risk</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Cold, heat, water and darkness are concerns to raise with responders.</p></article>
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Urgency level</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Any displayed risk level is an estimate, not a professional assessment.</p></article>
+            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Next steps</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Contact emergency services first. Review your facts before sharing a summary.</p></article>
           </div>
         </div>
       </section>
@@ -468,18 +450,18 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/start', label: 'AI Guide', icon: <Sparkles size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
-  return <div className="min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
-    <aside className="hidden w-[252px] shrink-0 flex-col bg-[#263d36] px-5 pb-5 pt-6 text-[#f4f0e6] md:flex">
+  return <div className="wa-shell min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
+    <aside className="wa-sidebar hidden shrink-0 flex-col px-5 pb-5 pt-6 md:flex">
       <Mark inverse />
-      <div className="mt-12" />
-      <nav className="space-y-1">
-        {navLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}{item.href === '/investigate' && <span className="ml-auto text-[#d78b5a]">+</span>}</Link>)}
+      <p className="wa-eyebrow mb-3 mt-10 px-3">Your workspace</p>
+      <nav className="space-y-1" aria-label="Main navigation">
+        {navLinks.map((item) => <Link key={item.href} href={item.href} aria-current={location === item.href ? 'page' : undefined} data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}{item.href === '/investigate' && <span className="ml-auto" aria-hidden="true">+</span>}</Link>)}
       </nav>
       <p className="mb-2 mt-7 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
-      <nav className="space-y-1">
-        {deskLinks.map((item) => <Link key={item.href} href={item.href} data-testid={`nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}</Link>)}
+      <nav className="space-y-1" aria-label="Image investigation desks">
+        {deskLinks.map((item) => <Link key={item.href} href={item.href} aria-current={location === item.href ? 'page' : undefined} data-testid={`nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}</Link>)}
       </nav>
-      <Link href="/settings" data-testid="nav-settings" className={`mt-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}><SettingsIcon size={17} />Settings</Link>
+      <Link href="/settings" aria-current={location === '/settings' ? 'page' : undefined} data-testid="nav-settings" className={`mt-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}><SettingsIcon size={17} />Settings</Link>
       <div className="mt-auto">
         <details className="relative mb-4 border-t border-[#52695d] pt-4">
           <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
@@ -497,14 +479,15 @@ function AppShell({ children }: { children: ReactNode }) {
         <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-sign-out" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#c1cdbf] transition hover:bg-white/5 hover:text-white"><LogOut size={16} />Sign out</button>
       </div>
     </aside>
-    <div className="min-w-0 flex-1">
-      <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-[#d8d1c2] bg-[#f4f0e6]/95 px-5 backdrop-blur md:px-10">
-        <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" data-testid="button-toggle-navigation" className="grid h-10 w-10 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
-        <div className="hidden items-center gap-2 font-data text-[9px] uppercase tracking-[.16em] text-[#829087] md:flex"><span className="h-1.5 w-1.5 rounded-full bg-[#c8794d]" />Personal field notes <span className="text-[#b2b7a9]">/</span> Anywhere, remembered</div>
+    <div className="wa-workspace min-w-0 flex-1">
+      <header className="wa-topbar sticky top-0 z-20 flex items-center justify-between border-b border-[#d8d1c2] px-5 md:px-8">
+        <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" aria-expanded={mobileNav} data-testid="button-toggle-navigation" className="grid h-11 w-11 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
+        <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
+        <span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
       </header>
-      {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)}>
-        <nav className="w-[min(84vw,320px)] bg-[#263d36] p-5 text-[#f4f0e6]" onClick={(event) => event.stopPropagation()}>
-          <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-9 w-9 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
+      {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)} onKeyDown={(event) => { if (event.key === 'Escape') setMobileNav(false); }}>
+        <nav aria-label="Mobile navigation" className="max-h-[100dvh] w-[min(84vw,320px)] overflow-y-auto bg-[#263d36] p-5 text-[#f4f0e6]" onClick={(event) => event.stopPropagation()}>
+          <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" aria-label="Close navigation" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
           {navLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
           <p className="mb-2 mt-6 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
           {deskLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
@@ -512,7 +495,7 @@ function AppShell({ children }: { children: ReactNode }) {
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
         </nav>
       </div>}
-      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-10 md:pt-10">{children}</main>
+      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-8 md:pt-9">{children}</main>
     </div>
   </div>;
 }
@@ -533,18 +516,18 @@ function DashboardPage() {
   const investigations = useListInvestigations(undefined, { query: { queryKey: getListInvestigationsQueryKey(), refetchInterval: pollListWhileAnalyzing } });
   const latest = summary.data?.latest;
   const rows = investigations.data ?? [];
-  return <div className="fade-up">
-    <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Personal archive / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your field desk.</h1><p className="mt-3 text-sm text-[#718078]">A little further along the trail.</p></div>
-      <div className="flex flex-wrap gap-3"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
+  return <div className="wa-dashboard fade-up">
+    <div className="wa-page-heading wa-dashboard-heading mb-7 gap-6">
+      <div><PageEyebrow>Your private instrument / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.06em] md:text-7xl">Back at the desk.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Your photographs, possible places, and next questions. Pick up an investigation or open a separate private case.</p></div>
+      <div className="wa-dashboard-actions"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
       <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><Sparkles size={16} />AI Guide</Link>
-      <Link href="/investigate" data-testid="button-start-investigation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-6 text-sm font-semibold text-[#f4f0e6] transition hover:-translate-y-0.5 hover:bg-[#2e5044]"><ImagePlus size={16} />Start an investigation <ArrowRight size={16} /></Link></div>
+      <Link href="/investigate" data-testid="button-start-investigation" className="wa-action inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"><ImagePlus size={16} />Investigate an image <ArrowRight size={16} /></Link></div>
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
       : summary.isError ? <div className="mb-8"><QueryError retry={() => summary.refetch()} text="Your archive summary is taking a moment." /></div>
-      : <div className="mb-9 grid gap-4 sm:grid-cols-3">
-        <Stat label="Saved investigations" value={summary.data?.total ?? 0} caption="Places worth remembering" icon={<Layers3 size={18} />} />
-        <Stat label="This month" value={summary.data?.thisMonth ?? 0} caption="New trails opened" icon={<Crosshair size={18} />} />
+      : <div className="wa-stats mb-9">
+        <Stat label="Saved investigations" value={summary.data?.total ?? 0} caption="In your image archive" icon={<Layers3 size={18} />} />
+        <Stat label="This month" value={summary.data?.thisMonth ?? 0} caption="Investigations opened" icon={<Crosshair size={18} />} />
         <div className="relative overflow-hidden rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="contour absolute inset-0 opacity-35" /><div className="relative"><p className="font-data text-[9px] uppercase tracking-[.17em] text-[#d78b5a]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs text-[#c1cdbf]">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#e3a274]">Open trail <ArrowRight size={14} /></Link>}</div></div>
       </div>}
     <div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
@@ -554,12 +537,12 @@ function DashboardPage() {
     {investigations.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56" />)}</div>
       : investigations.isError ? <QueryError retry={() => investigations.refetch()} />
       : rows.length === 0 ? <EmptyState icon={<Compass size={26} />} eyebrow="A new page" title="No investigations yet." text="Start with a photo that has been on your mind. We’ll help you follow its visual clues." action={<Link href="/investigate" data-testid="empty-start-investigation" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Investigate a photo <ArrowRight size={15} /></Link>} />
-      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.slice(0, 6).map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
+      : <div className="wa-archive-grid">{rows.slice(0, 6).map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
   </div>;
 }
 
 function Stat({ label, value, caption, icon }: { label: string; value: number; caption: string; icon: ReactNode }) {
-  return <div className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+  return <div className="wa-stat border border-[#d8d1c2] bg-[#f8f5ec]">
     <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div>
     <p className="mt-5 font-editorial text-4xl tracking-[-.04em]" data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}>{value}</p><p className="mt-1 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
   </div>;
@@ -588,7 +571,7 @@ function InvestigationCard({
   onToggleSelect?: (item: Investigation) => void;
 }) {
   const place = rankCandidates(item.candidates)[0];
-  return <article className="group relative overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(43,58,48,.09)]" data-testid={`card-investigation-${item.id}`}>
+  return <article className="wa-photo-card group relative overflow-hidden border border-[#d8d1c2] transition-transform hover:-translate-y-1" data-testid={`card-investigation-${item.id}`}>
     <div className={`relative h-[148px] overflow-hidden bg-[#d9ddcf] ${selectable ? 'cursor-pointer' : ''}`} onClick={() => selectable && onToggleSelect?.(item)}>
       {isVideoInvestigation(item) ? <div className="flex h-full w-full items-center justify-center bg-[#2f4a40] text-[#d9e2d4]" data-testid={`placeholder-video-${item.id}`}><Film size={34} strokeWidth={1.4} aria-hidden="true" /></div> : <img src={investigationMediaUrl(item.id)} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />}
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c3028]/55 to-transparent" />
@@ -628,7 +611,7 @@ function FieldDeskPage() {
   const query = useListInvestigations(undefined, { query: { queryKey: getListInvestigationsQueryKey(), refetchInterval: pollListWhileAnalyzing } });
   if (!desk) return <NotFound />;
   const rows = (query.data ?? []).filter((item) => item.desk === desk.id);
-  return <div className="fade-up">
+  return <div className="wa-library fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Private archive / field desk</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">{desk.label}.</h1><p className="mt-3 text-sm text-[#718078]">{desk.subtitle}.</p></div>
       <Link href="/investigate" data-testid={`button-new-from-desk-${desk.id}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6]"><ImagePlus size={15} />Add a photo</Link>
@@ -636,7 +619,7 @@ function FieldDeskPage() {
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text={`The ${desk.label} desk is unavailable just now.`} />
       : rows.length === 0 ? <EmptyState icon={desk.icon} eyebrow="Desk is ready" title="No investigations here yet." text={`Photos submitted in the ${desk.label} upload spot will be filed here.`} action={<Link href="/investigate" data-testid={`empty-desk-start-${desk.id}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add a photo <ArrowRight size={15} /></Link>} />
-      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
+      : <div className="wa-archive-grid">{rows.map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
   </div>;
 }
 
@@ -822,9 +805,10 @@ function InvestigatePage() {
     if (reportIdToOpen) setLocation(`/investigation/${encodeURIComponent(reportIdToOpen)}`);
   };
 
-  return <div className="fade-up investigation-theme mx-auto max-w-[960px]" data-desk-theme={activeSlotId}>
+  return <div className="wa-intake fade-up investigation-theme mx-auto" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-     <div className="mb-8"><p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Open new case files / 01–03</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">What’s the somewhere?</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
+     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.06em] md:text-6xl">Start with what you see.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
+    <p className="wa-mode-note mb-6">This is image analysis, not the private missing-person evidence workspace. For authorized case organization without automatic image analysis, use <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> or the <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link>.</p>
     <form id="investigate-form" onSubmit={submit} className="space-y-6">
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
@@ -868,7 +852,7 @@ function InvestigatePage() {
         </div>
       </section>
       <div className="desk-theme-panel mx-auto max-w-[720px] rounded-3xl border p-6 transition-colors duration-300 md:p-7">
-        <details className="optional-details group" data-testid="details-optional-fields">
+        <details open className="optional-details group" data-testid="details-optional-fields">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl" data-testid="toggle-optional-fields">
           <span className="min-w-0">
             <span className="desk-theme-eyebrow block font-data text-[9px] uppercase tracking-[.2em]">Add details <span className="normal-case tracking-normal">· optional</span></span>
@@ -982,7 +966,7 @@ function LibraryPage() {
     setDeleteError(failedCount ? `${deletedIds.length} deleted; ${failedCount} could not be deleted. Try those again.` : '');
     setActionMessage(failedCount ? '' : `${deletedIds.length} investigation${deletedIds.length === 1 ? '' : 's'} deleted.`);
   };
-  return <div className="fade-up">
+  return <div className="wa-library fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your library.</h1><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
     </div>
@@ -997,7 +981,7 @@ function LibraryPage() {
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." />
       : (query.data ?? []).length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search ? 'No matching notes' : 'The index is open'} title={search ? 'Nothing found here.' : 'Your library is still empty.'} text={search ? 'Try another place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search ? <button type="button" onClick={() => setSearch('')} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear search</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
-      : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((item) => <InvestigationCard key={item.id} item={item} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</div>}
+      : <div className="wa-archive-grid">{rows.map((item) => <InvestigationCard key={item.id} item={item} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</div>}
   </div>;
 }
 
@@ -1010,7 +994,7 @@ function InvestigationPage() {
   const retryAnalysis = useRetryInvestigationAnalysis();
   const [retryError, setRetryError] = useState('');
   const playerRef = useRef<HTMLVideoElement | null>(null);
-  const seekTo = (seconds: number) => { const player = playerRef.current; if (!player) return; player.currentTime = seconds; void player.play().catch(() => {}); player.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  const seekTo = (seconds: number) => { const player = playerRef.current; if (!player) return; player.currentTime = seconds; void player.play().catch(() => {}); player.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' }); };
   const retryVideo = async () => {
     setRetryError('');
     try {
@@ -1091,7 +1075,7 @@ function InvestigationPage() {
     : summaryMentionsLowerLead
     ? `The Image Locator service ranked ${rankedLeads[0].place} as the strongest location lead.`
     : humanizeClueText(item.summary);
-  return <div className="fade-up">
+  return <div className="wa-result fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><h1 className="mt-3 max-w-4xl font-editorial text-5xl tracking-[-.05em] md:text-6xl" data-testid="text-detail-title">{displayTitle(item.title)}</h1><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
@@ -1262,7 +1246,7 @@ function SettingsPage() {
   const [keyStatus, setKeyStatus] = useState('');
   const update = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) =>
     setPreferences({ ...preferences, [key]: value });
-  return <div className="fade-up mx-auto max-w-3xl">
+  return <div className="wa-settings fade-up mx-auto max-w-3xl">
     <PageEyebrow>Personal archive / preferences</PageEyebrow>
     <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Settings</h1>
     <p className="mt-3 text-sm text-[#718078]">Adjust how Whereabouts looks and reads on this device.</p>
@@ -1270,7 +1254,7 @@ function SettingsPage() {
       <h2 className="font-editorial text-2xl">Color theme</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {([
-          ['rescue', 'Rescue (demo)', '#ff6a13', '#0b1a2e'],
+          ['rescue', 'Instrument', '#b9472e', '#283b48'],
           ['field', 'Field notebook', '#385e51', '#f4f0e6'],
           ['ocean', 'Coastal blue', '#23617a', '#edf5f7'],
           ['sunset', 'Warm clay', '#8b4939', '#f8eee8'],
@@ -1283,7 +1267,7 @@ function SettingsPage() {
       <h2 className="font-editorial text-2xl">Text font</h2>
       <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="setting-font">Choose a font</label>
       <select id="setting-font" value={preferences.font} onChange={(event) => update('font', event.target.value as AppPreferences['font'])} data-testid="select-text-font" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm">
-        <option value="default">Default (Newsreader and DM Sans)</option>
+        <option value="default">Default (Bricolage Grotesque and DM Sans)</option>
         <option value="sans">Simple sans-serif</option>
         <option value="dyslexic">Dyslexia-friendly (Atkinson Hyperlegible)</option>
       </select>

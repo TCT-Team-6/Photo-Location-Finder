@@ -107,7 +107,7 @@ export default function CaseReviewPage() {
     <div role="group" aria-label="Relevance" className="mt-3 flex flex-wrap gap-1.5 border-t border-[#d8d1c2] pt-3">{statuses.map((s) => <button key={s.v} type="button" aria-pressed={l.reviewStatus === s.v} disabled={review.isPending || save.isPending} data-testid={`button-review-${s.v}-${l.id}`} onClick={() => l.reviewStatus !== s.v && review.mutate({ id, leadId: l.id, data: { reviewStatus: s.v } })} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${l.reviewStatus === s.v ? 'border-[#385e51] bg-[#385e51] text-[#f4f0e6]' : 'border-[#d8d1c2] bg-[#fbf9f3] text-[#385e51]'}`}>{s.l}</button>)}</div>
   </li>;
 
-  return <div className="fade-up mx-auto max-w-5xl">
+  return <div className="wa-case-workspace fade-up mx-auto max-w-5xl">
     {back}
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Manual case review</p>
     <h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]" data-testid="text-review-case-name">{displayName(c)}</h1>

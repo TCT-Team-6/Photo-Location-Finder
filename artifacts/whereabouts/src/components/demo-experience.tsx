@@ -13,7 +13,7 @@ type DemoView = 'overview' | 'investigate' | 'library';
 
 function SampleCard({ sample, onOpen }: { sample: DemoSample; onOpen: (sample: DemoSample) => void }) {
   const lead = sample.investigation.candidates[0];
-  return <article className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]" data-testid={`card-demo-sample-${sample.investigation.id}`}>
+  return <article className="wa-sample-card overflow-hidden border border-[#d8d1c2] bg-[#f8f5ec]" data-testid={`card-demo-sample-${sample.investigation.id}`}>
     <button type="button" onClick={() => onOpen(sample)} data-testid={`button-open-demo-sample-${sample.investigation.id}`} className="block w-full text-left">
       <div className="relative h-44 overflow-hidden">
         <img src={sample.imageUrl} alt={sample.investigation.title} className="h-full w-full object-cover" loading="lazy" data-testid={`img-demo-sample-${sample.investigation.id}`} />
@@ -59,7 +59,7 @@ export function DemoExperience() {
     window.scrollTo(0, 0);
   };
   return <div className="demo-app min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
-    <aside className="hidden w-[200px] shrink-0 flex-col bg-[#263d36] p-5 text-[#f4f0e6] md:flex">
+    <aside className="wa-sidebar hidden shrink-0 flex-col p-5 md:flex">
       <Link href="/" className="font-editorial text-[26px]" data-testid="link-demo-brand-home">whereabouts</Link>
       <nav className="mt-10 space-y-2" aria-label="Demo navigation">{navigation.map(({ id, label, icon: Icon }) => <button type="button" key={id} onClick={() => chooseView(id)} aria-current={view === id ? 'page' : undefined} data-testid={`button-demo-nav-${id}`} className={`flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-xs ${view === id ? 'bg-[#3b5d50]' : 'text-[#c1cdbf] hover:bg-white/5'}`}><Icon size={16} />{label}</button>)}</nav>
       <p className="mt-auto pt-6 text-xs leading-5 text-[#c1cdbf]">Demo mode · nothing is saved</p>
@@ -76,17 +76,17 @@ export function DemoExperience() {
         <h1 className="mb-5 font-editorial text-4xl">Start a search</h1>
         <DemoStartFlow samples={demoSamples} onRun={startSimulation} />
       </> : <>
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div><p className="font-data text-[9px] uppercase tracking-wider text-[#9c6d4e]">Four search briefings</p><h1 className="mt-2 font-editorial text-5xl tracking-[-.04em]">{view === 'library' ? 'My library.' : 'Sample cases'}</h1><p className="mt-3 text-sm text-[#718078]">Open a case file to explore its clues, likely places and search plan.</p></div>
+        <div className="wa-demo-heading mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div><p className="font-data text-[11px] uppercase tracking-wider text-[#9c6d4e]">The sample collection / {String(demoSamples.length).padStart(2, '0')} files</p><h1 className="mt-2 font-editorial text-5xl tracking-[-.04em] md:text-7xl">{view === 'library' ? 'The sample library.' : 'Take a closer look.'}</h1><p className="mt-3 max-w-lg text-sm leading-6 text-[#718078]">A hands-on collection of fictional cases. Open a photo to inspect its clues, possible places and sample briefing. Nothing here is live or saved.</p></div>
           <button type="button" onClick={() => chooseView('investigate')} data-testid="button-overview-new-investigation" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-white">New investigation <ArrowRight size={14} /></button>
         </div>
         <div className="mb-5 flex flex-wrap gap-2"><Link href="/guide-demo/alex" data-testid="link-guide-demo-alex" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#385e51] px-4 text-xs font-semibold text-[#385e51]">AI Guide sample: Alex <ArrowRight size={14} /></Link><Link href="/guide-demo/joe" data-testid="link-guide-demo-joe" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#385e51] px-4 text-xs font-semibold text-[#385e51]">AI Guide sample: Grandpa Joe <ArrowRight size={14} /></Link></div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{demoSamples.map((sample) => <SampleCard key={sample.investigation.id} sample={sample} onOpen={openSample} />)}</div>
+        <div className="wa-demo-gallery">{demoSamples.map((sample) => <SampleCard key={sample.investigation.id} sample={sample} onOpen={openSample} />)}</div>
         {view === 'overview' && <button type="button" onClick={() => chooseView('library')} data-testid="button-overview-open-library" className="mt-5 text-xs font-semibold text-[#385e51]">Browse library →</button>}
       </>}
-      <Link href="/sign-in" data-testid="link-demo-sign-in-mobile" className="mt-6 inline-flex text-xs font-semibold text-[#385e51] underline md:hidden">Log in to save your progress</Link>
+      <Link href="/sign-in" data-testid="link-demo-sign-in-mobile" className="mt-6 inline-flex min-h-11 items-center text-xs font-semibold text-[#385e51] underline md:hidden">Sign in for your private workspace</Link>
     </main>
-    <Link href="/sign-in" data-testid="link-demo-sign-in" className="fixed bottom-4 right-4 z-30 hidden rounded-full border border-[#d8d1c2] bg-white px-4 py-3 text-xs font-semibold text-[#263d36] shadow-lg md:inline-flex">Log in to save your progress</Link>
+    <Link href="/sign-in" data-testid="link-demo-sign-in" className="fixed bottom-4 right-4 z-30 hidden rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-xs font-semibold text-[#263d36] shadow-lg md:inline-flex">Sign in for your private workspace</Link>
     {pending && <DemoProgressOverlay sample={pending.sample} onDone={finish} />}
   </div>;
 }

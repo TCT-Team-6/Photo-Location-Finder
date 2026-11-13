@@ -90,7 +90,7 @@ export function GuideStartPage() {
     } catch (e) { setError(errorMessage(e)); } finally { setBusy(''); busyRef.current = false; }
   }
 
-  return <div className="fade-up mx-auto max-w-2xl space-y-5">
+  return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5">
     <Link href="/cases" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#718078]" data-testid="link-guide-back"><ArrowLeft size={14} />Cases</Link>
     <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private</p><h1 className="mt-2 font-editorial text-4xl tracking-[-.04em] sm:text-5xl">Let's write it down together.</h1><p className="mt-2 text-sm leading-6 text-[#62756c]">The guide organizes what you know for police and searchers. It does not analyze photos, guess locations or contact anyone.</p></div>
     <EmergencyBar />
@@ -176,7 +176,7 @@ export function GuideCasePage() {
     <h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]" data-testid="text-guide-case-name">{displayName(c)}</h1>
   </div>;
 
-  if (!guide) return <div className="fade-up mx-auto max-w-2xl space-y-5">{header}<EmergencyBar />
+  if (!guide) return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5">{header}<EmergencyBar />
     <div className="rounded-2xl border border-dashed border-[#b9c4b5] bg-[#f8f5ec] p-6"><p className="font-editorial text-2xl">The guide has not started for this case.</p><p className="mt-1 text-sm text-[#718078]">Tell it what happened. Your words are sent to OpenAI to organize the facts.</p>
       <textarea rows={4} maxLength={6000} value={reply} onChange={(e) => setReply(e.target.value)} className={`${inputCls} mt-3`} aria-label="Tell us what happened." placeholder="Tell us what happened." data-testid="input-guide-first-message" />
       {error && <div className="mt-3"><ErrorBanner message={error} /></div>}
@@ -190,7 +190,7 @@ export function GuideCasePage() {
   const notes = guide.log.filter((l) => l.role === 'note').map((l) => l.text);
   const summaryText = buildResponderSummary({ name: displayName(c), facts: guide.facts, notes, planSummary: planData?.summary });
 
-  return <div className="fade-up mx-auto max-w-2xl space-y-5 pb-28">
+  return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5 pb-28">
     {header}
     <EmergencyBar urgent={needsCallNow(guide) || blocked} />
     {blocked && <section role="alert" className="rounded-2xl border border-[#d9a596] bg-[#fbefeb] p-5" data-testid="panel-guide-blocked">
