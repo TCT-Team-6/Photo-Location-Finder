@@ -6,5 +6,6 @@ export const modules: ModuleMap = {
   "./components/mockups/analysis-pipeline/Harness.tsx": () => import("../components/mockups/analysis-pipeline/Harness.tsx"),
   "./components/mockups/analysis-pipeline/Mobile.tsx": () => import("../components/mockups/analysis-pipeline/Mobile.tsx"),
   "./components/mockups/analysis-pipeline/Preview.tsx": () => import("../components/mockups/analysis-pipeline/Preview.tsx"),
-  "./components/mockups/analysis-pipeline/Source.tsx": () => import("../components/mockups/analysis-pipeline/Source.tsx")
+  "./components/mockups/analysis-pipeline/Source.tsx": () => import("../components/mockups/analysis-pipeline/Source.tsx"),
+  "./components/mockups/whereabouts-redesign/Current.tsx": () => import("../components/mockups/whereabouts-redesign/Current.tsx")
 };
