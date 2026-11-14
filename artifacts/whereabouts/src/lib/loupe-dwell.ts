@@ -1,7 +1,8 @@
 export type LoupePhase = 'binary' | 'decoding' | 'json';
 export type LoupePoint = { x: number; y: number };
-export const LOUPE_DWELL_MS = 2000;
-export const LOUPE_DECODE_MS = 260;
+/** The entire stillness-to-JSON cycle is exactly one second. */
+export const LOUPE_DWELL_MS = 750;
+export const LOUPE_DECODE_MS = 250;
 export const LOUPE_JITTER_PX = 3;
 
 type Clock = {

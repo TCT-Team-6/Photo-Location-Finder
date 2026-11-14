@@ -1,13 +1,11 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Camera, Compass, Crosshair, FileSearch, Fingerprint, Layers3, MapPinned, ScanLine, ShieldCheck, Signpost, Sun, Trees } from 'lucide-react';
 import { Link } from 'wouter';
 import { pipelineSteps } from '@/components/analysis-progress-model';
 
 /** Editorial explanations only. No provider calls or simulated live findings. */
 function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
-  const reduceMotion = useReducedMotion();
-  return <motion.div className={className} initial={reduceMotion ? false : { opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .12 }} transition={{ duration: .55 }}>{children}</motion.div>;
+  return <div className={className}>{children}</div>;
 }
 
 const methods = [

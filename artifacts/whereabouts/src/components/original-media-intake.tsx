@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, FileImage, Film, LoaderCircle, RotateCcw, Sparkles, Upload, X } from "lucide-react";
+import { Check, FileImage, Film, LoaderCircle, RotateCcw, ScanSearch, Upload, X } from "lucide-react";
 import {
   getGetInvestigationSummaryQueryKey,
   getGetLocatorHealthQueryKey,
@@ -197,11 +197,11 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       {running && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={items.length} desk="original" video={activeVideo && stage === "analyzing"} />}
       {!running && items.length > 0 && pendingCount > 0 && (
         <button type="button" onClick={() => void run()} data-testid="button-analyze-photo" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044]">
-          {activeVideo ? "Analyze video" : `Analyze ${pendingCount} photo${pendingCount === 1 ? "" : "s"}`} <Sparkles size={16} />
+          {activeVideo ? "Analyze video" : `Analyze ${pendingCount} photo${pendingCount === 1 ? "" : "s"}`} <ScanSearch size={16} />
         </button>
       )}
       {!running && items.length === 0 && (
-        <button type="button" disabled data-testid="button-analyze-photo" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] opacity-70">Select photos to analyze <Sparkles size={16} /></button>
+        <button type="button" disabled data-testid="button-analyze-photo" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] opacity-70">Select photos to analyze <ScanSearch size={16} /></button>
       )}
     </section>
   );

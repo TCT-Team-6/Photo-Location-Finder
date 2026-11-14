@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, Menu, Newspaper, Search, Settings as SettingsIcon, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
+import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, Menu, Newspaper, ScanSearch, Search, Settings as SettingsIcon, ShieldCheck, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -434,7 +434,7 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/investigate', label: 'New investigation', icon: <ImagePlus size={17} /> },
     { href: '/library', label: 'My library', icon: <BookOpen size={17} /> },
     { href: '/cases', label: 'Cases', icon: <ShieldCheck size={17} /> },
-    { href: '/start', label: 'AI Guide', icon: <Sparkles size={17} /> },
+    { href: '/start', label: 'AI Guide', icon: <ScanSearch size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
   return <div className="wa-shell min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
@@ -507,7 +507,7 @@ function DashboardPage() {
     <div className="wa-page-heading wa-dashboard-heading mb-7 gap-6">
       <div><PageEyebrow>Your private instrument / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.06em] md:text-7xl">Back at the desk.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Your photographs, possible places, and next questions. Pick up an investigation or open a separate private case.</p></div>
       <div className="wa-dashboard-actions"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
-      <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><Sparkles size={16} />AI Guide</Link>
+      <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ScanSearch size={16} />AI Guide</Link>
       <Link href="/investigate" data-testid="button-start-investigation" className="wa-action inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"><ImagePlus size={16} />Investigate an image <ArrowRight size={16} /></Link></div>
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
@@ -863,7 +863,7 @@ function InvestigatePage() {
         {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} desk={analysisDesk} />}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
         <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
-          {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <Sparkles size={16} /></>}
+          {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <ScanSearch size={16} /></>}
         </button>
          <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId !== 'fake-news' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
         {batchStatus && (

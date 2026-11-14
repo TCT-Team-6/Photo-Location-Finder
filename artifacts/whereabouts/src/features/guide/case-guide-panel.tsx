@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { ArrowRight, Loader2, ScanSearch } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetMissingPersonCaseQueryKey, getListMissingPersonCasesQueryKey, useGuideIntake } from '@workspace/api-client-react';
 import type { MissingPersonCase } from '@workspace/api-client-react';
@@ -17,7 +17,7 @@ export function CaseGuidePanel({ c }: { c: MissingPersonCase }) {
   const note = useGuideIntake();
   const [text, setText] = useState('');
   const [err, setErr] = useState('');
-  if (!g) return <Link href={`/guide/${c.id}`} className="mt-4 flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 text-sm font-semibold text-[#385e51]" data-testid="link-start-guide"><span className="flex items-center gap-2"><Sparkles size={15} />Start the AI Guide for this case</span><ArrowRight size={16} /></Link>;
+  if (!g) return <Link href={`/guide/${c.id}`} className="mt-4 flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 text-sm font-semibold text-[#385e51]" data-testid="link-start-guide"><span className="flex items-center gap-2"><ScanSearch size={15} />Start the AI Guide for this case</span><ArrowRight size={16} /></Link>;
 
   async function correct() {
     if (!g || !text.trim()) return;
@@ -33,7 +33,7 @@ export function CaseGuidePanel({ c }: { c: MissingPersonCase }) {
   const rows = factRows(g.facts).filter((r) => !mapped.has(r.key));
   return <section className="mt-6 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 sm:p-5" aria-labelledby="case-guide-h" data-testid="panel-case-guide">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 id="case-guide-h" className="flex items-center gap-2 font-editorial text-2xl"><Sparkles size={17} className="text-[#c8794d]" />AI Guide facts</h2>
+      <h2 id="case-guide-h" className="flex items-center gap-2 font-editorial text-2xl"><ScanSearch size={17} className="text-[#c8794d]" />AI Guide facts</h2>
       <Link href={`/guide/${c.id}`} className={guideGhost} data-testid="link-resume-guide">Resume AI Guide <ArrowRight size={15} /></Link>
     </div>
     <p className="mt-1 text-xs text-[#718078]">User-reported and unverified. Area and date also appear above in the regular fields. Status: {g.gate === 'blocked' ? 'stopped by safety check' : g.question ? `waiting for an answer: ${g.question}` : 'ready for a responder summary'}.</p>

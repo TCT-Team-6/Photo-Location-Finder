@@ -93,7 +93,7 @@ export function DemoProgressOverlay({ sample, onDone }: { sample: DemoSample; on
     const t = window.setTimeout(() => doneRef.current(), demoProgressDurationMs);
     return () => { window.clearInterval(iv); window.clearTimeout(t); };
   }, []);
-  return <div className="demo-overlay fixed inset-0 z-50 grid place-items-center bg-[#1f302a]/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Analyzing sample photo">
+  return <div className="demo-overlay fixed inset-0 z-50 grid place-items-center bg-[#1f302a]/70 p-4" role="dialog" aria-modal="true" aria-label="Analyzing sample photo">
     <section className="demo-overlay-card w-full max-w-md overflow-hidden rounded-2xl bg-[#f8f5ec] shadow-2xl" role="status" aria-live="polite" data-testid="status-demo-simulated-progress">
       <div className="relative h-32 overflow-hidden"><img src={sample.imageUrl} alt="" className="h-full w-full object-cover opacity-80" /><div className="absolute inset-0 bg-gradient-to-t from-[#f8f5ec] to-transparent" /></div>
       <div className="px-6 pb-6">
