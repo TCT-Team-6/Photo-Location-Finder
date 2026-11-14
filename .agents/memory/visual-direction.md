@@ -13,3 +13,8 @@ The user wants a fuller, geolocation/OSINT-focused experience rather than sparse
 
 **Why:** The user found the redesigned investigation page empty and wanted the visuals to reflect image/video geolocation and missing-person support.
 **How to apply:** Use available space for useful investigation context, not decoration alone. Label illustrative clues and metadata, preserve reduced-motion access, and describe only capabilities the app actually provides.
+
+The homepage should primarily follow Metic (https://www.cssdesignawards.com/sites/metic/50230/). The magnifier must follow the cursor, not inspection buttons. Movement reveals binary; holding still for 1–3 seconds resolves it into JSON metadata and photo clues. Use shader-based optics, not a duplicated background image clipped into a lens.
+
+**Why:** The user explicitly corrected the button-driven magnifier and its static-image optical illusion.
+**How to apply:** Preserve free pointer movement and dwell-to-JSON behavior during future design changes; provide touch and keyboard equivalents without replacing the primary cursor interaction. Keep illustrative data clearly distinguished from extracted facts.

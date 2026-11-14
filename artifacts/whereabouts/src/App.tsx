@@ -205,9 +205,11 @@ function LandingPage() {
         </nav>
       </header>
       <section className="wa-hero">
-        <div className="fade-up relative z-10">
+        <div className="wa-hero-title fade-up relative z-10">
           <p className="wa-eyebrow mb-7">Visual geolocation / Private evidence organization</p>
-          <h1>Every scene.<br />A set of <span>clues.</span></h1>
+          <h1>Look closer.<br /><span>Find context.</span></h1>
+        </div>
+        <div className="wa-hero-intro fade-up">
           <p className="wa-hero-description">Read the sign. Trace the ridgeline. Question the first guess. A private instrument for turning image clues into reviewable location leads—and keeping authorized missing-person evidence organized in a separate workspace.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <ActionLink href="/start" testId="link-start-search">Open your workspace <ArrowRight size={16} /></ActionLink>
@@ -218,7 +220,7 @@ function LandingPage() {
             <p>Private by default. Estimates, never proof.<br />If someone is in danger, contact emergency services first.</p>
           </div>
         </div>
-        <div className="fade-up-delay min-w-0"><PhotoInstrument /></div>
+        <div className="wa-hero-bench fade-up-delay min-w-0"><PhotoInstrument /></div>
       </section>
       <div className="wa-index-strip"><span>Observe → Compare → Review</span><span>Scene investigation, not person tracking</span><span>Estimates ≠ evidence of certainty</span></div>
       <GeolocationMethods />
