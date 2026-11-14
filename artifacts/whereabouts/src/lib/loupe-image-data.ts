@@ -68,6 +68,7 @@ export function measurePixels(pixels: Uint8ClampedArray, width: number, height: 
 export function readingRecord(photo: ExamplePhoto, region: ImageRegion | undefined, stats: PixelStats) {
   if (!Array.isArray(photo.gps) || photo.gps.length !== 2 || !photo.gps.every(Number.isFinite)) throw new Error('Example GPS must be supplied explicitly.');
   return {
+    region_id: region?.id ?? 'unclassified',
     region: region?.label ?? 'unclassified',
     ...stats,
     ...(region?.label === 'person' ? { subject: 'person — not analyzed' } : region?.clues ?? { clue: 'no authored geolocation clue in this area' }),

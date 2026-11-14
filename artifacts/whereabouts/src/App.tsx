@@ -42,6 +42,7 @@ import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
 import { DemoExperience } from '@/components/demo-experience';
 import { PhotoInstrument } from '@/components/photo-instrument';
+import { SiteCursor } from '@/components/site-cursor';
 import { useLandingMotion } from '@/hooks/use-landing-motion';
 import { FiveStagePipeline, GeolocationMethods, IntakeFieldGuide, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
@@ -1309,6 +1310,7 @@ function App() {
   }, [preferences]);
   return <ApiKeyContext.Provider value={{ apiKey, setApiKey }}><PreferencesContext.Provider value={{ preferences, setPreferences }}>
     <div data-app-theme={preferences.theme} data-high-contrast={preferences.highContrast} data-app-font={preferences.font}>
+      <SiteCursor />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <WouterRouter base={basePath}>

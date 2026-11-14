@@ -12,13 +12,15 @@ test('spring follows with lag, then settles without runaway motion', () => {
 });
 test('long/negative deltas are bounded and do not explode', () => {
   const initial = { position: 5, velocity: 2 };
-  assert.deepEqual(stepLoupeSpring(initial, 400, 100), stepLoupeSpring(initial, 400, 1 / 30));
+  assert.deepEqual(stepLoupeSpring(initial, 400, 100), stepLoupeSpring(initial, 400, 1 / 10));
   assert.deepEqual(stepLoupeSpring(initial, 400, -1), initial);
 });
-test('understated near-critical spring does not bounce past a fixed target', () => {
+test('170/22 position spring has one small controlled overshoot, not a tween', () => {
   let state = { position: 0, velocity: 0 };
+  let maximum=0;
   for (let i = 0; i < 360; i++) {
     state = stepLoupeSpring(state, 100, 1 / 60);
-    assert.ok(state.position <= 100.00001);
+    maximum=Math.max(maximum,state.position);
   }
+  assert.ok(maximum>100&&maximum<102);
 });

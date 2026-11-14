@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from 'react';
+import { applyScrollLight } from '@/lib/instrument-layout';
 
 /** Homepage-scoped scroll choreography. No app-shell/global smooth scrolling. */
 export function useLandingMotion(rootRef: RefObject<HTMLElement | null>) {
@@ -59,11 +60,16 @@ export function useLandingMotion(rootRef: RefObject<HTMLElement | null>) {
             const stage = root.querySelector<HTMLElement>('[data-testid="stage-optical-loupe"]');
             const desktop = matchMedia('(min-width: 900px) and (pointer: fine)').matches;
             if (stage) {
+              applyScrollLight(stage,0);
               const photo = { scale: 1.055 };
               gsap.to(photo, { scale: 1, ease: 'none', onUpdate: () => stage.dispatchEvent(new CustomEvent('whereabouts:photo-scale', { detail: photo.scale })), scrollTrigger: {
                 trigger: stage, start: 'top top', end: '+=65%', pin: desktop, pinSpacing: true, scrub: .7, anticipatePin: 0, refreshPriority: 1, invalidateOnRefresh: true,
-                onUpdate: (self) => { const counter = stage.querySelector('[data-scroll-progress]'); if (counter) counter.textContent = `${String(Math.round(self.progress * 100)).padStart(3,'0')}%`; },
+                onUpdate: (self) => { const counter = root.querySelector('[data-scroll-progress="photo"]'); if (counter) counter.textContent = `${String(Math.round(self.progress * 100)).padStart(3,'0')}%`; },
               } });
+              const lamp={progress:0};
+              gsap.to(lamp,{progress:1,ease:'none',onUpdate:()=>applyScrollLight(stage,lamp.progress),scrollTrigger:{
+                trigger:stage,start:'top bottom',end:()=>`+=${stage.offsetHeight+innerHeight+(desktop?innerHeight*.65:0)}`,scrub:true,invalidateOnRefresh:true,
+              }});
             }
             const pipeline = root.querySelector<HTMLElement>('.wa-pipeline');
             if (pipeline) {
@@ -92,7 +98,7 @@ export function useLandingMotion(rootRef: RefObject<HTMLElement | null>) {
           lenis.off('scroll', ScrollTrigger.update);
           lenis.destroy();
           root.querySelectorAll('[data-scroll-progress]').forEach((node) => { node.textContent = '000%'; });
-          root.querySelectorAll('[data-testid="stage-optical-loupe"]').forEach((stage) => stage.dispatchEvent(new CustomEvent('whereabouts:photo-scale', { detail: 1 })));
+          root.querySelectorAll<HTMLElement>('[data-testid="stage-optical-loupe"]').forEach((stage) => { stage.dispatchEvent(new CustomEvent('whereabouts:photo-scale', { detail: 1 })); applyScrollLight(stage,0); });
           if (!ScrollTrigger.getAll().length) ScrollTrigger.disable();
         };
       }, root);

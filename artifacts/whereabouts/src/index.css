@@ -632,6 +632,46 @@
   .wa-scroll-line > span { transform: none !important; clip-path: none !important; }
   .wa-photo-scroll-label,.wa-scroll-section-counter { display: none; }
 }
+/* A single physical inspection wall. Geometry is shared with instrument-layout.ts. */
+.wa-landing .wa-instrument-scene { --panel-width: clamp(280px,22vw,380px); --cast-x: 18px; --cast-y: 24px; --cast-blur: 16px; --hole-x: 1px; --hole-y: 1px; --light-angle: 110deg; --glint-x: 20%; --glint-y: 12%; position: relative; display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: pan-y; background: #f4f4f2; isolation: isolate; }
+.wa-instrument-photo { position: absolute; inset: 0 var(--panel-width) 0 0; overflow: hidden; }
+.wa-instrument-photo::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; box-shadow: inset calc(var(--cast-x) * -.35) 0 var(--cast-blur) -7px #24272338; }
+.wa-instrument-photo > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.wa-instrument-scene > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+.wa-instrument-scene > .wa-optical-loading { z-index: 3; pointer-events: none; }
+.wa-tool-panel { position: absolute; inset: 0 0 0 auto; width: var(--panel-width); background-color: #ecebe7; color: #242723; border-left: 1px solid #242723; background-image: radial-gradient(circle,#d6d4ce 0 1.5px,transparent 1.7px),radial-gradient(circle,#bdbbb4 0 1.8px,transparent 2px),linear-gradient(var(--light-angle),#f0efeb,#e8e7e3); background-size: 24px 24px,24px 24px,100% 100%; background-position: 0 0,var(--hole-x) var(--hole-y),0 0; font: 10px/1.7 var(--app-font-mono); pointer-events: none; }
+.wa-tool-label { position: absolute; top: 28px; left: 22px; right: 22px; padding-bottom: 13px; border-bottom: 1px solid #242723; letter-spacing: .04em; }
+.wa-tool-hint { position: absolute; left: 0; right: 0; text-align: center; top: 48%; font-size: 9px; letter-spacing: .12em; }
+.wa-tool-ruler { position: absolute; top: 55%; bottom: 10%; left: 28px; width: 37px; border: 1px solid #a5a7a1; background: repeating-linear-gradient(to bottom,transparent 0 5px,#40453f 5px 6px) left 9px/9px calc(100% - 18px) no-repeat,linear-gradient(90deg,#c7cac5,#e4e6e0 44%,#bcbfb9); box-shadow: calc(var(--cast-x) * .25) calc(var(--cast-y) * .25) calc(var(--cast-blur) * .4) #24272323; display: flex; flex-direction: column; justify-content: space-evenly; align-items: end; padding-right: 4px; font-size: 7px; }
+.wa-tool-ruler::before,.wa-tool-ruler::after,.wa-specimen-tag::before { content: ''; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at var(--glint-x) var(--glint-y),#f4f4f2,#92978e 45%,#4f554e); box-shadow: calc(var(--cast-x) * .08) calc(var(--cast-y) * .08) 3px #24272340; }
+.wa-tool-ruler::before { top: 3px; left: 15px; }.wa-tool-ruler::after { bottom: 3px; left: 15px; }
+.wa-tool-ruler { background-image: repeating-linear-gradient(to bottom,transparent 0 5px,#40453f 5px 6px),linear-gradient(var(--light-angle),#c7cac5,#e4e6e0 44%,#bcbfb9); }
+.wa-instrument-scene[data-engine-state="image-error"] .wa-instrument-photo img { visibility: hidden; }
+.wa-instrument-scene[data-engine-state="ready"] .wa-tool-panel { opacity: 0; } /* Scene-plane twin remains visible and refractable; DOM retains semantics/fallback. */
+.wa-specimen-tag { position: absolute; top: 61%; left: 91px; right: 20px; padding: 20px 10px 12px; background: #f4f4f2; border: 1px solid #d6d4ce; transform: rotate(3deg); box-shadow: calc(var(--cast-x) * .5) calc(var(--cast-y) * .5) calc(var(--cast-blur) * .6) #24272322; font-size: 9px; line-height: 1.9; }
+.wa-specimen-tag::before { top: 4px; left: calc(50% - 3px); }.wa-specimen-tag span { display: block; }.wa-specimen-tag small { display: block; margin-top: 7px; font-size: 7px; line-height: 1.5; }
+.wa-tool-readout { position: absolute; bottom: 25px; left: 22px; right: 22px; border-top: 1px solid #a8aaa2; padding-top: 12px; font-size: 11px; }
+.wa-loupe-hit-target { position: absolute; z-index: 4; top: 0; left: 0; padding: 0; border: none; border-radius: 45% !important; background: transparent; touch-action: none; color: transparent; }
+.wa-loupe-hit-target:focus-visible { outline: 1px solid #b6382e; outline-offset: 8px; }
+.wa-instrument-instructions { display: flex; justify-content: space-between; gap: 20px; margin: 20px 48px; font: 10px/1.9 var(--app-font-mono); }
+.wa-instrument-instructions > span { white-space: nowrap; }.wa-instrument-heading .wa-bench-ruler { margin-bottom: 0; }
+.wa-site-cursor-dot,.wa-site-cursor-ring { position: fixed; top: 0; left: 0; z-index: 2147483646; pointer-events: none; border-radius: 50%; opacity: 0; will-change: transform; }
+.wa-site-cursor-dot { width: 6px; height: 6px; background: #b6382e; }.wa-site-cursor-ring { width: 36px; height: 36px; border: 1px solid #242723; }
+@media (hover: hover) and (pointer: fine) {
+  html.wa-custom-cursor-active,html.wa-custom-cursor-active * { cursor: none !important; }
+  html.wa-custom-cursor-active :is(input,textarea,[contenteditable="true"],[role="textbox"]) { cursor: auto !important; }
+}
+@media (max-width: 767px) {
+  .wa-landing .wa-instrument-scene { --panel-width: 0px; }
+  .wa-instrument-photo { inset: 0 0 160px; }.wa-tool-panel { inset: auto 0 0; height: 160px; width: 100%; border-left: none; border-top: 1px solid #242723; }
+  .wa-tool-label { top: 10px; left: 12px; right: auto; width: 130px; font-size: 8px; padding-bottom: 7px; }
+  .wa-tool-hint { left: 12px; top: 64px; right: auto; font-size: 8px; }
+  .wa-tool-ruler { top: 58px; bottom: 38px; left: 15px; width: 26px; opacity: .7; }.wa-tool-ruler span { font-size: 6px; }.wa-tool-ruler::before,.wa-tool-ruler::after { left: 9px; }
+  .wa-tool-panel:has(.wa-tool-hint) .wa-tool-ruler { left: 92px; }
+  .wa-specimen-tag { top: 24px; left: auto; right: 13px; width: 106px; padding: 13px 7px 6px; font-size: 7px; line-height: 1.55; }.wa-specimen-tag small { font-size: 6px; margin-top: 4px; }
+  .wa-tool-readout { bottom: 8px; left: 12px; right: 12px; padding-top: 5px; font-size: 8px; }
+  .wa-instrument-instructions { margin: 16px 22px; flex-direction: column; gap: 6px; }
+}
 @media print {
   .wa-sidebar, .wa-topbar { display: none !important; }
   .wa-shell, .wa-workspace { padding: 0; border: 0; }
