@@ -1,0 +1,21 @@
+{
+  "id": "mariposa-grove-user-example",
+  "title": "Bachelor and Three Graces / supplied forest photograph",
+  "image": "examples/mariposa-grove.webp",
+  "original_filename": "0_04_forest_changes_trees_1_1794640013361.jpg",
+  "original_width": 7264,
+  "original_height": 4266,
+  "served_width": 2200,
+  "served_height": 1292,
+  "source": "User-supplied photograph",
+  "place": "Bachelor and Three Graces, Mariposa Grove, Yosemite National Park, California, USA",
+  "gps": [37.5039, -119.6043],
+  "gps_status": "approximate user-supplied match; not verified geolocation",
+  "elevation_approx_m": 1785,
+  "capture": "late spring or summer, midday, overcast/diffuse light",
+  "provenance": "approximate match from visual analysis, not from EXIF",
+  "exif_status": "exifr.parse on the original returned undefined; no EXIF",
+  "exif": { "gps": "absent", "camera": null, "timestamp": null },
+  "clue_status": "User-supplied visual estimates. No live AI, no verified geolocation.",
+  "pixel_status": "Metrics measured from the optimized served image; pixel_xy mapped to original dimensions."
+}

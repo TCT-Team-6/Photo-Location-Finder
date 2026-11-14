@@ -24,14 +24,14 @@ function harness() {
   };
   return { dwell, phases, tick, jobs };
 }
-test('complete reveal is exactly 1000ms: 750ms binary plus 250ms glitch', () => {
+test('one-second dwell then whole-block 500ms morph, not the previous timing', () => {
   const { dwell, phases, tick } = harness();
   dwell.move({ x: 20, y: 30 });
-  tick(749);
+  tick(999);
   assert.deepEqual(phases, ['binary']);
   tick(1);
   assert.equal(phases.at(-1), 'decoding');
-  tick(249);
+  tick(499);
   assert.equal(phases.at(-1), 'decoding');
   tick(1);
   assert.equal(phases.at(-1), 'json');
@@ -41,13 +41,13 @@ test('movement resets immediately and jitter does not extend the dwell', () => {
   dwell.move({ x: 20, y: 30 });
   tick(350);
   dwell.move({ x: 21, y: 31 });
-  tick(400);
+  tick(650);
   assert.equal(phases.at(-1), 'decoding');
   dwell.move({ x: 40, y: 50 });
   assert.equal(phases.at(-1), 'binary');
   tick(249);
   assert.equal(phases.at(-1), 'binary');
-  tick(751);
+  tick(1251);
   assert.equal(phases.at(-1), 'json');
 });
 test('pointerleave cancels pending dwell but keeps an already settled JSON usable', () => {
@@ -58,16 +58,16 @@ test('pointerleave cancels pending dwell but keeps an already settled JSON usabl
   assert.equal(phases.at(-1), 'binary');
   assert.equal(jobs.size, 0);
   dwell.move({ x: 10, y: 10 });
-  tick(1000);
+  tick(1500);
   dwell.leave();
   assert.equal(phases.at(-1), 'json');
 });
 test('sample reset and disposal prevent old timers revealing previous data', () => {
   const { dwell, phases, tick, jobs } = harness();
   dwell.move({ x: 10, y: 10 });
-  tick(750);
+  tick(1000);
   dwell.reset();
-  tick(250);
+  tick(500);
   assert.equal(phases.at(-1), 'binary');
   dwell.move({ x: 10, y: 10 });
   dwell.dispose();
@@ -80,11 +80,11 @@ test('sample reset and disposal prevent old timers revealing previous data', () 
 test('movement after resolved JSON immediately returns to binary', () => {
   const { dwell, phases, tick } = harness();
   dwell.move({ x: 12, y: 24 });
-  tick(1000);
+  tick(1500);
   assert.equal(phases.at(-1), 'json');
   dwell.move({ x: 52, y: 64 });
   assert.equal(phases.at(-1), 'binary');
-  tick(749);
+  tick(999);
   assert.equal(phases.at(-1), 'binary');
 });
 test('callbacks from a cancelled timer cannot resolve a newer inspection', () => {

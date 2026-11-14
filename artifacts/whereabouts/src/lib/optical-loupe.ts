@@ -2,11 +2,12 @@ import {
   AmbientLight, CanvasTexture, CapsuleGeometry, CylinderGeometry, DirectionalLight,
   Group, LinearFilter, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, NoToneMapping,
   OrthographicCamera, PCFShadowMap, PlaneGeometry, Scene, ShaderMaterial, ShadowMaterial,
-  SphereGeometry, SRGBColorSpace, Texture, TorusGeometry, Vector2, WebGLRenderer, WebGLRenderTarget,
+  SphereGeometry, SRGBColorSpace, Texture, TorusGeometry, Vector2, WebGLRenderer,
   type BufferGeometry, type Material,
 } from 'three';
-import { sampleBinary, stepLoupeSpring, type SpringAxis } from './loupe-physics';
+import { stepLoupeSpring, type SpringAxis } from './loupe-physics';
 import type { LoupePhase, LoupePoint } from './loupe-dwell';
+import type { RegionReading } from './loupe-image-data';
 
 const PHOTO_VERTEX = `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 const PHOTO_FRAGMENT = `
@@ -19,25 +20,24 @@ varying vec3 vNormal; varying vec2 vLocal;
 void main(){vNormal=normalize(normalMatrix*normal);vLocal=position.xy;
 gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}
 `;
-// Genuine mesh-based transmission: the already-rendered scene is sampled in
-// screen UVs. Restrained refraction/dispersion keeps typography and photos clear.
+// The glass refracts only the opaque DATA texture; no photograph is transmitted.
 const GLASS_FRAGMENT = `
-uniform sampler2D uScene; uniform sampler2D uData;
+uniform sampler2D uData;
 uniform vec2 uResolution; uniform vec2 uCenter; uniform vec2 uRadius;
 varying vec3 vNormal; varying vec2 vLocal;
 void main(){
  vec3 n=normalize(vNormal);
- vec2 screen=gl_FragCoord.xy/uResolution;
+ vec2 q=vLocal/1.025;
+ float edge=pow(clamp(length(q),0.,1.),6.);
  vec3 ray=refract(vec3(0.,0.,-1.),n,1./1.517);
- vec2 uv=uCenter+(screen-uCenter)/1.58+ray.xy*uRadius*.12;
- vec2 dispersion=n.xy*uRadius*.001;
- vec3 glass=vec3(texture2D(uScene,clamp(uv+dispersion,0.001,.999)).r,
- texture2D(uScene,clamp(uv,0.001,.999)).g,texture2D(uScene,clamp(uv-dispersion,0.001,.999)).b);
+ vec2 uv=.5+q*.5*(1.+.085*edge)+ray.xy*.008*edge;
+ vec2 dispersion=n.xy*.0015*edge;
+ vec3 glass=vec3(texture2D(uData,clamp(uv+dispersion,0.001,.999)).r,
+ texture2D(uData,clamp(uv,0.001,.999)).g,texture2D(uData,clamp(uv-dispersion,0.001,.999)).b);
  float fresnel=.025+.975*pow(1.-abs(n.z),5.);
  float shine=pow(max(dot(reflect(-normalize(vec3(-.5,.7,1.)),n),vec3(0.,0.,1.)),0.),100.);
- glass=mix(glass,vec3(.88,.9,.89),fresnel*.18)+shine*.23;
- vec4 data=texture2D(uData,vLocal*.5+.5);
- gl_FragColor=vec4(mix(glass,data.rgb,data.a),1.);
+ glass=mix(glass,vec3(.90,.91,.90),fresnel*.07)+shine*.06;
+ gl_FragColor=vec4(glass,1.);
  #include <colorspace_fragment>
 }`;
 
@@ -47,10 +47,13 @@ export type OpticalRenderer = {
   setPhase: (phase: LoupePhase) => void;
   cancelReveal: () => void;
   setVisible: (visible: boolean) => void;
+  setPhotoZoom: (zoom: number) => void;
   dispose: () => void;
 };
 type Options = {
-  width: number; height: number; clue: string; reducedMotion?: boolean;
+  reducedMotion?: boolean;
+  readPixels: (point: LoupePoint, viewport: { width: number; height: number }, radius: number) => RegionReading;
+  onReading?: (reading: RegionReading) => void;
   onFrame?: (point: LoupePoint, progress: number) => void;
 };
 
@@ -59,7 +62,6 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
   const geometries: BufferGeometry[] = [];
   const materials: Material[] = [];
   const textures: Texture[] = [];
-  const targetTexture = new WebGLRenderTarget(1, 1, { minFilter: LinearFilter, magFilter: LinearFilter });
   let frame = 0;
   let disposed = false;
   const release = () => {
@@ -67,7 +69,6 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
     geometries.forEach((geometry) => geometry.dispose());
     materials.forEach((material) => material.dispose());
     textures.forEach((texture) => texture.dispose());
-    targetTexture.dispose();
     renderer.dispose();
   };
   try {
@@ -112,7 +113,7 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
     const glassMaterial = ownMaterial(new ShaderMaterial({
       vertexShader: GLASS_VERTEX, fragmentShader: GLASS_FRAGMENT,
       uniforms: {
-        uScene: { value: targetTexture.texture }, uData: { value: dataTexture },
+        uData: { value: dataTexture },
         uResolution: { value: new Vector2(1, 1) }, uCenter: { value: new Vector2(.5, .5) },
         uRadius: { value: new Vector2(.1, .1) },
       },
@@ -170,7 +171,8 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
     const shadow = new Mesh(ownGeometry(new PlaneGeometry(1, 1)), ownMaterial(new ShadowMaterial({ opacity: .2 })));
     shadow.receiveShadow = true;
     scene.add(shadow);
-    let width = 1, height = 1, radius = 125, ratio = 1;
+    let width = 1, height = 1, radius = 125, ratio = 1, photoZoom = 1;
+    const baseCover = new Vector2(1, 1);
     let x: SpringAxis = { position: 0, velocity: 0 };
     let y: SpringAxis = { position: 0, velocity: 0 };
     let destination: LoupePoint = { x: 0, y: 0 };
@@ -179,39 +181,61 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
     let tiltY: SpringAxis = { position: 0, velocity: 0 };
     let visible = true;
     let phase: LoupePhase = 'binary';
-    let lastTime = 0, lastData = -1000, lastReport = -1000, cycleStart = 0, glitchStart = 0;
+    let lastTime = 0, lastData = -1000, lastReport = -1000, cycleStart = 0, glitchStart = -1000, reverseUntil = 0;
     const media = matchMedia('(prefers-reduced-motion: reduce)');
     let reduceMotion = options.reducedMotion ?? media.matches;
-    let sourceDirty = true;
+    let currentReading: RegionReading;
+    let shadowDirty = true;
     const paintData = (now: number) => {
-      context.clearRect(0, 0, 512, 512);
-      const seed = Math.floor(x.position * 3) + Math.floor(y.position * 5) * 31;
-      context.fillStyle = highContrast ? 'rgba(15,22,17,.78)' : 'rgba(15,22,17,.32)';
-      context.fillRect(0, 0, 512, 512);
-      context.font = `18px ${dataFont}`;
+      currentReading = options.readPixels({ x: (x.position - width / 2) / photoZoom + width / 2, y: (y.position - height / 2) / photoZoom + height / 2 }, { width, height }, radius / photoZoom);
+      options.onReading?.(currentReading);
       context.fillStyle = '#f4f4f2';
-      for (let row = 0; row < 21; row++) {
-        for (let column = 0; column < 5; column++) {
-          context.fillText(sampleBinary(seed, row, column), column * 98 - 10, row * 26 + 10);
+      context.fillRect(0, 0, 512, 512);
+      context.fillStyle = highContrast ? '#101410' : '#242723';
+      const record = currentReading.record;
+      const stats = currentReading.stats;
+      const clip = (value: unknown, limit: number) => String(value ?? '').length > limit ? `${String(value).slice(0, limit - 1)}…` : String(value ?? '');
+      const jsonLines = [
+        '{', ` "region":${JSON.stringify(clip(record.region, 20))},`,
+        ` "pixel_xy":${JSON.stringify(stats.pixel_xy)},`,
+        ` "avg_rgb":${JSON.stringify(stats.avg_rgb)},`,
+        ` "hex":"${stats.hex}",`,
+        ` "brightness":${stats.brightness},`,
+        ` "dominant_colors":`, `  ${JSON.stringify(stats.dominant_colors)},`,
+        ` "edge_density":${stats.edge_density},`,
+        ` "clue":${JSON.stringify(clip(record.clue ?? record.subject, 23))},`,
+        ` "gps":${JSON.stringify(record.gps)},`,
+        ` "gps_status":${JSON.stringify(clip(record.gps_status, 23))},`,
+        ` "capture":${JSON.stringify(clip(record.capture, 23))},`,
+        ' "details":"full JSON download"', '}',
+      ];
+      const showJson = phase === 'json';
+      const transitioning = !reduceMotion && (phase === 'decoding' || now < reverseUntil);
+      const progress = phase === 'decoding' ? Math.min(1, (now - glitchStart) / 500) : Math.max(0, (reverseUntil - now) / 500);
+      const lines = showJson || transitioning ? jsonLines : currentReading.binary;
+      context.font = `${showJson || transitioning ? 19 : 16}px ${dataFont}`;
+      lines.forEach((line, row) => {
+        let output = line;
+        let shift = 0;
+        if (transitioning && !reduceMotion) {
+          const frame = Math.floor((now - glitchStart) / 42);
+          const preserve = Math.floor(line.length * progress);
+          const bytes = currentReading.binary[row % currentReading.binary.length].replaceAll(' ', '');
+          output = line.split('').map((char, index) => index < preserve || char === ' ' ? char : bytes[(index + frame) % bytes.length]).join('');
+          shift = ((frame + row * 3) % 5 - 2) * (1 - progress) * 7;
+          context.fillStyle = 'rgba(142,40,35,.55)';
+          context.fillText(output, 72 + shift + 2, 75 + row * 24);
+          context.fillStyle = 'rgba(35,66,82,.5)';
+          context.fillText(output, 72 + shift - 2, 75 + row * 24);
         }
-      }
-      if (phase === 'decoding' && !reduceMotion) {
-        const band = Math.floor((now - glitchStart) / 40) % 5;
-        context.fillStyle = '#f4f4f2';
-        context.fillRect(70 + band * 5, 184 + band * 22, 365, 3);
-        context.clearRect(65, 220 + band * 9, 30, 8);
-      }
-      if (phase === 'json') {
-        // Only this small central patch resolves. Surrounding binary persists.
-        context.fillStyle = '#f4f4f2';
-        context.fillRect(66, 165, 380, 180);
         context.fillStyle = '#242723';
-        context.font = `14px ${dataFont}`;
-        context.fillText('ILLUSTRATIVE SAMPLE / JSON', 80, 188);
-        context.font = `24px ${dataFont}`;
-        const clue = options.clue.slice(0, 12);
-        const lines = ['{', ` "px":[${options.width},${options.height}],`, ' "gps":null,"exif":null,', ` "clue":${JSON.stringify(clue)}`, '}'];
-        lines.forEach((line, i) => context.fillText(line, 80, 217 + i * 27));
+        context.fillText(output, (showJson || transitioning ? 72 : 65) + shift, (showJson || transitioning ? 75 : 66) + row * (showJson || transitioning ? 24 : 23));
+      });
+      if (transitioning && !reduceMotion) {
+        const slice = Math.floor((now - glitchStart) / 60) % 8;
+        const yy = 110 + slice * 36;
+        // Shift existing glyph slices, never a scan line or a separate box.
+        context.drawImage(dataCanvas, 65, yy, 380, 9, 65 + (slice % 2 ? 8 : -8), yy, 380, 9);
       }
       dataTexture.needsUpdate = true;
       lastData = now;
@@ -232,36 +256,31 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
       } else {
         x = stepLoupeSpring(x, destination.x, dt);
         y = stepLoupeSpring(y, destination.y, dt);
-        tiltX = stepLoupeSpring(tiltX, Math.max(-.16, Math.min(.16, y.velocity * -.0003)), dt);
-        tiltY = stepLoupeSpring(tiltY, Math.max(-.16, Math.min(.16, x.velocity * .0003)), dt);
+        tiltX = stepLoupeSpring(tiltX, Math.max(-.065, Math.min(.065, y.velocity * -.00014)), dt);
+        tiltY = stepLoupeSpring(tiltY, Math.max(-.065, Math.min(.065, x.velocity * .00014)), dt);
       }
       loupe.position.set(x.position - width / 2, height / 2 - y.position, 36);
-      loupe.rotation.set(tiltX.position, tiltY.position, -.04);
+      loupe.rotation.set(tiltX.position, tiltY.position, 0);
       glassMaterial.uniforms.uCenter.value.set(x.position / width, 1 - y.position / height);
       const moving = Math.abs(x.position - destination.x) + Math.abs(y.position - destination.y) > .035
         || Math.abs(x.velocity) + Math.abs(y.velocity) > .07
         || Math.abs(tiltX.position) + Math.abs(tiltY.position) > .0001
         || Math.abs(tiltX.velocity) + Math.abs(tiltY.velocity) > .0002;
-      if (lastData < 0 || now - lastData > 40 && (moving || phase === 'decoding')) paintData(now);
-      if (sourceDirty) {
-        renderer.setRenderTarget(targetTexture);
-        renderer.render(photoScene, camera);
-        renderer.setRenderTarget(null);
-        sourceDirty = false;
-      }
+      if (lastData < 0 || now - lastData > 50 && (moving || phase === 'decoding' || now < reverseUntil)) paintData(now);
       renderer.autoClear = true;
       renderer.render(photoScene, camera);
       renderer.autoClear = false;
       renderer.clearDepth();
-      renderer.shadowMap.needsUpdate = true;
+      renderer.shadowMap.needsUpdate = moving || shadowDirty;
+      shadowDirty = false;
       renderer.render(scene, camera);
       renderer.autoClear = true;
       if (now - lastReport > 60 || !moving) {
-        const progress = phase === 'json' ? 100 : cycleStart ? Math.min(99, Math.floor((now - cycleStart) / 10)) : 0;
+        const progress = phase === 'json' ? 100 : cycleStart ? Math.min(99, Math.floor((now - cycleStart) / 15)) : 0;
         options.onFrame?.({ x: x.position, y: y.position }, progress);
         lastReport = now;
       }
-      if (moving || phase === 'decoding' || cycleStart > 0 && phase !== 'json' && now - cycleStart < 1000) request();
+      if (moving || phase === 'decoding' || now < reverseUntil || cycleStart > 0 && phase !== 'json' && now - cycleStart < 1500) request();
     };
     const visibility = () => {
       if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
@@ -277,6 +296,7 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
       draw(point) {
         destination = point;
         if (Math.hypot(point.x - anchor.x, point.y - anchor.y) >= 3) {
+          if (phase === 'json' || phase === 'decoding') { glitchStart = performance.now(); reverseUntil = glitchStart + 500; }
           anchor = { ...point }; phase = 'binary'; cycleStart = performance.now(); lastData = -1000;
         }
         request();
@@ -284,28 +304,29 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
       resize(nextWidth, nextHeight, dpr = window.devicePixelRatio) {
         width = Math.max(1, nextWidth); height = Math.max(1, nextHeight);
         ratio = Math.max(1, Math.min(dpr || 1, 1.6));
-        radius = Math.min(142, width * .29);
+        radius = Math.min(window.innerHeight * .20, width * .44);
         renderer.setPixelRatio(ratio);
         renderer.setSize(width, height, false);
-        targetTexture.setSize(Math.round(width * ratio), Math.round(height * ratio));
         camera.left = -width / 2; camera.right = width / 2; camera.top = height / 2; camera.bottom = -height / 2;
         camera.updateProjectionMatrix();
         photoPlane.scale.set(width, height, 1);
         shadow.scale.set(width, height, 1);
         loupe.scale.setScalar(radius / 100);
         const coverScale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-        photoMaterial.uniforms.uCover.value.set(width / (image.naturalWidth * coverScale), height / (image.naturalHeight * coverScale));
+        baseCover.set(width / (image.naturalWidth * coverScale), height / (image.naturalHeight * coverScale));
+        photoMaterial.uniforms.uCover.value.copy(baseCover).divideScalar(photoZoom);
         glassMaterial.uniforms.uResolution.value.set(Math.round(width * ratio), Math.round(height * ratio));
         glassMaterial.uniforms.uRadius.value.set(radius / width, radius / height);
         if (!destination.x) {
           destination = { x: width * .46, y: height * .44 };
           x.position = destination.x; y.position = destination.y;
         }
-        sourceDirty = true; lastData = -1000; request();
+        shadowDirty = true; lastData = -1000; request();
       },
       setPhase(next) {
+        if (phase !== next && next === 'binary' && phase === 'json') reverseUntil = performance.now() + 500;
         phase = next; glitchStart = performance.now(); lastData = -1000;
-        if (next === 'json') cycleStart = 0;
+        if (next === 'json') { cycleStart = 0; reverseUntil = 0; }
         request();
       },
       cancelReveal() {
@@ -316,6 +337,12 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement, image: HTMLImag
         visible = next;
         if (!next) { cancelAnimationFrame(frame); frame = 0; }
         else { lastTime = 0; request(); }
+      },
+      setPhotoZoom(next) {
+        photoZoom = Math.max(1, Math.min(1.12, next));
+        photoMaterial.uniforms.uCover.value.copy(baseCover).divideScalar(photoZoom);
+        lastData = -1000;
+        request();
       },
       dispose() {
         disposed = true;

@@ -436,7 +436,7 @@
 .wa-optical-ruler { display: flex; justify-content: space-between; height: 24px; border-bottom: 1px solid var(--line); background: repeating-linear-gradient(90deg,var(--quiet) 0 1px,transparent 1px 10px) left bottom/100% 7px no-repeat; font: 8px var(--app-font-mono); color: var(--quiet); margin-bottom: 8px; }
 .wa-optical-stage { position: relative; height: clamp(330px,31vw,440px); width: 100%; background: var(--recess); overflow: hidden; isolation: isolate; touch-action: none; outline-offset: 5px; }
 .wa-optical-stage.wa-optical-ready { cursor: none; }
-.wa-optical-stage canvas, .wa-optical-fallback-image, .wa-optical-loading { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wa-optical-stage canvas, .wa-optical-fallback-image, .wa-optical-stage > .wa-optical-loading { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .wa-optical-stage canvas, .wa-optical-fallback-image, .wa-optical-stamp { pointer-events: none; }
 .wa-optical-fallback-image { object-fit: cover; }
 .wa-optical-stage canvas.wa-optical-canvas-hidden { visibility: hidden; }
@@ -602,6 +602,35 @@
   .wa-optical-controls { gap: 10px 20px; }
   .wa-optical-controls > .wa-json-download { order: 3; }
   .wa-landing .wa-hero-intro .wa-action-secondary { margin-left: 0; }
+}
+/* Full-viewport example, independent scroll layers and accessible touch drag. */
+.wa-landing { overflow: clip; }
+.wa-hero-bench { width: 100vw; margin-inline: calc(50% - 50vw); }
+.wa-optical-bench > :is(.wa-bench-heading,.wa-optical-controls,.wa-optical-disclaimer),
+.wa-optical-stage-footer,.wa-optical-notice { margin-inline: 48px; }
+.wa-optical-ruler { margin-inline: 48px; }
+.wa-landing .wa-optical-stage { width: 100vw; height: 100vh; height: 100dvh; }
+.wa-optical-stage canvas { width: 100%; height: 100%; }
+.wa-scroll-line { display: block; overflow: hidden; }
+.wa-scroll-line > span { display: inline-block; }
+.wa-photo-scroll-label { position: absolute; bottom: 20px; right: 24px; pointer-events: none; padding: 6px 10px; color: #242723; background: #f4f4f2; font: 10px var(--app-font-mono); }
+.wa-scroll-section-counter { position: absolute; bottom: 20px; left: 48px; font: 10px var(--app-font-mono); color: var(--quiet); }
+.wa-pipeline { position: relative; }
+.wa-optical-load-label { position: absolute; left: 24px; top: 40%; max-width: 420px; padding: 20px; font: 13px/1.8 var(--app-font-mono); }
+.wa-loupe-touch-target { display: none; }
+@media (pointer: coarse) {
+  .wa-optical-stage { touch-action: pan-y; }
+  .wa-loupe-touch-target { display: block; position: absolute; top: 0; left: 0; border-radius: 50% !important; background: transparent; border: none; touch-action: none; }
+}
+@media (max-width: 767px) {
+  .wa-optical-bench > :is(.wa-bench-heading,.wa-optical-controls,.wa-optical-disclaimer),
+  .wa-optical-stage-footer,.wa-optical-notice,.wa-optical-ruler { margin-inline: 22px; }
+  .wa-photo-scroll-label { right: 14px; bottom: 44px; }
+  .wa-scroll-section-counter { left: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-scroll-line > span { transform: none !important; clip-path: none !important; }
+  .wa-photo-scroll-label,.wa-scroll-section-counter { display: none; }
 }
 @media print {
   .wa-sidebar, .wa-topbar { display: none !important; }

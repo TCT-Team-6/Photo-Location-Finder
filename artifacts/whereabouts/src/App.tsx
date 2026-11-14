@@ -42,6 +42,7 @@ import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
 import { DemoExperience } from '@/components/demo-experience';
 import { PhotoInstrument } from '@/components/photo-instrument';
+import { useLandingMotion } from '@/hooks/use-landing-motion';
 import { FiveStagePipeline, GeolocationMethods, IntakeFieldGuide, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
@@ -193,8 +194,10 @@ function HomeRedirect() {
 }
 
 function LandingPage() {
+  const landingRef = useRef<HTMLElement>(null);
+  useLandingMotion(landingRef);
   return (
-    <main className="wa-landing min-h-[100dvh] overflow-hidden">
+    <main ref={landingRef} className="wa-landing min-h-[100dvh] overflow-hidden">
       <header className="wa-landing-header relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
         <Mark />
         <nav className="flex items-center gap-3" aria-label="Main navigation">

@@ -6,13 +6,8 @@ export function stepLoupeSpring(axis: SpringAxis, target: number, delta: number)
   let { position, velocity } = axis;
   for (let i = 0; i < steps; i += 1) {
     const h = dt / steps;
-    velocity += ((target - position) * 155 - velocity * 19) * h;
+    velocity += ((target - position) * 110 - velocity * 22) * h;
     position += velocity * h;
   }
   return { position, velocity };
-}
-export function sampleBinary(seed: number, row: number, column: number): string {
-  let value = (Math.imul(Math.floor(seed), 1664525) + Math.imul(row + 1, 1013904223) + column * 7919) >>> 0;
-  value ^= value >>> 13;
-  return (value >>> 0).toString(2).padStart(32, '0').slice(0, 8);
 }
