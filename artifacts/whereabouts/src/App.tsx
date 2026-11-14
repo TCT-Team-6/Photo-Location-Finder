@@ -42,6 +42,7 @@ import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
 import { DemoExperience } from '@/components/demo-experience';
 import { PhotoInstrument } from '@/components/photo-instrument';
+import { FiveStagePipeline, GeolocationMethods, IntakeFieldGuide, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
@@ -196,16 +197,18 @@ function LandingPage() {
     <main className="wa-landing min-h-[100dvh] overflow-hidden">
       <header className="wa-landing-header relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
         <Mark />
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-3" aria-label="Main navigation">
+          <a href="#methods" className="wa-home-section-link px-3 text-xs font-semibold" data-testid="link-home-methods">The method</a>
+          <a href="#pipeline" className="wa-home-section-link px-3 text-xs font-semibold" data-testid="link-home-pipeline">The pipeline</a>
           <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
-          <ActionLink href="/start" testId="link-get-started">Start a search <ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/start" testId="link-get-started">Open workspace <ArrowRight size={16} /></ActionLink>
         </nav>
       </header>
       <section className="wa-hero">
         <div className="fade-up relative z-10">
-          <p className="wa-eyebrow mb-7">Whereabouts / A private exploration instrument</p>
-          <h1>A little closer<br />to <span>somewhere.</span></h1>
-          <p className="wa-hero-description">Look beyond the photograph. Explore the places an image might hold, or keep an authorized missing-person case organized in a separate, private workspace.</p>
+          <p className="wa-eyebrow mb-7">Visual geolocation / Private evidence organization</p>
+          <h1>Every scene.<br />A set of <span>clues.</span></h1>
+          <p className="wa-hero-description">Read the sign. Trace the ridgeline. Question the first guess. A private instrument for turning image clues into reviewable location leads—and keeping authorized missing-person evidence organized in a separate workspace.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <ActionLink href="/start" testId="link-start-search">Open your workspace <ArrowRight size={16} /></ActionLink>
             <ActionLink href="/demo" secondary testId="link-see-sample-case">Explore the samples</ActionLink>
@@ -217,7 +220,9 @@ function LandingPage() {
         </div>
         <div className="fade-up-delay min-w-0"><PhotoInstrument /></div>
       </section>
-      <div className="wa-index-strip"><span>01 / Observe the image</span><span>02 / Keep the context</span><span>03 / Review the possibilities</span></div>
+      <div className="wa-index-strip"><span>Observe → Compare → Review</span><span>Scene investigation, not person tracking</span><span>Estimates ≠ evidence of certainty</span></div>
+      <GeolocationMethods />
+      <FiveStagePipeline />
       <section className="wa-workflows">
         <div><p className="wa-eyebrow">Two workspaces. Clear boundaries.</p><h2>The right tool<br />for the next step.</h2></div>
         <div>
@@ -235,7 +240,7 @@ function LandingPage() {
           <div className="wa-audiences mt-10">
             <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
               <h3 className="font-editorial text-2xl">Caregivers &amp; families</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">A parent with dementia walked out the door. A child with autism wandered from a park. You have a recent photo and no idea where to start. Whereabouts gives you a starting point to share with police and searchers.</p>
+              <p className="mt-4 text-sm leading-6 text-[#65766c]">Keep the timeline, authorized evidence, care needs, and reported facts together for responders. A recent photo belongs in the private case record; it is not used to face-match or automatically locate a person.</p>
             </article>
             <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
               <h3 className="font-editorial text-2xl">Search &amp; rescue volunteers</h3>
@@ -248,19 +253,7 @@ function LandingPage() {
           </div>
         </div>
       </section>
-      <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
-        <div className="mx-auto grid max-w-[1240px] gap-10 md:grid-cols-[.75fr_1.25fr] md:gap-24">
-          <div>
-            <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">A considered way forward</p>
-            <h2 className="mt-5 font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Less scattered.<br /><span className="text-[#d78b5a]">More considered.</span></h2>
-          </div>
-          <div className="wa-process">
-            <Feature number="01" icon={<ImagePlus size={18} />} title="Choose your workspace." text="Explore a scene in an image investigation, or keep authorized missing-person evidence in a private case. The two workflows stay separate." />
-            <Feature number="02" icon={<Crosshair size={18} />} title="Keep the context." text="An image investigation inspects scene clues. A private case holds the facts and evidence you provide; the AI Guide organizes those reported facts, not a person's location." />
-            <Feature number="03" icon={<BookOpen size={18} />} title="Review, then act." text="Compare suggested places carefully. For a missing-person case, review your facts and prepare a summary for responders. No AI output independently confirms a lead." />
-          </div>
-        </div>
-      </section>
+      <TechnologyNotes />
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto max-w-[1180px]">
           <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Keep the person in mind</p>
@@ -276,40 +269,32 @@ function LandingPage() {
       <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
         <div className="mx-auto max-w-[1180px]">
           <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">Safety first</p>
-          <h2 className="mt-5 max-w-3xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Made for finding people, never for tracking them.</h2>
-          <p className="mt-6 max-w-2xl leading-7 text-[#c1cbbd]">A tool that can tell where a photo was taken is powerful, so we built Whereabouts with guardrails.</p>
+          <h2 className="mt-5 max-w-3xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Investigate the scene.<br />Respect the person.</h2>
+          <p className="mt-6 max-w-2xl leading-7 text-[#c1cbbd]">Image analysis can suggest possible places, not locate a person from their face. Private cases support responders by organizing authorized evidence and reported facts.</p>
           <div className="mt-9 grid gap-6 md:grid-cols-2">
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Emergency first.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">If someone is in danger, call 911 before anything else. Whereabouts supports searchers; it does not replace them.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">A real reason, every time.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Each search asks why you're looking, such as a missing person or a lost hiker, and records it in your private activity log.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Private by default.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Your photos and results stay in your account. We never share them or post them anywhere.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Estimates, not certainty.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Locations and risk levels are AI estimates to guide a search, not proof and not medical advice.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Emergency first.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">If someone is in danger, contact local emergency services before anything else. Whereabouts supports the people organizing a response; it does not replace them.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Authorization matters.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Use only images and evidence you are authorized to provide. The AI Guide organizes reported facts; private cases are never automatically analyzed, face matched, crawled, or located.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Private, with clear boundaries.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Photos and reports are private account records, not public posts. Choosing image analysis sends the selected media to the relevant external provider. Your name, notes, and date remain record context, not locator input.</p></article>
+            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Estimates, not certainty.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Possible locations need independent review. Any displayed urgency estimate is not medical advice or a professional assessment. Missing information stays unknown.</p></article>
           </div>
         </div>
       </section>
       <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
         <div className="mx-auto flex max-w-[1180px] flex-col items-start justify-between gap-9 rounded-[28px] border border-[#d6cfbf] bg-[#f7f3e9]/85 p-8 md:flex-row md:items-center md:p-12">
           <div className="max-w-[650px]">
-            <h2 className="font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">When every hour counts, start with what you have.</h2>
-            <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">A blurry trail sign. A storefront in the background. The angle of the afternoon sun. Whereabouts turns those small details into a place to start looking.</p>
+            <h2 className="font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">Start with an observation.<br />Leave with a next step.</h2>
+            <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">Explore a scene, compare the possibilities, or bring a private case into order. Keep the unknowns visible. Let the evidence—not the first guess—lead.</p>
           </div>
-          <ActionLink href="/start" testId="link-closing-start-search">Start a search <ArrowRight size={16} /></ActionLink>
+          <ActionLink href="/start" testId="link-closing-start-search">Choose your workspace <ArrowRight size={16} /></ActionLink>
         </div>
       </section>
       <footer className="flex flex-col items-center justify-between gap-4 bg-[#263d36] px-6 py-6 text-[#c1cbbd] md:flex-row md:px-12">
         <Mark inverse />
-        <p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · smart search for safer communities · private by default</p>
+        <p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · observe carefully / review independently · private by default</p>
         <Link href="/sign-in" data-testid="link-footer-sign-in" className="text-xs text-[#e4e8dc] hover:text-[#d78b5a]">Sign in</Link>
       </footer>
     </main>
   );
-}
-
-function Feature({ number, icon, title, text }: { number: string; icon: ReactNode; title: string; text: string }) {
-  return <article className="border-t border-[#597064] pt-5">
-    <div className="flex items-center justify-between text-[#d78b5a]"><span className="font-data text-[10px] tracking-[.18em]">{number}</span>{icon}</div>
-    <h3 className="mt-8 font-editorial text-2xl">{title}</h3>
-    <p className="mt-3 text-sm leading-6 text-[#bdc9bd]">{text}</p>
-  </article>;
 }
 
 function SignInPage() {
@@ -812,7 +797,7 @@ function InvestigatePage() {
     <form id="investigate-form" onSubmit={submit} className="space-y-6">
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
-          <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">Choose a field desk</p>
+          <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
           <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
         <div className="desk-toggle mb-4 grid grid-cols-3 rounded-2xl border p-1.5" role="group" aria-label="Choose photo field desk" data-testid="toggle-group-photo-desk">
@@ -855,7 +840,7 @@ function InvestigatePage() {
         <details open className="optional-details group" data-testid="details-optional-fields">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl" data-testid="toggle-optional-fields">
           <span className="min-w-0">
-            <span className="desk-theme-eyebrow block font-data text-[9px] uppercase tracking-[.2em]">Add details <span className="normal-case tracking-normal">· optional</span></span>
+            <span className="desk-theme-eyebrow block font-data text-[9px] uppercase tracking-[.2em]">02 / Record context <span className="normal-case tracking-normal">· optional</span></span>
             <span className="mt-1 block truncate text-xs text-[#718078]">{[title.trim() && 'Case name', context.trim() && 'Notes', activeSlotId === 'fake-news' && journalismQuestion.trim() && 'Question', shotAt && (dateFromPhoto ? 'Date (from photo)' : 'Date')].filter(Boolean).join(' · ') || 'Case name, what you already know, date taken'}</span>
           </span>
           <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-[#718078] transition-transform group-open:rotate-180" />
@@ -906,6 +891,7 @@ function InvestigatePage() {
         )}
       </div>
     </form>
+    <IntakeFieldGuide />
   </div>;
 }
 
