@@ -1,23 +1,9 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { Link } from 'wouter';
+import { DeskRuler, FieldSheet, SpecimenTray } from '@/components/field-desk';
 
-export default function NotFound() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              404 Page Not Found
-            </h1>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+export default function NotFound(){
+  return <main className="min-h-[100dvh] px-6 py-7 md:px-12">
+    <header className="mb-6 font-data text-xs"><Link href="/">whereabouts / address index</Link></header>
+    <DeskRuler/><div className="max-w-4xl py-12"><FieldSheet code="404 / UNFILED ADDRESS"><SpecimenTray label="INDEX EMPTY / NO MATCHING ADDRESS" title="404 Page Not Found" text="This address is not in the index. Return to Whereabouts or open the sample collection." action={<div className="mt-7 flex flex-wrap gap-4"><Link href="/" className="fd-primary px-5 py-3 text-sm">Return to Whereabouts</Link><Link href="/demo" className="border border-current px-5 py-3 text-sm">Open samples</Link></div>}/></FieldSheet></div>
+  </main>;
 }

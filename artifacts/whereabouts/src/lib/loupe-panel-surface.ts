@@ -12,7 +12,7 @@ export function createPanelSurface(font:string,photo:ExamplePhoto,index:number) 
   };
   return {canvas,
     paint(layout:InstrumentLayout,progress:number,used:boolean,readout:string,dpr:number){
-      const w=layout.panelWidth,h=layout.mobile?160:layout.height,l=scrollLight(progress),r=Math.min(1.6,dpr);
+      const w=layout.panelWidth,h=layout.mobile?160:layout.height,l=scrollLight(progress),r=dpr;
       if(canvas.width!==Math.ceil(w*r)||canvas.height!==Math.ceil(h*r)){canvas.width=Math.ceil(w*r);canvas.height=Math.ceil(h*r);}
       ctx.setTransform(r,0,0,r,0,0);ctx.clearRect(0,0,w,h);
       const gradient=ctx.createLinearGradient(w/2+l.x*w*.5,0,w/2-l.x*w*.5,h);

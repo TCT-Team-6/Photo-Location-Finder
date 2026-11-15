@@ -9,7 +9,7 @@ export function SiteCursor() {
     const fine=matchMedia('(hover: hover) and (pointer: fine)'),motion=matchMedia('(prefers-reduced-motion: reduce)');
     let x=0,y=0,rx=0,ry=0,frame=0,initialized=false,visible=false,held=false,interactive=false,input=false;
     const feedback=createCursorFeedback();let lastTime=0;
-    const photoAt=()=>{const photo=document.querySelector('[data-testid="inspection-photo"]')?.getBoundingClientRect();return !!photo&&x>=photo.left&&x<photo.right&&y>=photo.top&&y<photo.bottom;};
+    const photoAt=()=>Array.from(document.querySelectorAll('[data-testid="inspection-photo"],.fd-print')).some(element=>{const rect=element.getBoundingClientRect();return x>=rect.left&&x<rect.right&&y>=rect.top&&y<rect.bottom;});
     const paint=(now:number)=>{
       frame=0;
       if(!fine.matches)return;
@@ -29,6 +29,7 @@ export function SiteCursor() {
     const updateTarget=(target:EventTarget|null)=>{
       const element=target instanceof Element?target:null;
       interactive=!!element?.closest('a,button,[role="button"],summary,select');
+      ring.dataset.cursorShape=element?.closest('[data-cursor-crop],.fd-folder,.fd-example-card,.wa-photo-card,.wa-sample-card')?'crop':'round';
       input=!!element?.closest('input,textarea,[contenteditable="true"],[role="textbox"]');
     };
     const move=(event:PointerEvent)=>{

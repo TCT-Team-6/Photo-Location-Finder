@@ -39,7 +39,7 @@ test('data resolve and reverse take 250ms, and the radial reveal reaches the ent
 });
 test('refracted mask removes the old seam strip and preserves a 12 CSS-pixel feather at different DPR/curvature',()=>{
   const size={width:1000,height:800},center=980;
-  for(const slope of[1/1.6,1.075/1.6])for(const dpr of[1,1.6,2]){
+  for(const slope of[1/1.6,1.075/1.6,1/2.5,1.075/2.5])for(const dpr of[1,1.6,2,3]){
     const boundaryScreen=center+(size.width-center)/slope;
     const sourcePerCssPixel=Math.hypot(slope/dpr*dpr,0);
     const mask=(screenX:number)=>photoFeather({x:center+(screenX-center)*slope,y:400},size,sourcePerCssPixel);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CropMarks, UploadReceipt } from './field-desk';
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, FileImage, Film, LoaderCircle, RotateCcw, ScanSearch, Upload, X } from "lucide-react";
 import {
@@ -21,6 +22,7 @@ type Props = {
   onImageSelected?: (file: File) => void;
   onOpen: (path: string) => void;
   onRunningChange?: (running: boolean) => void;
+  onSelectionCountChange?:(count:number)=>void;
 };
 
 function ItemPreview({ item }: { item: IntakeItem }) {
@@ -36,8 +38,10 @@ function ItemPreview({ item }: { item: IntakeItem }) {
   return <img src={url} alt={`Selected photo: ${item.file.name}`} onError={() => setBroken(true)} className="h-full w-full rounded-lg object-contain" data-testid={`img-selected-photo-${item.id}`} />;
 }
 
-export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSelected, onOpen, onRunningChange }: Props) {
+export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSelected, onOpen, onRunningChange,onSelectionCountChange }: Props) {
   const [items, setItems] = useState<IntakeItem[]>([]);
+  const selectionCallback=useRef(onSelectionCountChange);selectionCallback.current=onSelectionCountChange;
+  useEffect(()=>{selectionCallback.current?.(items.length);},[items.length]);
   const [messages, setMessages] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState<AnalysisStage>("uploading");
@@ -145,6 +149,7 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
         className={`photo-upload-dropzone relative overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${running ? "cursor-wait opacity-70" : ""}`}
         data-testid="dropzone-photo-upload"
       >
+        <CropMarks/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':items.length?`${String(items.length).padStart(2,'0')} ITEMS / LOCAL SELECTION`:'TRAY EMPTY / 00 ITEMS'}</span>
         <input id="photo-upload-original" type="file" multiple={!activeVideo} accept={accept} disabled={running} className="sr-only" data-testid="input-photo-file"
           onChange={(event) => { addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
         <label htmlFor="photo-upload-original" className={`flex cursor-pointer flex-col items-center justify-center px-4 ${items.length ? "py-4" : "h-[210px] py-5"}`}>
@@ -165,7 +170,8 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       {items.length > 0 && (
         <ul className="mt-3 space-y-3" data-testid="list-original-items">
           {items.map((item, index) => (
-            <li key={item.id} className="rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-2.5" data-testid={`item-original-${index}`}>
+            <li key={item.id} className="fd-land-print rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-2.5" data-testid={`item-original-${index}`}>
+              <UploadReceipt status={item.status}/>
               <div className="flex gap-3">
                 <div className={`shrink-0 overflow-hidden rounded-lg bg-[#e8e9df] ${item.kind === "video" ? "h-28 w-44" : "h-20 w-20"}`}><ItemPreview item={item} /></div>
                 <div className="min-w-0 flex-1">

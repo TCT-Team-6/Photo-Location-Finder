@@ -1,6 +1,15 @@
 import { coverToImage, type ExamplePhoto, type ImageRegion, type RegionReading } from './loupe-image-data';
 import type { LoupePoint } from './loupe-dwell';
 import type { LoupePhase } from './loupe-dwell';
+import { GLASS_MAGNIFICATION } from './lens-feedback';
+
+/** Measure at 10px/alphabetic, never from a top-baseline negative ascent. */
+export function wallGlyphLayout(metrics:Pick<TextMetrics,'actualBoundingBoxAscent'|'actualBoundingBoxDescent'>){
+  const ascent=metrics.actualBoundingBoxAscent,descent=metrics.actualBoundingBoxDescent,total=ascent+descent;
+  const reference=Number.isFinite(ascent)&&ascent>0&&Number.isFinite(descent)&&descent>=0&&total>=3&&total<=18?total:8;
+  const target=20/GLASS_MAGNIFICATION,fontSize=Math.max(4,Math.min(27,10*target/reference));
+  return {fontSize,glyphHeight:reference*fontSize/10};
+}
 
 export function rgbBit(rgb: ArrayLike<number>, bit: number) {
   const position = ((bit % 24) + 24) % 24;
@@ -44,28 +53,30 @@ export function createDataWall(image: HTMLImageElement, font: string, ink: strin
   const canvas=document.createElement('canvas'),binary=document.createElement('canvas'),json=document.createElement('canvas');
   const context=canvas.getContext('2d'),bc=binary.getContext('2d'),jc=json.getContext('2d');
   if(!context||!bc||!jc)throw new Error('Data wall unavailable.');
-  let width=1,height=1,zoom=1,scale=1,bw=5,bh=9,jw=8,jh=13,columns=1,jsonDirty=true,lastRegion='',lastReading:RegionReading|undefined;
+  let width=1,height=1,zoom=1,scale=1,fontSize=10,glyphHeight=8,bw=5,bh=11,jw=5,jh=11,columns=1,jsonDirty=true,lastRegion='',lastReading:RegionReading|undefined;
   const baseBit=(x:number,y:number,bit:number)=>{
     const point=coverToImage({x:(x-width/2)/zoom+width/2,y:(y-height/2)/zoom+height/2},{width,height},{width:source.width,height:source.height});
     const at=(Math.floor(point.y)*source.width+Math.floor(point.x))*4;
     return rgbBit(pixels.subarray(at,at+3),bit);
   };
-  const resize=(w:number,h:number,nextZoom=zoom)=>{
-    width=Math.max(1,w);height=Math.max(1,h);zoom=nextZoom;scale=Math.min(1,2048/Math.max(width,height));
+  const resize=(w:number,h:number,nextZoom=zoom,maxEdge=Infinity)=>{
+    width=Math.max(1,w);height=Math.max(1,h);zoom=nextZoom;scale=Math.min(window.devicePixelRatio||1,maxEdge/Math.max(width,height));
     [canvas,binary,json].forEach(c=>{c.width=Math.ceil(width*scale);c.height=Math.ceil(height*scale);});
     [context,bc,jc].forEach(c=>{c.setTransform(scale,0,0,scale,0,0);c.textBaseline='top';});
-    bc.font=`9px ${font}`;bw=bc.measureText('0').width;bh=9;columns=Math.ceil(width/bw);
+    bc.font=`10px ${font}`;bc.textBaseline='alphabetic';
+    ({fontSize,glyphHeight}=wallGlyphLayout(bc.measureText('0')));
+    bc.textBaseline='top';bc.font=`${fontSize}px ${font}`;bw=Math.max(1,bc.measureText('0').width||fontSize*.6);bh=Math.max(fontSize+1,glyphHeight+2);columns=Math.ceil(width/bw);
     bc.fillStyle=paper;bc.fillRect(0,0,width,height);bc.fillStyle=ink;
     for(let row=0;row<Math.ceil(height/bh);row++){
       let line='';for(let col=0;col<columns;col++)line+=baseBit(col*bw+bw/2,row*bh+bh/2,(row*columns+col)%24);
       bc.fillText(line,0,row*bh);
     }
-    jc.font=`13px ${font}`;jw=jc.measureText('0').width;jh=13;jsonDirty=true;
+    jc.font=`${fontSize}px ${font}`;jw=Math.max(1,jc.measureText('0').width||fontSize*.6);jh=Math.max(fontSize+1,glyphHeight+2);jsonDirty=true;
   };
   const paintJson=(reading:RegionReading,photo:ExamplePhoto,regions:ImageRegion[],point:LoupePoint,radius:number)=>{
     const stream=wallStream(wallObjects(reading,photo,regions));const cols=Math.ceil(width/jw);
     const anchor=Math.floor(Math.max(0,point.y-radius*.7)/jh)*cols+Math.floor(Math.max(0,point.x-radius*.7)/jw);
-    jc.fillStyle=paper;jc.fillRect(0,0,width,height);jc.font=`13px ${font}`;
+    jc.fillStyle=paper;jc.fillRect(0,0,width,height);jc.font=`${fontSize}px ${font}`;
     for(let row=0;row<Math.ceil(height/jh);row++){
       let line='';const marks:boolean[]=[];
       for(let col=0;col<cols;col++){const cell=streamCell(stream,row*cols+col,anchor);line+=cell.char;marks.push(cell.red);}
@@ -74,7 +85,7 @@ export function createDataWall(image: HTMLImageElement, font: string, ink: strin
     }
   };
   return {
-    canvas,resize,
+    canvas,resize,get pixelRatio(){return scale;},get glyphHeight(){return glyphHeight;},
     paint(now:number,phase:LoupePhase,progress:number,point:LoupePoint,radius:number,reading:RegionReading,photo:ExamplePhoto,regions:ImageRegion[],reduced:boolean,reverse=false,resolve=1){
       if(reading.region?.id!==lastRegion||reading!==lastReading&&phase==='decoding'){jsonDirty=true;lastRegion=reading.region?.id??'';}
       if(jsonDirty&&(phase!=='binary'||reverse)){paintJson(reading,photo,regions,point,radius);jsonDirty=false;}
@@ -84,7 +95,7 @@ export function createDataWall(image: HTMLImageElement, font: string, ink: strin
       if(amount>0){context.globalAlpha=reduced?(phase==='json'?1:0):amount;context.drawImage(json,0,0);context.globalAlpha=1;}
       context.setTransform(scale,0,0,scale,0,0);
       if(!reduced&&phase==='binary'&&!reverse&&resolve<1){
-        context.font=`9px ${font}`;const glyphs='01{}[]:;';
+        context.font=`${fontSize}px ${font}`;const glyphs='01{}[]:;';
         for(let row=Math.max(0,Math.floor((point.y-radius)/bh));row<Math.min(Math.ceil(height/bh),Math.ceil((point.y+radius)/bh));row++){
           for(let col=Math.max(0,Math.floor((point.x-radius)/bw));col<Math.min(columns,Math.ceil((point.x+radius)/bw));col++){
             const x=col*bw,y=row*bh;if(Math.hypot(x-point.x,y-point.y)>radius||Math.random()<resolve)continue;
@@ -93,7 +104,7 @@ export function createDataWall(image: HTMLImageElement, font: string, ink: strin
         }
       }
       if(!reduced&&phase==='binary'&&!reverse){
-        context.font=`9px ${font}`;
+        context.font=`${fontSize}px ${font}`;
         for(let i=0;i<4;i++){
           const px=Math.max(0,Math.min(width-bw,point.x+(Math.random()-.5)*radius)),py=Math.max(0,Math.min(height-bh,point.y+(Math.random()-.5)*radius));
           const col=Math.floor(px/bw),row=Math.floor(py/bh),x=col*bw,y=row*bh;
@@ -107,7 +118,7 @@ export function createDataWall(image: HTMLImageElement, font: string, ink: strin
           const sy=((tick*37+i*101)%Math.max(1,Math.floor(height)))*scale,dy=(i%2?1:-1)*intensity*13*scale;
           context.setTransform(1,0,0,1,0,0);context.drawImage(canvas,0,sy,canvas.width,6*scale,dy,sy,canvas.width,6*scale);
         }
-        context.setTransform(scale,0,0,scale,0,0);context.font=`13px ${font}`;
+        context.setTransform(scale,0,0,scale,0,0);context.font=`${fontSize}px ${font}`;
         for(let i=0;i<8;i++){const px=point.x-radius+(i*43+tick*7)%(radius*2),py=point.y-radius+(i*59+tick*11)%(radius*2);context.fillStyle=i%2?'#9e332d':'#365967';context.fillText(rgbBit(reading.stats.avg_rgb,tick+i),px+intensity*(i%2?2:-2),py);}
       }
     },

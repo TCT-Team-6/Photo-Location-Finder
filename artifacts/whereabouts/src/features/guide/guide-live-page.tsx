@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { CropMarks, DeskHeadline } from '@/components/field-desk';
 import { Link, useLocation, useParams } from 'wouter';
 import { ArrowLeft, ChevronDown, ClipboardList, Loader2, Phone, Printer, Send, Share2, ShieldX } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -92,7 +93,7 @@ export function GuideStartPage() {
 
   return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5">
     <Link href="/cases" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#718078]" data-testid="link-guide-back"><ArrowLeft size={14} />Cases</Link>
-    <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private</p><h1 className="mt-2 font-editorial text-4xl tracking-[-.04em] sm:text-5xl">Let's write it down together.</h1><p className="mt-2 text-sm leading-6 text-[#62756c]">The guide organizes what you know for police and searchers. It does not analyze photos, guess locations or contact anyone.</p></div>
+    <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private</p><DeskHeadline className="mt-2 text-4xl sm:text-5xl">Let's write it down together.</DeskHeadline><p className="mt-2 text-sm leading-6 text-[#62756c]">The guide organizes what you know for police and searchers. It does not analyze photos, guess locations or contact anyone.</p></div>
     <EmergencyBar />
     {error && <ErrorBanner message={error} onRetry={submit} />}
     <fieldset disabled={!!busy} className="min-w-0 space-y-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 sm:p-5" aria-busy={!!busy}>
@@ -173,11 +174,11 @@ export function GuideCasePage() {
   const header = <div>
     <Link href={`/cases/${id}`} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#718078]" data-testid="link-guide-case"><ArrowLeft size={14} />Case details</Link>
     <p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private case</p>
-    <h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]" data-testid="text-guide-case-name">{displayName(c)}</h1>
+    <DeskHeadline className="mt-1 text-4xl" testId="text-guide-case-name">{displayName(c)}</DeskHeadline>
   </div>;
 
   if (!guide) return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5">{header}<EmergencyBar />
-    <div className="rounded-2xl border border-dashed border-[#b9c4b5] bg-[#f8f5ec] p-6"><p className="font-editorial text-2xl">The guide has not started for this case.</p><p className="mt-1 text-sm text-[#718078]">Tell it what happened. Your words are sent to OpenAI to organize the facts.</p>
+    <div className="fd-tray"><CropMarks/><p>TRAY EMPTY / 00 MESSAGES</p><p className="font-editorial text-2xl">The guide has not started for this case.</p><p className="mt-1 text-sm text-[#718078]">Tell it what happened. Your words are sent to OpenAI to organize the facts.</p>
       <textarea rows={4} maxLength={6000} value={reply} onChange={(e) => setReply(e.target.value)} className={`${inputCls} mt-3`} aria-label="Tell us what happened." placeholder="Tell us what happened." data-testid="input-guide-first-message" />
       {error && <div className="mt-3"><ErrorBanner message={error} /></div>}
       <button type="button" disabled={intake.isPending || !reply.trim()} onClick={async () => { setError(''); try { sync(await intake.mutateAsync({ data: { caseId: id, text: reply.trim(), revision: 0 } })); setReply(''); } catch (e) { setError(errorMessage(e)); } }} className={`${guidePrimary} mt-3`} data-testid="button-guide-first-send">{intake.isPending && <Loader2 size={15} className="animate-spin" />}Start the guide</button>

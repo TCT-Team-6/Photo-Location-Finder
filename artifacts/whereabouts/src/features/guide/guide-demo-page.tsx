@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { DeskHeadline, DeskRuler, FieldSheet } from '@/components/field-desk';
 import { Link, useParams } from 'wouter';
 import { ArrowLeft, Check, ChevronDown, CircleCheck, FileImage, MapPin, Printer, Share2 } from 'lucide-react';
 import { demoFactsWithAnswers, demoGroundedActions, demoResults, demoUrgency, getGuideDemo, GUIDE_DEMO_NOW, type GuideDemo } from '@/lib/guide-demos';
@@ -65,8 +66,10 @@ function GuideDemo({ demo }: { demo: GuideDemo }) {
       <Link href="/demo" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#62756c]" data-testid="link-guide-demo-back"><ArrowLeft size={14} />All samples</Link>
       <SampleLabel />
     </header>
+    <DeskRuler/>
     <main className="mx-auto max-w-3xl space-y-5 px-4 pb-24 pt-4">
-      <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide walkthrough · saved replies, nothing is sent</p><h1 className="mt-2 font-editorial text-4xl tracking-[-.04em] sm:text-5xl">{demo.name}</h1></div>
+      <FieldSheet code="05 / GUIDE SAMPLE" className="fd-flow">
+      <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide walkthrough · saved replies, nothing is sent</p><DeskHeadline className="mt-2 text-4xl sm:text-5xl">{demo.name}</DeskHeadline></div>
       <EmergencyBar urgent={facts.called911 !== true} sample />
       <figure className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]">
         <img src={demo.imageUrl} alt={demo.imageCaption} className="h-44 w-full object-cover sm:h-56" data-testid="img-guide-demo" />
@@ -95,6 +98,7 @@ function GuideDemo({ demo }: { demo: GuideDemo }) {
 
       {phase === 'results' && <DemoResults demo={demo} facts={facts} notes={accepted} />}
       <Disclaimer />
+      </FieldSheet>
     </main>
   </div>;
 }

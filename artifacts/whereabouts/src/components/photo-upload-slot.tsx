@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileImage, Upload, X } from "lucide-react";
+import { CropMarks } from './field-desk';
 
 export type PhotoUploadSlotId = "original" | "recreation" | "fake-news";
 
@@ -99,6 +100,7 @@ export function PhotoUploadSlot({
         className={`photo-upload-dropzone relative h-[210px] overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${disabled ? "cursor-wait opacity-70" : "cursor-pointer"}`}
         data-testid={dropzoneTestId}
       >
+        <CropMarks/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
         <input
           id={inputId}
           type="file"

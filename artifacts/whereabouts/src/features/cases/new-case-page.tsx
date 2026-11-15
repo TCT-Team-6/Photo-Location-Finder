@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useLocation } from 'wouter';
+import { DeskHeadline } from '@/components/field-desk';
 import { ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetMissingPersonCaseQueryKey, getListMissingPersonCasesQueryKey, useCreateMissingPersonCase } from '@workspace/api-client-react';
@@ -29,7 +30,7 @@ export default function NewCasePage() {
   return <div className="wa-case-workspace fade-up mx-auto max-w-4xl">
     <button type="button" onClick={leave} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]" data-testid="link-back-cases"><ArrowLeft size={14} />Back to cases</button>
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / intake</p>
-    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Open a case.</h1>
+    <DeskHeadline className="mt-3 text-5xl">Open a case.</DeskHeadline>
     <p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Only a first name is required. Add what you know and are comfortable keeping here.</p>
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_280px]">
       <CaseForm initial={emptyCase} submitLabel="Save case" pending={create.isPending} error={error} onDirtyChange={setDirty} onCancel={leave}

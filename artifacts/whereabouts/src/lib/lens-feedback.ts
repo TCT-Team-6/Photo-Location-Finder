@@ -1,6 +1,6 @@
 import type { SpringAxis } from './loupe-physics';
 import type { LoupePoint } from './loupe-dwell';
-export const GLASS_MAGNIFICATION=1.6;
+export const GLASS_MAGNIFICATION=2.5;
 export const PHOTO_FEATHER_PX=12;
 export const DATA_RESOLVE_MS=250;
 export const HELD_LIFT=48;

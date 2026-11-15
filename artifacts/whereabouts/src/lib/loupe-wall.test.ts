@@ -3,7 +3,16 @@ import assert from 'node:assert/strict';
 import photoJson from '../../public/data/example-photo.json';
 import regionsJson from '../../public/data/regions.json';
 import { measurePixels, regionAt, readingRecord, type ExamplePhoto, type RegionMap } from './loupe-image-data';
-import { rgbBit, streamCell, wallObjects, wallStream } from './loupe-wall';
+import { rgbBit, streamCell, wallGlyphLayout, wallObjects, wallStream } from './loupe-wall';
+import { GLASS_MAGNIFICATION } from './lens-feedback';
+test('wall font stays positive and legible with negative top-baseline, zero and invalid metrics',()=>{
+  for(const [ascent,descent] of [[-.625,8.625],[0,0],[NaN,NaN],[Infinity,0],[7,1],[8,0],[3,0],[16,2]]){
+    const layout=wallGlyphLayout({actualBoundingBoxAscent:ascent,actualBoundingBoxDescent:descent});
+    assert.ok(Number.isFinite(layout.fontSize)&&layout.fontSize>=4&&layout.fontSize<=27);
+    assert.ok(layout.glyphHeight*GLASS_MAGNIFICATION>=18&&layout.glyphHeight*GLASS_MAGNIFICATION<=22);
+    assert.ok(Math.ceil(900/Math.max(layout.fontSize+1,layout.glyphHeight+2))>0);
+  }
+});
 const photo=photoJson as ExamplePhoto,regions=(regionsJson as RegionMap).regions;
 test('each RGB cell supplies a bit from its own three actual channel bytes',()=>{
   const rgb=[64,128,192];

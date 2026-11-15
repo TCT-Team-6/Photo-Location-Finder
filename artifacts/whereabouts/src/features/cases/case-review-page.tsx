@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'wouter';
+import { DeskHeadline, SpecimenTray } from '@/components/field-desk';
 import { ArrowLeft, Loader2, Maximize2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetMissingPersonCaseQueryKey, getListMissingPersonCasesQueryKey, useGetMissingPersonCase, useReviewCaseLead, useSaveCaseReview } from '@workspace/api-client-react';
@@ -110,7 +111,7 @@ export default function CaseReviewPage() {
   return <div className="wa-case-workspace fade-up mx-auto max-w-5xl">
     {back}
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Manual case review</p>
-    <h1 className="mt-1 font-editorial text-4xl tracking-[-.04em]" data-testid="text-review-case-name">{displayName(c)}</h1>
+    <DeskHeadline className="mt-1 text-4xl" testId="text-review-case-name">{displayName(c)}</DeskHeadline>
     <p className="mt-2 max-w-2xl text-xs leading-5 text-[#718078]">Your own observations and follow-up notes. Nothing here is verified, automated, or a conclusion about anyone's whereabouts.</p>
     {q.isError && <div className="mt-4"><ErrorBanner message="Could not refresh the latest saved case. Your draft is still here; retry before resolving a conflict." onRetry={() => q.refetch()} /></div>}
 
@@ -153,7 +154,7 @@ export default function CaseReviewPage() {
           <h2 id="tl-h" className="border-b border-[#d8d1c2] pb-3 font-editorial text-3xl tracking-[-.03em]">Timeline <span className="font-data text-xs text-[#718078]">{c.leads.length}</span></h2>
           <p className="mt-3 text-xs leading-5 text-[#718078]">Ordered by the date each lead was reported as taken; if absent, by posted date (marked). Dates are as supplied and unverified. Added-to-case time is when you saved it, not when it happened.</p>
           {actionError && <div className="mt-4"><ErrorBanner message={actionError} /></div>}
-          {c.leads.length === 0 ? <p className="mt-5 rounded-2xl border border-dashed border-[#b9c4b5] bg-[#f8f5ec] p-8 text-center text-sm text-[#718078]" data-testid="empty-timeline">No leads to review yet. <Link href={`/cases/${id}`} className="font-semibold underline">Add one from the case overview.</Link></p> : <>
+          {c.leads.length === 0 ? <SpecimenTray testId="empty-timeline" title="No leads to review yet." text="" action={<Link href={`/cases/${id}`} className="mt-5 font-semibold underline">Add one from the case overview.</Link>}/> : <>
             {timeline.dated.length > 0 && <ol className="mt-5 space-y-5 border-l border-[#b9c4b5] pl-5">{timeline.dated.map((e) => <li key={e.lead.id}>
               <p className="-ml-[26px] mb-2 flex items-center gap-2 font-data text-[10px] uppercase tracking-[.14em] text-[#385e51]"><span className="h-2 w-2 rounded-full bg-[#385e51]" />{fmt(e.date)} / {e.basis === 'reported' ? 'reported taken' : 'posted (taken date unknown)'}</p>
               <ul>{leadCard(e.lead, e.basis === 'posted' ? 'No taken date supplied; placed by posted date.' : undefined)}</ul>

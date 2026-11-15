@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useParams } from 'wouter';
+import { DeskHeadline, SpecimenTray } from '@/components/field-desk';
 import { ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -62,14 +63,14 @@ export default function CaseDetailPage() {
     {back}
     <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / {roleLabel[c.responderRole]} (self-declared)</p>
     {editing ? <div className="mt-4">
-      <h1 className="font-editorial text-4xl tracking-[-.04em]">Edit case information</h1>
+      <DeskHeadline className="text-4xl">Edit case information</DeskHeadline>
       <div className="mt-6"><CaseForm initial={toValues(c)} initialHeadshot={c.headshot} submitLabel="Save changes" pending={update.isPending} error={editError} onDirtyChange={edit.setDirty}
         onCancel={() => { if (edit.confirmLeave()) { edit.setDirty(false); setEditing(false); setEditError(''); } }}
         onSubmit={(data) => { setEditError(''); update.mutate({ id, data: { ...data, clientRequestId: c.clientRequestId } }); }} /></div>
     </div> : <section className="mt-3 flex flex-col gap-6 sm:flex-row">
       {c.headshot && <img src={photoUrl(c.headshot)} alt="Reference headshot, private" className="h-40 w-40 rounded-2xl object-cover" data-testid="img-headshot" />}
       <div className="min-w-0 flex-1">
-        <h1 className="font-editorial text-5xl tracking-[-.05em]" data-testid="text-case-name">{displayName(c)}</h1>
+        <DeskHeadline className="text-5xl" testId="text-case-name">{displayName(c)}</DeskHeadline>
         <p className="mt-2 text-xs text-[#718078]">Name and details are not verified.</p>
         <dl className="mt-5 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
           {([['Age or description', c.ageDescription], ['Last-known date', fmt(c.lastKnownDate)], ['General area', c.lastKnownArea], ['Official reference', c.officialReference]] as const).map(([k, val]) => <div key={k}><dt className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{k}</dt><dd className="mt-0.5 text-[#263d36]">{val || 'Not provided'}</dd></div>)}
@@ -91,7 +92,7 @@ export default function CaseDetailPage() {
           <h2 id="leads-h" className="border-b border-[#d8d1c2] pb-3 font-editorial text-3xl tracking-[-.03em]">Saved leads <span className="font-data text-xs text-[#718078]">{leads.length}</span></h2>
           {actionError && !confirmLead && !confirmCase && <div className="mt-4"><ErrorBanner message={actionError} /></div>}
           <p className="mt-3 text-xs leading-5 text-[#718078]">Review labels reflect your assessment of relevance, not independent verification or confirmed whereabouts.</p>
-          {leads.length === 0 ? <p className="mt-5 rounded-2xl border border-dashed border-[#b9c4b5] bg-[#f8f5ec] p-8 text-center text-sm text-[#718078]" data-testid="empty-leads">No leads yet. Add an authorized photo, link or tip below. New leads are marked needs verification.</p>
+          {leads.length === 0 ? <SpecimenTray testId="empty-leads" title="No leads yet." text="Add an authorized photo, link or tip below. New leads are marked needs verification."/>
             : <ul className="mt-5 space-y-4">{leads.map((l) => <li key={l.id} data-testid={`card-lead-${l.id}`} className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4">
               <div className="flex gap-4">
                 {l.photo && <img src={photoUrl(l.photo)} alt={`Submitted photo: ${l.title}`} className="h-24 w-24 shrink-0 rounded-xl object-cover" />}

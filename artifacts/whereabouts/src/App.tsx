@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { ClerkProvider, Show, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, Menu, Newspaper, ScanSearch, Search, Settings as SettingsIcon, ShieldCheck, Trash2, X } from 'lucide-react';
+import { Film, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Circle, Compass, Crosshair, Ellipsis, FileImage, Globe2, ImagePlus, Layers3, LoaderCircle, LogOut, Menu, Newspaper, ScanSearch, Search, ShieldCheck, Trash2, X } from 'lucide-react';
 import { coordinatesFromMapsUrl, LeadLocationMap } from '@/components/lead-location-map';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useRoute } from 'wouter';
 import {
@@ -43,6 +43,7 @@ import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from 
 import { DemoExperience } from '@/components/demo-experience';
 import { PhotoInstrument } from '@/components/photo-instrument';
 import { SiteCursor } from '@/components/site-cursor';
+import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray, stepProgress } from '@/components/field-desk';
 import { useLandingMotion } from '@/hooks/use-landing-motion';
 import { FiveStagePipeline, GeolocationMethods, IntakeFieldGuide, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
@@ -55,6 +56,7 @@ import GuideDemoPage from '@/features/guide/guide-demo-page';
 import { GuideEntry } from '@/features/guide/guide-entry';
 import { GuideDraftProvider, useGuideDraft } from '@/features/guide/guide-ui';
 import './index.css';
+import './styles/field-desk.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
@@ -132,21 +134,22 @@ const clerkAppearance = {
     colorPrimary: 'hsl(var(--primary))',
     colorForeground: 'hsl(var(--foreground))',
     colorMutedForeground: 'hsl(var(--muted-foreground))',
-    colorDanger: '#a64e43',
+    colorDanger: '#b6382e',
     colorBackground: 'hsl(var(--card))',
     colorInput: 'hsl(var(--card))',
     colorInputForeground: 'hsl(var(--foreground))',
     colorNeutral: 'hsl(var(--border))',
     fontFamily: 'DM Sans, sans-serif',
-    borderRadius: '12px',
+    borderRadius: '2px',
   },
   elements: {
-    rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#f8f5ed] rounded-2xl w-[440px] max-w-full overflow-hidden border border-[#d8d1c2]',
+    rootBox: 'fd-clerk-root',
+    cardBox: 'fd-clerk-card',
     card: '!shadow-none !border-0 !bg-transparent !rounded-none',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    headerTitle: 'font-semibold text-[#263d36]',
-    headerSubtitle: 'text-[#718078]',
+    header: 'fd-clerk-header',
+    headerTitle: 'fd-clerk-heading font-semibold text-[#242723]',
+    headerSubtitle: 'fd-clerk-subtitle text-[#5b5e58]',
     socialButtonsBlockButtonText: { color: '#000000', fontWeight: 500 },
     alternativeMethodsBlockButtonText: { color: '#000000' },
     identityPreviewText: { color: '#000000' },
@@ -157,11 +160,11 @@ const clerkAppearance = {
     identityPreviewEditButton: 'text-[#385e51]',
     formFieldSuccessText: 'text-[#385e51]',
     alertText: 'text-[#a64e43]',
-    logoBox: 'rounded-lg',
+    logoBox: 'fd-clerk-logo',
     logoImage: 'object-contain',
-    socialButtonsBlockButton: 'border-[#d8d1c2] bg-[#fbf9f3] hover:bg-[#f0ece2]',
-    formButtonPrimary: 'bg-[#385e51] hover:bg-[#2d5045] text-[#fbf9f3] shadow-none',
-    formFieldInput: 'bg-[#fbf9f3] border-[#d8d1c2] text-[#263d36]',
+    socialButtonsBlockButton: 'fd-clerk-social',
+    formButtonPrimary: 'fd-clerk-primary',
+    formFieldInput: 'fd-clerk-input',
     footerAction: 'text-[#718078]',
     dividerLine: 'bg-[#d8d1c2]',
     alert: 'border-[#dbb6a8] bg-[#fbefeb]',
@@ -304,12 +307,13 @@ function LandingPage() {
 }
 
 function SignInPage() {
-  return <div className="clerk-frame min-h-[100dvh] px-4 py-7">
+  return <div className="fd-auth clerk-frame min-h-[100dvh] px-4 py-7">
     <div className="mx-auto flex max-w-6xl items-center justify-between"><Mark /><Link href="/" className="text-sm text-[#62756c] hover:text-[#385e51]" data-testid="link-auth-back">Back to Whereabouts</Link></div>
-    <div className="mx-auto mt-10 max-w-6xl overflow-hidden rounded-[30px] border border-[#d8d1c2] bg-[#eee9dc] md:grid md:grid-cols-[.92fr_1.08fr]">
-      <div className="relative hidden min-h-[690px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
-        <div className="contour absolute inset-0 opacity-35" />
-        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">The private field notebook</p><h1 className="mt-7 font-editorial text-6xl leading-[.94] tracking-[-.05em]">Pick up<br />the trail.</h1><p className="mt-6 max-w-sm text-[#c4d0c2]">Your saved photographs, observations, and likely places are waiting where you left them.</p></div>
+    <DeskRuler/>
+    <div className="fd-auth-layout mx-auto mt-10 max-w-6xl overflow-hidden md:grid md:grid-cols-[.92fr_1.08fr]">
+      <div className="fd-auth-dark relative hidden min-h-[690px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
+        <pre className="fd-auth-binary" aria-hidden="true">{'01001001 00101110 01000110 01001001 01000101 01001100 01000100\n'.repeat(100)}</pre>
+        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em]">The private field notebook</p><DeskHeadline className="mt-7 text-6xl">Pick up the trail.</DeskHeadline><p className="mt-6 max-w-sm">Your saved photographs, observations, and likely places are waiting where you left them.</p></div>
         <div className="relative border-t border-[#5c7465] pt-5 font-data text-[9px] uppercase tracking-[.17em] text-[#a8b8a9]">INDEX 001 — personal archive</div>
       </div>
       <div className="flex min-h-[690px] items-center justify-center px-4 py-12 sm:px-10"><SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} /></div>
@@ -319,12 +323,13 @@ function SignInPage() {
 }
 
 function SignUpPage() {
-  return <div className="clerk-frame min-h-[100dvh] px-4 py-7">
+  return <div className="fd-auth clerk-frame min-h-[100dvh] px-4 py-7">
     <div className="mx-auto flex max-w-6xl items-center justify-between"><Mark /><Link href="/" className="text-sm text-[#62756c] hover:text-[#385e51]" data-testid="link-auth-home">Back to Whereabouts</Link></div>
-    <div className="mx-auto mt-10 max-w-6xl overflow-hidden rounded-[30px] border border-[#d8d1c2] bg-[#eee9dc] md:grid md:grid-cols-[.92fr_1.08fr]">
-      <div className="relative hidden min-h-[730px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
-        <div className="contour absolute inset-0 opacity-35" />
-        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">Open a new notebook</p><h1 className="mt-7 font-editorial text-6xl leading-[.94] tracking-[-.05em]">Start with<br />a somewhere.</h1><p className="mt-6 max-w-sm text-[#c4d0c2]">One image can hold a whole journey. Make a private place for the clues you find along the way.</p></div>
+    <DeskRuler/>
+    <div className="fd-auth-layout mx-auto mt-10 max-w-6xl overflow-hidden md:grid md:grid-cols-[.92fr_1.08fr]">
+      <div className="fd-auth-dark relative hidden min-h-[730px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
+        <pre className="fd-auth-binary" aria-hidden="true">{'01001001 00101110 01000110 01001001 01000101 01001100 01000100\n'.repeat(100)}</pre>
+        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em]">Open a new notebook</p><DeskHeadline className="mt-7 text-6xl">Start with a somewhere.</DeskHeadline><p className="mt-6 max-w-sm">One image can hold a whole journey. Make a private place for the clues you find along the way.</p></div>
         <div className="relative grid grid-cols-3 gap-3">
           {['Image', 'Clues', 'Places'].map((item, i) => <div key={item} className="border-t border-[#5c7465] pt-3"><span className="font-data text-[9px] text-[#d78b5a]">0{i + 1}</span><p className="mt-2 font-editorial text-lg">{item}</p></div>)}
         </div>
@@ -366,7 +371,7 @@ function ClerkProviderWithRoutes() {
     appearance={clerkAppearance}
     signInUrl={`${basePath}/sign-in`}
     signUpUrl={`${basePath}/sign-up`}
-    localization={{ signIn: { start: { title: 'Welcome back', subtitle: 'Pick up the trail where you left it.' } }, signUp: { start: { title: 'Start your notebook', subtitle: 'Create a private place for your discoveries.' } } }}
+    localization={{ formButtonPrimary:'Continue →', signIn: { start: { title: 'Welcome back', subtitle: 'Pick up the trail where you left it.' } }, signUp: { start: { title: 'Start your notebook', subtitle: 'Create a private place for your discoveries.' } } }}
     routerPush={(to) => setLocation(stripBase(to))}
     routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
   >
@@ -415,7 +420,7 @@ function DetailRoute() { return <Protected><AppShell><InvestigationPage /></AppS
 function LeadLocationRoute() { return <Protected><AppShell><LeadLocationPage /></AppShell></Protected>; }
 
 function StartSearchRoute() {
-  return <><Show when="signed-in"><Protected><AppShell><div className="fade-up mx-auto max-w-3xl"><GuideEntry signedIn tone="panel" /></div></AppShell></Protected></Show><Show when="signed-out"><main className="min-h-[100dvh] bg-[#f4f0e6] px-4 py-5 text-[#263d36]"><div className="mx-auto max-w-3xl"><div className="mb-6 flex items-center justify-between"><Mark /><Link href="/demo" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#385e51]" data-testid="link-start-see-samples">See sample cases</Link></div><GuideEntry signedIn={false} /></div></main></Show></>;
+  return <><Show when="signed-in"><Protected><AppShell><div className="fd-guide-start max-w-3xl"><GuideEntry signedIn tone="panel" /></div></AppShell></Protected></Show><Show when="signed-out"><main className="fd-start min-h-[100dvh] px-5 py-6 md:px-12"><div className="mx-auto max-w-6xl"><header className="mb-6 flex items-center justify-between"><Mark /><Link href="/demo" className="inline-flex min-h-11 items-center text-sm font-semibold" data-testid="link-start-see-samples">See sample cases</Link></header><DeskRuler/><div className="py-10"><FieldSheet code="05 / AI GUIDE"><div className="max-w-3xl"><GuideEntry signedIn={false}/></div></FieldSheet></div></div></main></Show></>;
 }
 
 function DemoRoute() { return <DemoExperience />; }
@@ -445,19 +450,15 @@ function AppShell({ children }: { children: ReactNode }) {
     <aside className="wa-sidebar hidden shrink-0 flex-col px-5 pb-5 pt-6 md:flex">
       <Mark inverse />
       <p className="wa-eyebrow mb-3 mt-10 px-3">Your workspace</p>
-      <nav className="space-y-1" aria-label="Main navigation">
-        {navLinks.map((item) => <Link key={item.href} href={item.href} aria-current={location === item.href ? 'page' : undefined} data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}{item.href === '/investigate' && <span className="ml-auto" aria-hidden="true">+</span>}</Link>)}
-      </nav>
+      <FieldIndex items={navLinks.map(item=>({...item,testId:`nav-${item.label.toLowerCase().replaceAll(' ','-')}`}))} location={location} label="Main navigation"/>
       <p className="mb-2 mt-7 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
-      <nav className="space-y-1" aria-label="Image investigation desks">
-        {deskLinks.map((item) => <Link key={item.href} href={item.href} aria-current={location === item.href ? 'page' : undefined} data-testid={`nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}>{item.icon}{item.label}</Link>)}
-      </nav>
-      <Link href="/settings" aria-current={location === '/settings' ? 'page' : undefined} data-testid="nav-settings" className={`mt-5 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#c1cdbf] hover:bg-white/5 hover:text-white'}`}><SettingsIcon size={17} />Settings</Link>
+      <FieldIndex items={deskLinks.map(item=>({...item,testId:`nav-desk-${item.id}`}))} location={location} start={6} label="Image investigation desks"/>
+      <div className="mt-5"><FieldIndex items={[{href:'/settings',label:'Settings',testId:'nav-settings'}]} location={location} start={9}/></div>
       <div className="mt-auto">
-        <details className="relative mb-4 border-t border-[#52695d] pt-4">
+        <details className="fd-id-tag relative mb-4">
           <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
-            {user?.imageUrl ? <img src={user.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]">{initials}</span>}
-            <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em] text-[#a9b8aa]">Account</span></span>
+            {user?.imageUrl ? <img src={user.imageUrl} alt="" data-default-avatar={!user.hasImage} className="h-9 w-9 rounded-full object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]">{initials}</span>}
+            <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em]">OPERATOR 001</span></span>
           </summary>
           <form className="absolute bottom-14 left-0 z-30 w-[220px] rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 text-[#263d36] shadow-xl" onSubmit={async (event) => { event.preventDefault(); try { await user?.update({ unsafeMetadata: { ...user.unsafeMetadata, whereaboutsDisplayName: profileName.trim() } }); setProfileStatus('Profile saved.'); } catch { setProfileStatus('Could not save your profile.'); } }}>
             <label className="block text-[11px] font-semibold" htmlFor="in-app-username">In-app username</label>
@@ -476,17 +477,18 @@ function AppShell({ children }: { children: ReactNode }) {
         <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
         <span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
       </header>
+      <DeskRuler/>
       {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)} onKeyDown={(event) => { if (event.key === 'Escape') setMobileNav(false); }}>
-        <nav aria-label="Mobile navigation" className="max-h-[100dvh] w-[min(84vw,320px)] overflow-y-auto bg-[#263d36] p-5 text-[#f4f0e6]" onClick={(event) => event.stopPropagation()}>
+        <nav aria-label="Mobile navigation" className="fd-index-mobile max-h-[100dvh] w-[min(84vw,320px)] overflow-y-auto p-5" onClick={(event) => event.stopPropagation()}>
           <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" aria-label="Close navigation" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
-          {navLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-${item.label.toLowerCase().replaceAll(' ', '-')}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
+          <FieldIndex items={navLinks.map(item=>({...item,testId:`mobile-nav-${item.label.toLowerCase().replaceAll(' ','-')}`}))} location={location} onNavigate={()=>setMobileNav(false)}/>
           <p className="mb-2 mt-6 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
-          {deskLinks.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileNav(false)} data-testid={`mobile-nav-desk-${item.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition ${location === item.href ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}>{item.icon}{item.label}</Link>)}
-          <Link href="/settings" onClick={() => setMobileNav(false)} data-testid="mobile-nav-settings" className={`mt-4 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${location === '/settings' ? 'bg-[#3b5d50] text-[#f5f0e5]' : 'text-[#d0d9ce] hover:bg-white/10'}`}><SettingsIcon size={17} />Settings</Link>
+          <FieldIndex items={deskLinks.map(item=>({...item,testId:`mobile-nav-desk-${item.id}`}))} location={location} start={6} onNavigate={()=>setMobileNav(false)}/>
+          <FieldIndex items={[{href:'/settings',label:'Settings',testId:'mobile-nav-settings'}]} location={location} start={9} onNavigate={()=>setMobileNav(false)}/>
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
         </nav>
       </div>}
-      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-8 md:pt-9">{children}</main>
+      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-8 md:pt-9"><FieldSheet key={location} code={`${String([...navLinks,...deskLinks,{href:'/settings'}].findIndex(item=>item.href===location)+1||10).padStart(2,'0')} / FIELD DESK`}>{children}</FieldSheet></main>
     </div>
   </div>;
 }
@@ -509,7 +511,7 @@ function DashboardPage() {
   const rows = investigations.data ?? [];
   return <div className="wa-dashboard fade-up">
     <div className="wa-page-heading wa-dashboard-heading mb-7 gap-6">
-      <div><PageEyebrow>Your private instrument / overview</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.06em] md:text-7xl">Back at the desk.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Your photographs, possible places, and next questions. Pick up an investigation or open a separate private case.</p></div>
+      <div><PageEyebrow>Your private instrument / overview</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-7xl">Back at the desk.</DeskHeadline><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Your photographs, possible places, and next questions. Pick up an investigation or open a separate private case.</p></div>
       <div className="wa-dashboard-actions"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
       <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ScanSearch size={16} />AI Guide</Link>
       <Link href="/investigate" data-testid="button-start-investigation" className="wa-action inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"><ImagePlus size={16} />Investigate an image <ArrowRight size={16} /></Link></div>
@@ -517,9 +519,9 @@ function DashboardPage() {
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
       : summary.isError ? <div className="mb-8"><QueryError retry={() => summary.refetch()} text="Your archive summary is taking a moment." /></div>
       : <div className="wa-stats mb-9">
-        <Stat label="Saved investigations" value={summary.data?.total ?? 0} caption="In your image archive" icon={<Layers3 size={18} />} />
-        <Stat label="This month" value={summary.data?.thisMonth ?? 0} caption="Investigations opened" icon={<Crosshair size={18} />} />
-        <div className="relative overflow-hidden rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="contour absolute inset-0 opacity-35" /><div className="relative"><p className="font-data text-[9px] uppercase tracking-[.17em] text-[#d78b5a]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs text-[#c1cdbf]">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#e3a274]">Open trail <ArrowRight size={14} /></Link>}</div></div>
+        <Stat label="Saved investigations" value={summary.data?.total ?? 0} total={summary.data?.total??0} caption="In your image archive" icon={<Layers3 size={18} />} />
+        <Stat label="This month" value={summary.data?.thisMonth ?? 0} total={summary.data?.total??0} caption="Investigations opened" icon={<Crosshair size={18} />} />
+        <div className="fd-tag" data-cursor-crop=""><p className="font-data text-[9px] uppercase tracking-[.17em]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold">Open trail <ArrowRight size={14} /></Link>}</div>
       </div>}
     <div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
@@ -528,22 +530,19 @@ function DashboardPage() {
     {investigations.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56" />)}</div>
       : investigations.isError ? <QueryError retry={() => investigations.refetch()} />
       : rows.length === 0 ? <EmptyState icon={<Compass size={26} />} eyebrow="A new page" title="No investigations yet." text="Start with a photo that has been on your mind. We’ll help you follow its visual clues." action={<Link href="/investigate" data-testid="empty-start-investigation" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Investigate a photo <ArrowRight size={15} /></Link>} />
-      : <div className="wa-archive-grid">{rows.slice(0, 6).map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
+      : <ContactSheet>{rows.slice(0, 6).map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1}/>)}</ContactSheet>}
   </div>;
 }
 
-function Stat({ label, value, caption, icon }: { label: string; value: number; caption: string; icon: ReactNode }) {
+function Stat({ label, value, caption, icon,total }: { label: string; value: number; caption: string; icon: ReactNode;total:number }) {
   return <div className="wa-stat border border-[#d8d1c2] bg-[#f8f5ec]">
     <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div>
-    <p className="mt-5 font-editorial text-4xl tracking-[-.04em]" data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}>{value}</p><p className="mt-1 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
+    <p className="mt-5 font-editorial text-4xl tracking-[-.04em]" data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}><Odometer value={value}/></p><div className="fd-stat-ruler" title={`${value} of ${total} saved investigations`} aria-hidden="true"><span style={{width:`${total?Math.min(100,value/total*100):0}%`}}/></div><p className="mt-3 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
   </div>;
 }
 
-function EmptyState({ icon, eyebrow, title, text, action }: { icon: ReactNode; eyebrow: string; title: string; text: string; action?: ReactNode }) {
-  return <div className="paper-grid flex min-h-[300px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#c9c3b4] px-6 py-12 text-center" data-testid="content-empty-state">
-    <span className="grid h-14 w-14 place-items-center rounded-full border border-[#b5c1b1] bg-[#e8e9df] text-[#557363]">{icon}</span>
-    <p className="mt-5 font-data text-[9px] uppercase tracking-[.19em] text-[#9c6d4e]">{eyebrow}</p><h3 className="mt-2 font-editorial text-3xl">{title}</h3><p className="mt-2 max-w-md text-sm leading-6 text-[#738078]">{text}</p>{action}
-  </div>;
+function EmptyState({ eyebrow, title, text, action }: { icon: ReactNode; eyebrow: string; title: string; text: string; action?: ReactNode }) {
+  return <SpecimenTray label={`TRAY EMPTY / 00 ITEMS — ${eyebrow}`} title={title} text={text} action={action}/>;
 }
 
 function InvestigationCard({
@@ -553,6 +552,7 @@ function InvestigationCard({
   selectable = false,
   selected = false,
   onToggleSelect,
+  frame=1,
 }: {
   item: Investigation;
   onDelete?: (item: Investigation) => void;
@@ -560,11 +560,14 @@ function InvestigationCard({
   selectable?: boolean;
   selected?: boolean;
   onToggleSelect?: (item: Investigation) => void;
+  frame?:number;
 }) {
+  const[,navigate]=useLocation();
   const place = rankCandidates(item.candidates)[0];
-  return <article className="wa-photo-card group relative overflow-hidden border border-[#d8d1c2] transition-transform hover:-translate-y-1" data-testid={`card-investigation-${item.id}`}>
-    <div className={`relative h-[148px] overflow-hidden bg-[#d9ddcf] ${selectable ? 'cursor-pointer' : ''}`} onClick={() => selectable && onToggleSelect?.(item)}>
-      {isVideoInvestigation(item) ? <div className="flex h-full w-full items-center justify-center bg-[#2f4a40] text-[#d9e2d4]" data-testid={`placeholder-video-${item.id}`}><Film size={34} strokeWidth={1.4} aria-hidden="true" /></div> : <img src={investigationMediaUrl(item.id)} alt={`Original photograph for ${item.title}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.opacity = '0'; }} data-testid={`img-investigation-${item.id}`} />}
+  return <article className="wa-photo-card group relative" data-testid={`card-investigation-${item.id}`} data-selected={selected} data-cursor-crop="">
+    {selected&&<CropMarks/>}
+    <div className="relative aspect-[4/3] overflow-hidden bg-[#d9ddcf]" role={selectable?undefined:'link'} tabIndex={selectable?undefined:0} aria-label={selectable?undefined:`Open ${item.title}`} onClick={()=>selectable?onToggleSelect?.(item):navigate(`/investigation/${item.id}`)} onKeyDown={event=>{if(!selectable&&(event.key==='Enter'||event.key===' ')){event.preventDefault();navigate(`/investigation/${item.id}`);}}}>
+      {isVideoInvestigation(item) ? <div className="flex h-full w-full items-center justify-center bg-[#2f4a40] text-[#d9e2d4]" data-testid={`placeholder-video-${item.id}`}><Film size={34} strokeWidth={1.4} aria-hidden="true" /></div> : <PixelPrint src={investigationMediaUrl(item.id)} alt={`Original photograph for ${item.title}`} className="h-full" testId={`img-investigation-${item.id}`}/>}
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c3028]/55 to-transparent" />
       {selectable && <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelect?.(item); }} aria-label={`${selected ? 'Deselect' : 'Select'} ${item.title}`} aria-pressed={selected} data-testid={`button-select-investigation-${item.id}`} className={`absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full border-2 shadow-sm transition ${selected ? 'border-[#2e7047] bg-[#2e7047] text-white' : 'border-white bg-black/20 text-transparent hover:bg-black/40'}`}>{selected ? <Check size={18} strokeWidth={3} /> : <Circle size={20} className="text-white" />}</button>}
       <span className="absolute bottom-3 left-4 font-data text-[9px] uppercase tracking-[.14em] text-white">{place ? `${place.place}${place.country ? ` · ${place.country}` : ''}` : 'Place still unfolding'}</span>
@@ -572,6 +575,7 @@ function InvestigationCard({
       {isAnalyzing(item) && <span className="absolute left-3 bottom-9 rounded-full bg-[#f6f2e6]/90 px-2.5 py-1 font-data text-[9px] text-[#a56743]" data-testid={`badge-analyzing-${item.id}`}>Analyzing…</span>}
       <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[9px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
     </div>
+    <span className="fd-frame-number">{String(frame).padStart(2,'0')}A / {isVideoInvestigation(item)?'MOTION FILE':'SOURCE PRINT'}</span>
     <div className="p-5">
       <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{displayTitle(item.title)}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
       <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · model score {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
@@ -604,13 +608,13 @@ function FieldDeskPage() {
   const rows = (query.data ?? []).filter((item) => item.desk === desk.id);
   return <div className="wa-library fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Private archive / field desk</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">{desk.label}.</h1><p className="mt-3 text-sm text-[#718078]">{desk.subtitle}.</p></div>
+      <div><PageEyebrow>{`DESK ${desk.id==='original'?'A':desk.id==='recreation'?'B':'C'} / ${desk.id==='fake-news'?'JOURNALISM':desk.label.toUpperCase()}`}</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-6xl">{`${desk.label}.`}</DeskHeadline><p className="mt-3 text-sm text-[#718078]">{desk.subtitle}.</p></div>
       <Link href="/investigate" data-testid={`button-new-from-desk-${desk.id}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6]"><ImagePlus size={15} />Add a photo</Link>
     </div>
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text={`The ${desk.label} desk is unavailable just now.`} />
       : rows.length === 0 ? <EmptyState icon={desk.icon} eyebrow="Desk is ready" title="No investigations here yet." text={`Photos submitted in the ${desk.label} upload spot will be filed here.`} action={<Link href="/investigate" data-testid={`empty-desk-start-${desk.id}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add a photo <ArrowRight size={15} /></Link>} />
-      : <div className="wa-archive-grid">{rows.map((item) => <InvestigationCard key={item.id} item={item} />)}</div>}
+      : <ContactSheet>{rows.map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1}/>)}</ContactSheet>}
   </div>;
 }
 
@@ -658,6 +662,8 @@ function InvestigatePage() {
   const activeSlot = investigationPhotoSlots.find((slot) => slot.id === activeSlotId)!;
   const activeDeskIndex = fieldDesks.findIndex((desk) => desk.id === activeSlotId);
   const [originalRunning, setOriginalRunning] = useState(false);
+  const [originalCount,setOriginalCount]=useState(0);
+  useEffect(()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const pane=document.querySelector('[data-active-desk]');const animation=pane?.animate([{transform:'translateX(12px)',opacity:.5},{transform:'translateX(0)',opacity:1}],{duration:250,easing:'ease-out'});return()=>animation?.cancel();},[activeSlotId]);
   const pending = submitting || uploadUrl.isPending || create.isPending;
   const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
     setLocalError('');
@@ -798,9 +804,9 @@ function InvestigatePage() {
 
   return <div className="wa-intake fade-up investigation-theme mx-auto" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><h1 className="mt-3 font-editorial text-5xl tracking-[-.06em] md:text-6xl">Start with what you see.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
+     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Start with what you see.</DeskHeadline><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
     <p className="wa-mode-note mb-6">This is image analysis, not the private missing-person evidence workspace. For authorized case organization without automatic image analysis, use <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> or the <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link>.</p>
-    <form id="investigate-form" onSubmit={submit} className="space-y-6">
+    <form id="investigate-form" onSubmit={submit} className="space-y-6" style={stepProgress(originalCount+selectedCount>0,Boolean(title.trim()||context.trim()||shotAt))}>
       <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
         <div className="mb-5">
           <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
@@ -829,8 +835,8 @@ function InvestigatePage() {
             </button>;
           })}
         </div>
-        <div role="region" aria-label={`${activeSlot.label} photo upload`}>
-          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => setLocation(path)} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
+        <div role="region" className="fd-desk-page" aria-label={`${activeSlot.label} photo upload`} data-active-desk={activeSlotId}>
+          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake onSelectionCountChange={setOriginalCount} onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => setLocation(path)} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
           {activeSlot.id !== 'original' && <PhotoUploadSlot
             key={activeSlot.id}
             slot={activeSlot}
@@ -866,7 +872,7 @@ function InvestigatePage() {
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} desk={analysisDesk} />}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
-        <button type="submit" disabled={pending} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
+        <button type="submit" disabled={pending||selectedCount===0} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
           {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <ScanSearch size={16} /></>}
         </button>
          <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId !== 'fake-news' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
@@ -903,7 +909,7 @@ function InvestigatePage() {
 
 function LibraryPage() {
   const [search, setSearch] = useState('');
-  const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined, { query: { queryKey: getListInvestigationsQueryKey(search.trim() ? { query: search.trim() } : undefined), refetchInterval: pollListWhileAnalyzing } });
+  const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined, { query: { queryKey: getListInvestigationsQueryKey(search.trim() ? { query: search.trim() } : undefined), refetchInterval: pollListWhileAnalyzing,placeholderData:previous=>previous } });
   const remove = useDeleteInvestigation();
   const update = useUpdateInvestigation();
   const client = useQueryClient();
@@ -911,7 +917,7 @@ function LibraryPage() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [actionMessage, setActionMessage] = useState('');
-  const rows = query.data ?? [];
+  const rows = useMemo(()=>{const term=search.trim().toLocaleLowerCase(),matches=(item:Investigation)=>JSON.stringify([item.title,item.context,item.summary,item.candidates]).toLocaleLowerCase().includes(term);return [...(query.data??[])].sort((a,b)=>Number(matches(b))-Number(matches(a)));},[query.data,search]);
   const selectedRows = rows.filter((item) => selectedIds.has(item.id));
   const toggleSelect = (item: Investigation) => setSelectedIds((current) => {
     const next = new Set(current);
@@ -960,11 +966,11 @@ function LibraryPage() {
   };
   return <div className="wa-library fade-up">
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Personal archive / index</PageEyebrow><h1 className="mt-3 font-editorial text-5xl tracking-[-.05em] md:text-6xl">Your library.</h1><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
+      <div><PageEyebrow>Personal archive / index</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-6xl">Your library.</DeskHeadline><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
     </div>
     <div className="mb-7 flex flex-col gap-3 sm:flex-row">
-      <label className="relative block max-w-[560px] flex-1"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8d998d]" /><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full rounded-full border border-[#d8d1c2] bg-[#f8f5ec] pl-11 pr-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></label>
-      <div className="flex items-center gap-2 self-start rounded-full border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] text-[#76857a] sm:self-auto"><BookOpen size={14} className="text-[#a56e4b]" />{query.data?.length ?? '—'} saved</div>
+      <label className="fd-search-ruler relative block max-w-[560px] flex-1"><span className="sr-only">Search your library</span><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full pr-4 text-sm" /></label>
+      <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={query.data.length}/>: '—'} saved {query.isFetching&&<span> / UPDATING INDEX</span>}</div>
       <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>
       {selectMode && <button type="button" onClick={deleteSelected} disabled={!selectedRows.length || remove.isPending} data-testid="button-delete-selected-investigations" className="rounded-full bg-[#a65044] px-5 py-3 text-xs font-semibold text-white disabled:opacity-45">Delete selected ({selectedRows.length})</button>}
     </div>
@@ -973,7 +979,7 @@ function LibraryPage() {
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." />
       : (query.data ?? []).length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search ? 'No matching notes' : 'The index is open'} title={search ? 'Nothing found here.' : 'Your library is still empty.'} text={search ? 'Try another place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search ? <button type="button" onClick={() => setSearch('')} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear search</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
-      : <div className="wa-archive-grid">{rows.map((item) => <InvestigationCard key={item.id} item={item} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</div>}
+      : <ContactSheet orderKey={`${search}:${rows.map(row=>row.id).join(',')}`}>{rows.map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</ContactSheet>}
   </div>;
 }
 
@@ -1070,7 +1076,7 @@ function InvestigationPage() {
   return <div className="wa-result fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><h1 className="mt-3 max-w-4xl font-editorial text-5xl tracking-[-.05em] md:text-6xl" data-testid="text-detail-title">{displayTitle(item.title)}</h1><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
+      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><DeskHeadline className="mt-3 max-w-4xl text-5xl md:text-6xl" testId="text-detail-title">{displayTitle(item.title)}</DeskHeadline><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
       <div className="flex gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
     </div>
     {message && <p role="status" data-testid="status-investigation-update" className="mb-5 rounded-xl border border-[#c8d4c4] bg-[#edf2e9] px-4 py-3 text-sm text-[#476450]">{message}</p>}
@@ -1174,7 +1180,7 @@ function LeadLocationPage() {
   return <article className="fade-up mx-auto max-w-3xl">
     <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
     <PageEyebrow>{legacySourceReport ? `Legacy source-image report / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
-    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">{lead.place}</h1>
+    <DeskHeadline className="mt-3 text-5xl">{lead.place}</DeskHeadline>
     {!legacySourceReport && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
     <HealthUrgencyCard investigation={query.data} />
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
@@ -1240,18 +1246,18 @@ function SettingsPage() {
     setPreferences({ ...preferences, [key]: value });
   return <div className="wa-settings fade-up mx-auto max-w-3xl">
     <PageEyebrow>Personal archive / preferences</PageEyebrow>
-    <h1 className="mt-3 font-editorial text-5xl tracking-[-.05em]">Settings</h1>
+    <DeskHeadline className="mt-3 text-5xl">Settings</DeskHeadline>
     <p className="mt-3 text-sm text-[#718078]">Adjust how Whereabouts looks and reads on this device.</p>
     <section className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <h2 className="font-editorial text-2xl">Color theme</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {([
-          ['rescue', 'Instrument', '#b9472e', '#283b48'],
-          ['field', 'Field notebook', '#385e51', '#f4f0e6'],
-          ['ocean', 'Coastal blue', '#23617a', '#edf5f7'],
-          ['sunset', 'Warm clay', '#8b4939', '#f8eee8'],
-          ['mono', 'Black & white', '#111111', '#ffffff'],
-        ] as const).map(([value, label, accent, paper]) => <button key={value} type="button" onClick={() => update('theme', value)} aria-pressed={preferences.theme === value} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm ${preferences.theme === value ? 'border-[#385e51] ring-2 ring-[#385e51]/20' : 'border-[#d8d1c2]'}`}><span className="h-9 w-9 rounded-full border" style={{ background: `linear-gradient(135deg, ${paper} 45%, ${accent} 45%)` }} />{label}{preferences.theme === value && <Check size={15} className="ml-auto" />}</button>)}
+          ['rescue', 'Instrument', '#242723', '#f4f4f2'],
+          ['field', 'Field notebook', '#20221f', '#f4f4f2'],
+          ['ocean', 'Coastal graphite', '#202122', '#f4f4f2'],
+          ['sunset', 'Warm graphite', '#252422', '#f4f4f2'],
+          ['mono', 'Monochrome', '#1a1a1a', '#f4f4f2'],
+        ] as const).map(([value, label, accent, paper]) => <button key={value} type="button" onClick={() => update('theme', value)} aria-pressed={preferences.theme === value} data-testid={`theme-${value}`} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm ${preferences.theme === value ? 'border-[#385e51] ring-2 ring-[#385e51]/20' : 'border-[#d8d1c2]'}`}><span className="h-9 w-9 border" style={{ background:paper,borderBottom:`7px solid ${accent}` }} />{label}{preferences.theme === value && <Check size={15} className="ml-auto" />}</button>)}
       </div>
       <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 border-t border-[#e1dbce] pt-5 text-sm"><span><strong className="block">High contrast</strong><span className="mt-1 block text-xs text-[#718078]">Strengthen text and border contrast throughout the app.</span></span><input type="checkbox" checked={preferences.highContrast} onChange={(event) => update('highContrast', event.target.checked)} data-testid="toggle-high-contrast" className="h-5 w-5 accent-[#385e51]" /></label>
     </section>
@@ -1312,6 +1318,7 @@ function App() {
     <div data-app-theme={preferences.theme} data-high-contrast={preferences.highContrast} data-app-font={preferences.font}>
       <SiteCursor />
       <QueryClientProvider client={queryClient}>
+        <FieldDeskFilingNotice/>
         <TooltipProvider>
           <WouterRouter base={basePath}>
             <GuideDraftProvider><RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary></GuideDraftProvider>

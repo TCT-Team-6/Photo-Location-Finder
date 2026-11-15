@@ -3,6 +3,7 @@ import { AlertTriangle, Loader2, ShieldCheck } from 'lucide-react';
 import { useRequestUploadUrl } from '@workspace/api-client-react';
 import type { CasePhoto } from '@workspace/api-client-react';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { CropMarks } from '@/components/field-desk';
 
 export const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -113,10 +114,12 @@ export function useCasePhotoUpload() {
 
 export function PhotoPicker({ id, label, hint, file, existing, onChange, onClear, error }: { id: string; label: string; hint: string; file: File | null; existing?: CasePhoto | null; onChange: (f: File) => void; onClear: () => void; error?: string }) {
   const preview = useObjectUrl(file);
+  const[dragging,setDragging]=useState(false);
   const src = preview ?? (existing ? photoUrl(existing) : null);
   return <div>
     <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-[#344b42]">{label}</label>
-    <div className="flex items-center gap-4 rounded-xl border border-dashed border-[#b9c4b5] bg-[#e8e9df] p-3">
+    <div className={`photo-upload-dropzone relative flex items-center gap-4 p-6 ${dragging?'is-dragging':''}`} onDragOver={event=>{event.preventDefault();setDragging(true);}} onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setDragging(false);}} onDrop={event=>{event.preventDefault();setDragging(false);const file=event.dataTransfer.files[0];if(file)onChange(file);}}>
+      <CropMarks/>{dragging&&<span className="fd-drag-label">RELEASE TO FILE</span>}
       {src ? <img src={src} alt="Selected reference" className="h-20 w-20 rounded-lg object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#fbf9f3] font-data text-[9px] uppercase text-[#718078]">None</div>}
       <div className="min-w-0 flex-1">
         <input id={id} data-testid={`input-${id}`} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ''; }} className="block w-full text-xs text-[#44556d] file:mr-3 file:rounded-full file:border-0 file:bg-[#385e51] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-[#f4f0e6]" />

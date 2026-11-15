@@ -1,7 +1,8 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { ArrowRight, Camera, Compass, Crosshair, FileSearch, Fingerprint, Layers3, MapPinned, ScanLine, ShieldCheck, Signpost, Sun, Trees } from 'lucide-react';
+import { ArrowRight, Camera, Compass, Crosshair, FileSearch, Fingerprint, MapPinned, Signpost, Sun, Trees } from 'lucide-react';
 import { Link } from 'wouter';
 import { pipelineSteps } from '@/components/analysis-progress-model';
+import { DeskChecklist } from './field-desk';
 
 /** Editorial explanations only. No provider calls or simulated live findings. */
 function Reveal({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -72,10 +73,10 @@ export function TechnologyNotes() {
 }
 
 export function IntakeFieldGuide() {
-  return <aside className="wa-intake-guidance" aria-labelledby="intake-guide-heading"><div className="wa-intake-guidance-heading"><h2 id="intake-guide-heading">Before you investigate.</h2><span>FIELD CHECKLIST / 01—04</span></div><div className="wa-intake-guide-grid">
-    <article><Camera /><h3>Keep the whole frame.</h3><p>Use the clearest authorized source file you have. Roads, signs, horizons, and surrounding buildings can be more useful than the main subject. Keep the original unchanged.</p></article>
-    <article><Layers3 /><h3>Choose the right desk.</h3><p>Investigations and Recreation explore possible places. Journalism reviews visible image-integrity signals. Each image is processed separately, not combined into one location estimate.</p></article>
-    <article><ScanLine /><h3>Unknown is a valid answer.</h3><p>A photo date is read when present; missing metadata stays unknown. Your notes help you review the saved record, but are not sent to the location finder.</p></article>
-    <article><ShieldCheck /><h3>Review before acting.</h3><p>A candidate location is a lead, not proof. Compare it with independent sources. Private cases are separate: no automatic analysis, face matching, crawling, or person-location search.</p></article>
-  </div><div className="wa-intake-guide-footer"><p>Five-stage model: Upload photo → Read scene → Compare clues → Rank findings → Save report. This explains the workflow; it is not live provider telemetry.</p><Link href="/demo" data-testid="link-intake-example-report">See a sample report <ArrowRight size={14} /></Link></div></aside>;
+  return <aside className="wa-intake-guidance" aria-labelledby="intake-guide-heading"><div className="wa-intake-guidance-heading"><h2 id="intake-guide-heading">Before you investigate.</h2><span>FIELD CHECKLIST / 01—04 · OPTIONAL</span></div><DeskChecklist items={[
+    'Keep the whole frame. Use the clearest authorized source file you have. Roads, signs, horizons, and surrounding buildings can be more useful than the main subject. Keep the original unchanged.',
+    'Choose the right desk. Investigations and Recreation explore possible places. Journalism reviews visible image-integrity signals. Each image is processed separately, not combined into one location estimate.',
+    'Unknown is a valid answer. A photo date is read when present; missing metadata stays unknown. Your notes help you review the saved record, but are not sent to the location finder.',
+    'Review before acting. A candidate location is a lead, not proof. Compare it with independent sources. Private cases are separate: no automatic analysis, face matching, crawling, or person-location search.',
+  ]}/><div className="wa-intake-guide-footer"><p>Five-stage model: Upload photo → Read scene → Compare clues → Rank findings → Save report. This explains the workflow; it is not live provider telemetry.</p><Link href="/demo" data-testid="link-intake-example-report">See a sample report <ArrowRight size={14} /></Link></div></aside>;
 }
