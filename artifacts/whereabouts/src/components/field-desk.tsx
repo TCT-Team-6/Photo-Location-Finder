@@ -89,11 +89,4 @@ export function UploadReceipt({status}:{status:'ready'|'uploading'|'analyzing'|'
   if(status==='uploading')return <span className="fd-upload-status" role="status" data-testid="upload-byte-status">FILING / TRANSFERRING… <span className="sr-only">Indeterminate: upload byte progress is unavailable.</span></span>;
   return null;
 }
-export function FolderFront({number,children,date}:{number:number;children:ReactNode;date?:string}){return <><span className="fd-folder-tab">CASE {String(number).padStart(3,'0')}</span><div className="fd-folder-front">{children}</div>{date&&<span className="fd-folder-date">{date}</span>}</>;}
-/** A departing visual snapshot, never an input/navigation delay. */
-export function animateFolderOpen(element:HTMLElement){
-  if(reduced())return;const front=element.querySelector<HTMLElement>('.fd-folder-front');if(!front)return;
-  const rect=front.getBoundingClientRect(),clone=front.cloneNode(true) as HTMLElement;clone.setAttribute('aria-hidden','true');clone.style.cssText=`position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;pointer-events:none;z-index:8000;background:#f4f4f2;transform-origin:bottom;`;
-  document.body.appendChild(clone);const animation=clone.animate([{transform:'perspective(900px) rotateX(0)',opacity:1},{transform:'perspective(900px) rotateX(-12deg)',opacity:0}],{duration:300,easing:'ease-out'});animation.onfinish=animation.oncancel=()=>clone.remove();
-}
 export function stepProgress(photo:boolean,context:boolean):CSSProperties{return {'--fd-step-progress':photo?context?'100%':'58%':'12%'} as CSSProperties;}

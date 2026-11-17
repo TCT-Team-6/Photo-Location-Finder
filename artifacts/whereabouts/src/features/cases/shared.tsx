@@ -43,8 +43,8 @@ export function Field({ label, hint, error, children, id }: { label: string; hin
 }
 
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
-  return <div role="alert" className="flex items-start gap-3 rounded-xl border border-[#dbb6a8] bg-[#fbefeb] p-4 text-sm text-[#a64e43]">
-    <AlertTriangle size={16} className="mt-0.5 shrink-0" /><p className="flex-1">{message}</p>
+  return <div role="alert" className="instrument-error flex items-start gap-3 rounded-xl border p-4 text-sm">
+    <AlertTriangle size={16} className="mt-0.5 shrink-0" /><div className="flex-1"><span className="instrument-error-label">ERROR / 01</span><p>{message}</p></div>
     {onRetry && <button type="button" onClick={onRetry} className="font-semibold underline">Retry</button>}
   </div>;
 }

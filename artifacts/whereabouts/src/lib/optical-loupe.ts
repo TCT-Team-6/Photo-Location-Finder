@@ -1,8 +1,8 @@
 import {
-  AmbientLight, BoxGeometry, CapsuleGeometry, CatmullRomCurve3, CylinderGeometry, DataTexture,
-  DirectionalLight, Group, LinearFilter, NearestFilter, Mesh, MeshPhysicalMaterial, MeshStandardMaterial,
-  NoToneMapping, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial,
-  ShadowMaterial, SphereGeometry, SRGBColorSpace, Texture, TorusGeometry, TubeGeometry,
+  AmbientLight, DataTexture,
+  DirectionalLight, LinearFilter, NearestFilter, Mesh, MeshPhysicalMaterial,
+  PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial,
+  ShadowMaterial, SRGBColorSpace, Texture,
   Vector2, Vector3, Vector4, WebGLRenderer, WebGLRenderTarget, type BufferGeometry, type Material,
 } from 'three';
 import type { SpringAxis } from './loupe-physics';
@@ -21,6 +21,8 @@ import {deskSound} from './desk-sound';
 import {RGB_SCREEN_GLSL} from './rgb-screen';
 import {STAGE_PROJECTION_GLSL,lensSurface} from './loupe-projection';
 import {createLiveCanvasTexture} from './live-canvas-texture';
+import {createLoupeAssembly} from './loupe-model';
+import {createInstrumentEnvironment,instrumentMaterial,instrumentRenderer} from './instrument-kit';
 
 const PHOTO_VERTEX=`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
 const PHOTO_FRAGMENT=`uniform sampler2D uPhoto;uniform vec2 uCover;varying vec2 vUv;
@@ -110,16 +112,18 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement,image: HTMLImage
   const canvasUploads:ReturnType<typeof createLiveCanvasTexture>[]=[];
   let frame=0,disposed=false,dataWall:ReturnType<typeof createDataWall>|null=null,panelSurface:ReturnType<typeof createPanelSurface>|null=null,sceneTarget:WebGLRenderTarget|null=null;
   let lightToDispose:DirectionalLight|null=null;
+  let environment:ReturnType<typeof createInstrumentEnvironment>|null=null;
   let capture:ReturnType<typeof createPageCapture>|null=null;
-  const release=()=>{cancelAnimationFrame(frame);capture?.dispose();canvasUploads.forEach(resource=>resource.dispose());geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());sceneTarget?.dispose();lightToDispose?.shadow.dispose();dataWall?.dispose();panelSurface?.dispose();layer.dispose();renderer.dispose();};
+  const release=()=>{cancelAnimationFrame(frame);capture?.dispose();canvasUploads.forEach(resource=>resource.dispose());geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());sceneTarget?.dispose();environment?.dispose();lightToDispose?.shadow.dispose();dataWall?.dispose();panelSurface?.dispose();layer.dispose();renderer.dispose();};
   try{
     canvas.removeAttribute('data-data-resolve');
-    renderer.setClearColor(0xf4f4f2,0);renderer.outputColorSpace=SRGBColorSpace;renderer.toneMapping=NoToneMapping;
+    renderer.setClearColor(0xf4f4f2,0);renderer.outputColorSpace=instrumentRenderer.outputColorSpace;renderer.toneMapping=instrumentRenderer.toneMapping;
     renderer.debug.onShaderError=()=>{throw new Error('The 3D instrument shader could not compile.');};
-    renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFShadowMap;renderer.shadowMap.autoUpdate=false;
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=instrumentRenderer.shadowType;renderer.shadowMap.autoUpdate=false;
     const ownG=<T extends BufferGeometry>(g:T):T=>{geometries.push(g);return g;};
     const ownM=<T extends Material>(m:T):T=>{materials.push(m);return m;};
     const scene=new Scene(),camera=new PerspectiveCamera(35,1,.1,12000);
+    environment=createInstrumentEnvironment(renderer);scene.environment=environment.texture;
     const source=new Texture(image);source.colorSpace=SRGBColorSpace;source.minFilter=source.magFilter=LinearFilter;source.generateMipmaps=false;source.needsUpdate=true;textures.push(source);
     const photoMaterial=ownM(new ShaderMaterial({vertexShader:PHOTO_VERTEX,fragmentShader:PHOTO_FRAGMENT,uniforms:{uPhoto:{value:source},uCover:{value:new Vector2(1,1)}},depthTest:false,depthWrite:false}));
     const photoPlane=new Mesh(ownG(new PlaneGeometry(1,1)),photoMaterial);photoPlane.renderOrder=-10;scene.add(photoPlane);
@@ -142,41 +146,16 @@ export function createOpticalRenderer(canvas: HTMLCanvasElement,image: HTMLImage
       vertexShader:GLASS_VERTEX,fragmentShader:GLASS_FRAGMENT,transparent:true,depthWrite:false,
       uniforms:{uPaperTitle:paperTitle,uPaperIntro:paperIntro,uWall:wallUniform,uScene:{value:background.texture},uPage:pageUniform,uCaptureReady:{value:0},uDomControl:{value:new Vector4()},uHeaderBottom:{value:0},uWait:{value:0},uFlash:{value:0},uSplit:{value:0},uCameraZ:{value:1},uDataDpr:{value:dataGlyphSamplingRatio(devicePixelRatio)},uWallRect:{value:new Vector4(0,0,1,1)},uResolution:{value:new Vector2(1,1)},uStage:{value:new Vector2(1,1)},uViewport:{value:new Vector2(1,1)},uStageOrigin:{value:new Vector2()},uPixelDpr:{value:1},uPhotoSize:{value:new Vector2(1,1)},uCenter:{value:new Vector2()},uResolve:{value:0},uRadius:{value:1},uMagnification:{value:GLASS_MAGNIFICATION},uLight:{value:new Vector3(-.85,1,.65)}},
     }));
-    const dark=ownM(new MeshPhysicalMaterial({color:0x202421,metalness:.72,roughness:.28,clearcoat:.55,clearcoatRoughness:.24}));
-    const bracketMaterial=ownM(new MeshStandardMaterial({color:0x1c1c1c,metalness:.3,roughness:.7}));
-    const steel=ownM(new MeshStandardMaterial({color:0xa1a69e,metalness:.85,roughness:.22}));
-    const red=ownM(new MeshStandardMaterial({color:0xb6382e,metalness:.2,roughness:.45}));
-    const grip=ownM(new MeshPhysicalMaterial({color:0x191d19,metalness:.12,roughness:.65}));
-    const mesh=(parent:Group,geometry:BufferGeometry,material:Material,px=0,py=0,pz=0)=>{
-      const object=new Mesh(ownG(geometry),material);object.position.set(px,py,pz);object.castShadow=true;object.receiveShadow=true;parent.add(object);return object;
-    };
-    const loupe=new Group();scene.add(loupe);
-    mesh(loupe,new TorusGeometry(107,9,20,104),dark);
-    mesh(loupe,new TorusGeometry(102,1.5,10,104),steel,0,0,6);
-    mesh(loupe,new TorusGeometry(108,.85,8,104),red,0,0,9);
-    mesh(loupe,new TorusGeometry(113.5,.8,8,104),steel,0,0,2);
-    const glass=mesh(loupe,new SphereGeometry(1,72,36),glassMaterial,0,0,1);glass.scale.set(100,100,9);glass.castShadow=false;glass.renderOrder=2;
-    // The handle has its own damped rotational joint behind the lens.
-    const handle=new Group();handle.position.set(0,-105,0);loupe.add(handle);
-    mesh(handle,new CylinderGeometry(12,11,24,24),steel,0,-4,0);
-    mesh(handle,new CapsuleGeometry(11,88,8,20),grip,0,-65,-1);
-    mesh(handle,new CylinderGeometry(10,10,4,24),dark,0,-120,-1);
-    for(let i=0;i<8;i++){const groove=mesh(handle,new TorusGeometry(11,.45,6,24),dark,0,-38-i*7,-1);groove.rotation.x=Math.PI/2;}
-    const holder=new Group();scene.add(holder);
-    // Keep both real mounting bolts within the 1.6x glass field, not hidden under the rim.
-    mesh(holder,new BoxGeometry(100,23,9),bracketMaterial,0,15,5);
-    mesh(holder,new BoxGeometry(38,12,18),bracketMaterial,0,15,16);
-    mesh(holder,new BoxGeometry(14,70,9),bracketMaterial,0,-20,16);
-    for(const sx of[-36,36]){
-      const screw=mesh(holder,new SphereGeometry(4,20,12),steel,sx,15,11);screw.scale.z=.45;
-      mesh(holder,new BoxGeometry(4,.8,.5),bracketMaterial,sx,15,13);
-    }
-    mesh(holder,new SphereGeometry(2.7,16,12),red,0,23.5,11);
-    const cradleCurve=new CatmullRomCurve3([new Vector3(-102,45,18),new Vector3(-106,-30,24),new Vector3(0,-55,29),new Vector3(106,-30,24),new Vector3(102,45,18)]);
-    mesh(holder,new TubeGeometry(cradleCurve,64,5.5,10,false),bracketMaterial);
-    // Dark contact pads sit under the resting rim; real shadowing adds the contact occlusion.
-    mesh(holder,new CapsuleGeometry(6,14,4,12),grip,-101,-6,25);
-    mesh(holder,new CapsuleGeometry(6,14,4,12),grip,101,-6,25);
+    const paper=computed.getPropertyValue('--paper').trim()||'#f4f4f2';
+    const dark=ownM(new MeshPhysicalMaterial(instrumentMaterial('Black anodized',paper)));
+    const bracketMaterial=ownM(new MeshPhysicalMaterial(instrumentMaterial('Black anodized',paper)));
+    const steel=ownM(new MeshPhysicalMaterial(instrumentMaterial('Polished chrome',paper)));
+    const red=ownM(new MeshPhysicalMaterial({color:0xb6382e,metalness:.2,roughness:.45}));
+    const grip=ownM(new MeshPhysicalMaterial(instrumentMaterial('Rubber',paper)));
+    // Exact same exported model is used by the small InstrumentKit loupes.
+    // The original optical glass material and every optical uniform remain unchanged.
+    const {loupe,glass,handle,holder}=createLoupeAssembly({dark,steel,red,grip,bracket:bracketMaterial,glass:glassMaterial},ownG);
+    scene.add(loupe);scene.add(holder);
     const receiver=new Mesh(ownG(new PlaneGeometry(1,1)),ownM(new ShadowMaterial({opacity:.25,depthWrite:false})));receiver.position.z=.05;receiver.receiveShadow=true;scene.add(receiver);
     scene.add(new AmbientLight(0xf4f4f2,.85));
     const key=new DirectionalLight(0xfaf9f4,3.1);lightToDispose=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.00015;key.shadow.normalBias=.4;scene.add(key);scene.add(key.target);

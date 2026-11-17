@@ -5,6 +5,7 @@ import {MiniPixelInspector} from './mini-pixel-inspector';
 import {feedbackSpring} from '@/lib/lens-feedback';
 import {SubpixelSecret} from './subpixel-secret';
 import {departPrint,settlePrint} from '@/lib/print-motion';
+import {InstrumentView as PhysicalView} from './InstrumentKit';
 
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function HelpNote({children}:{children:ReactNode}){
@@ -36,27 +37,37 @@ export function HangingTag({children}:{children:ReactNode}){
 }
 export function RotaryDial({value,labels,onChange,label,disabled=false}:{value:number;labels:string[];onChange:(value:number)=>void;label:string;disabled?:boolean}){
   const button=useRef<HTMLButtonElement>(null),current=useRef({value,onChange,disabled});current.current={value,onChange,disabled};
-  const drag=useRef<{x:number;value:number}|null>(null),suppress=useRef(false);
-  const change=(next:number)=>{const c=current.current,n=Math.max(0,Math.min(labels.length-1,next));if(!c.disabled&&n!==c.value){deskSound('detent');c.onChange(n);}};
+   const drag=useRef<{x:number;y:number;value:number;angle:number;rotation:number}|null>(null),suppress=useRef(false);
+   const[pressed,setPressed]=useState(false),pulse=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
+   useEffect(()=>()=>clearTimeout(pulse.current),[]);
+   const change=(next:number)=>{const c=current.current,n=label==='Desk'?((next%labels.length)+labels.length)%labels.length:Math.max(0,Math.min(labels.length-1,next));if(!c.disabled&&n!==c.value){deskSound('detent');setPressed(true);clearTimeout(pulse.current);pulse.current=setTimeout(()=>setPressed(false),65);c.onChange(n);}};
   const changeRef=useRef(change);changeRef.current=change;
   useEffect(()=>{const node=button.current;if(!node)return;const wheel=(e:WheelEvent)=>{if(current.current.disabled)return;e.preventDefault();e.stopPropagation();changeRef.current(current.current.value+(e.deltaY>0?1:-1));};node.addEventListener('wheel',wheel,{passive:false});return()=>node.removeEventListener('wheel',wheel);},[]);
-  return <div className="fd-dial" data-testid={`dial-${label.toLowerCase().replaceAll(' ','-')}`}>
-    <button ref={button} type="button" className="fd-dial-knob" disabled={disabled} role="slider" aria-label={label} aria-valuemin={0} aria-valuemax={labels.length-1} aria-valuenow={value} aria-valuetext={labels[value]}
-      onPointerDown={e=>{e.stopPropagation();drag.current={x:e.clientX,value};suppress.current=false;e.currentTarget.setPointerCapture(e.pointerId);}}
-      onPointerMove={e=>{e.stopPropagation();if(!drag.current)return;const dx=e.clientX-drag.current.x;if(Math.abs(dx)>4)suppress.current=true;change(drag.current.value+Math.round(dx/36));}}
-      onPointerUp={e=>{e.stopPropagation();drag.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}}
-      onPointerCancel={()=>{drag.current=null;suppress.current=true;}}
+   const turn=useRef({angle:0,rotation:0,start:0});
+   const onTurn=(radians:number,phase:'start'|'move'|'end'|'click')=>{
+     if(disabled)return;
+     if(phase==='start'){turn.current={angle:radians,rotation:value*Math.PI*2/3,start:value};return;}
+     if(phase==='click'){const index=((Math.round((radians+value*Math.PI*2/3)/(Math.PI*2/3))%3)+3)%3;change(index);return;}
+     if(phase==='move'){let delta=radians-turn.current.angle;if(delta>Math.PI)delta-=Math.PI*2;if(delta< -Math.PI)delta+=Math.PI*2;turn.current.angle=radians;turn.current.rotation-=delta;change(((Math.round(turn.current.rotation/(Math.PI*2/3))%3)+3)%3);}
+   };
+   return <div className={label==='Desk'?'physical-footprint physical-dial':'fd-dial'} data-control={label} data-testid={`dial-${label.toLowerCase().replaceAll(' ','-')}`}>
+     {label==='Desk'&&<PhysicalView kind="dial" value={value} pressed={pressed} interaction={{disabled,onTurn,onSelect:index=>change(index)}}/>}
+     <button ref={button} type="button" className={label==='Desk'?'physical-hit':'fd-dial-knob'} disabled={disabled} role="slider" aria-label={label} aria-valuemin={0} aria-valuemax={labels.length-1} aria-valuenow={value} aria-valuetext={labels[value]}
+       onPointerDown={e=>{const r=e.currentTarget.getBoundingClientRect();drag.current={x:e.clientX,y:e.clientY,value,angle:Math.atan2(e.clientY-r.top-r.height/2,e.clientX-r.left-r.width/2),rotation:0};suppress.current=false;e.currentTarget.setPointerCapture(e.pointerId);}}
+       onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.hypot(dx,dy)>4)suppress.current=true;const r=e.currentTarget.getBoundingClientRect(),px=e.clientX-r.left-r.width/2,py=e.clientY-r.top-r.height/2,angle=Math.atan2(py,px);let delta=angle-d.angle;if(delta>Math.PI)delta-=Math.PI*2;if(delta< -Math.PI)delta+=Math.PI*2;d.rotation+=delta;d.angle=angle;change(d.value+Math.round(Math.hypot(px,py)<24?dx/36:d.rotation/(Math.PI/4)));}}
+       onPointerUp={e=>{drag.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}}
+       onPointerCancel={e=>{drag.current=null;suppress.current=true;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}}
       onClick={e=>{e.stopPropagation();if(suppress.current&&e.detail!==0){suppress.current=false;return;}change((value+1)%labels.length);}}
       onKeyDown={e=>{e.stopPropagation();if(['ArrowRight','ArrowUp','ArrowLeft','ArrowDown','Home','End'].includes(e.key)){e.preventDefault();change(e.key==='Home'?0:e.key==='End'?labels.length-1:value+(['ArrowRight','ArrowUp'].includes(e.key)?1:-1));}}}>
-      <span style={{transform:`rotate(${-55+value*55}deg)`}}/>
+       {label!=='Desk'&&<span aria-hidden="true">+</span>}
     </button>
-    <div className="fd-dial-labels">{labels.map((text,i)=><button key={text} type="button" disabled={disabled} aria-pressed={value===i} onClick={()=>change(i)}>{text}</button>)}</div>
+     <div className={label==='Desk'?'physical-dial-labels':'fd-dial-labels'}>{labels.map((text,i)=><button key={text} type="button" disabled={disabled} aria-pressed={value===i} onClick={()=>change(i)}>{text}</button>)}</div>
     <output>{label.toUpperCase()} {labels[value]}</output>
   </div>;
 }
 const titles=['Keep the whole frame.','Choose the right desk.','Unknown is a valid answer.','Review before acting.'];
 const explanations=['Keep the original frame and visible context. Avoid edits that remove useful scene clues.','Investigations and Recreation estimate places; Journalism reviews image authenticity. Private cases remain a separate, authorized evidence workspace.','Leave unavailable dates and context blank. A guess is not a recorded fact.','Review estimates and sources independently before acting. Image analysis is not forensic proof or emergency assistance.'];
-export function FlipChecklist(){const[flipped,setFlipped]=useState<number[]>([]);return <div><p className="font-data text-[10px] mt-8">FIELD CHECKLIST / OPTIONAL</p><div className="fd-flip-checklist">{titles.map((title,i)=><div key={title}><button type="button" className="fd-flip-card" data-flipped={flipped.includes(i)} aria-expanded={flipped.includes(i)} onClick={()=>setFlipped(items=>items.includes(i)?items.filter(n=>n!==i):[...items,i])}><span><i><b>0{i+1} / TURN TO READ</b>{title}</i><i>{explanations[i]}</i></span></button><label className="flex gap-2 text-[10px] items-center py-3"><input type="checkbox"/>Noted · optional</label></div>)}</div></div>;}
+export function FlipChecklist(){const[flipped,setFlipped]=useState<number[]>([]);return <div><p className="font-data text-[10px] mt-8">FIELD CHECKLIST / OPTIONAL</p><div className="fd-flip-checklist">{titles.map((title,i)=><div key={title}><label className="fd-check-inside"><input type="checkbox" aria-label={`Noted: ${title}`} data-testid={`checkbox-field-checklist-${i}`}/></label><button type="button" className="fd-flip-card" data-testid={`button-field-checklist-${i}`} data-flipped={flipped.includes(i)} aria-expanded={flipped.includes(i)} onClick={()=>setFlipped(items=>items.includes(i)?items.filter(n=>n!==i):[...items,i])}><span><i>{title}</i><i>{explanations[i]}</i></span></button></div>)}</div></div>;}
 export function PrintInspector({src,alt,onClose}:{src:string;alt:string;onClose:()=>void}){
   const ref=useRef<HTMLDialogElement>(null);useEffect(()=>{const node=ref.current;node?.showModal();return()=>node?.close();},[]);
   return <dialog ref={ref} className="fd-print-inspector" onCancel={onClose} onClick={e=>{if(e.target===e.currentTarget)onClose();}}><p className="font-data text-[10px] mb-4">LOCAL PRINT / PIXEL INSPECTION</p><MiniPixelInspector src={src} alt={alt}/><button type="button" onClick={onClose}>Close inspection</button></dialog>;
@@ -81,18 +92,28 @@ export function BatchPrints({items,onRemove,onOrder,errors={}}:{items:{id:string
 }
 function LocalPrint({file}:{file:File}){const[url,setUrl]=useState(''),[open,setOpen]=useState(false);useEffect(()=>{const next=URL.createObjectURL(file);setUrl(next);return()=>URL.revokeObjectURL(next);},[file]);return <><button type="button" className="block h-28 w-full" onClick={()=>setOpen(true)} aria-label={`Inspect ${file.name}`}><img src={url||undefined} alt={file.name} draggable={false} className="w-full h-full object-contain"/></button>{open&&url&&<PrintInspector src={url} alt={file.name} onClose={()=>setOpen(false)}/>}</>;}
 export function EmptyTrayLoupe({message}:{message:string}){
-  const button=useRef<HTMLButtonElement>(null),secret=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number}|null>(null),offset=useRef({x:0,y:0}),moved=useRef(false);
-  const[shown,setShown]=useState(false);
-  const paint=(x:number,y:number)=>{const node=button.current,parent=node?.parentElement;if(!node||!parent)return;const startX=parent.clientWidth-76,startY=parent.clientHeight-100;offset.current={x:Math.max(-startX,Math.min(12,x)),y:Math.max(-startY,Math.min(10,y))};node.style.transform=`translate(${offset.current.x}px,${offset.current.y}px)`;secret.current?.style.setProperty('--secret-x',`${startX+32+offset.current.x}px`);secret.current?.style.setProperty('--secret-y',`${startY+24+offset.current.y}px`);setShown(true);};
-  const home=()=>{const node=button.current;if(node&&!reduced())node.animate([{transform:node.style.transform},{transform:'translate(0,0)'}],{duration:250,easing:'cubic-bezier(.2,1,.3,1)'});if(node)node.style.transform='translate(0,0)';offset.current={x:0,y:0};setShown(false);};
+  const tool=useRef<HTMLDivElement>(null),secret=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number}|null>(null),offset=useRef({x:0,y:0}),moved=useRef(false),frame=useRef(0),velocity=useRef({x:0,y:0}),last=useRef(0);
+  const[shown,setShown]=useState(false),[held,setHeld]=useState(false);
+  useEffect(()=>()=>cancelAnimationFrame(frame.current),[]);
+  const paint=(x:number,y:number)=>{const node=tool.current,parent=node?.parentElement;if(!node||!parent)return;const startX=node.offsetLeft,startY=node.offsetTop;offset.current={x:Math.max(-startX,Math.min(parent.clientWidth-startX-node.offsetWidth,x)),y:Math.max(-startY,Math.min(parent.clientHeight-startY-node.offsetHeight,y))};node.style.transform=`translate(${offset.current.x}px,${offset.current.y}px)`;secret.current?.style.setProperty('--secret-x',`${startX+80+offset.current.x}px`);secret.current?.style.setProperty('--secret-y',`${startY+57+offset.current.y}px`);setShown(true);window.dispatchEvent(new Event('whereabouts:instrument-motion'));};
+  const home=()=>{cancelAnimationFrame(frame.current);velocity.current={x:0,y:0};last.current=0;
+    if(reduced()){paint(0,0);setShown(false);return;}
+    const tick=(now:number)=>{const dt=last.current?Math.min(.032,(now-last.current)/1000):.016;last.current=now;
+      const x=feedbackSpring({position:offset.current.x,velocity:velocity.current.x},0,dt,220,22),y=feedbackSpring({position:offset.current.y,velocity:velocity.current.y},0,dt,220,22);velocity.current={x:x.velocity,y:y.velocity};paint(x.position,y.position);
+      if(Math.abs(x.position)+Math.abs(y.position)+Math.abs(x.velocity)+Math.abs(y.velocity)>.08)frame.current=requestAnimationFrame(tick);else{paint(0,0);setShown(false);frame.current=0;}
+    };frame.current=requestAnimationFrame(tick);
+  };
+  const inspect=()=>{if(shown)home();else{const node=tool.current,parent=node?.parentElement;if(node&&parent)paint(parent.clientWidth/2-node.offsetLeft-80,parent.clientHeight/2-node.offsetTop-57);}};
   return <>
     <div ref={secret} className="fd-empty-secret" style={{'--secret-visible':shown?1:0} as React.CSSProperties} aria-hidden="true"><SubpixelSecret text={message}/></div>
-    <button ref={button} type="button" className="fd-empty-tool" aria-label={shown?message:'Inspect empty tray; arrows move, Escape returns'}
-      onPointerDown={e=>{button.current?.getAnimations().forEach(a=>a.cancel());drag.current={x:e.clientX-offset.current.x,y:e.clientY-offset.current.y};moved.current=false;e.currentTarget.setPointerCapture(e.pointerId);}}
-      onPointerMove={e=>{if(drag.current){moved.current=true;paint(e.clientX-drag.current.x,e.clientY-drag.current.y);}}}
-      onPointerUp={()=>{drag.current=null;if(moved.current)home();}} onPointerCancel={()=>{drag.current=null;home();}}
-      onClick={()=>{if(moved.current){moved.current=false;return;}if(shown)home();else{const p=button.current?.parentElement;if(p)paint(-p.clientWidth/2+76,-p.clientHeight/2+100);}}}
-      onKeyDown={e=>{const delta:{[key:string]:number[]}={ArrowLeft:[-24,0],ArrowRight:[24,0],ArrowUp:[0,-24],ArrowDown:[0,24]};if(e.key==='Escape'){home();e.preventDefault();}else if(delta[e.key]){e.preventDefault();button.current?.getAnimations().forEach(a=>a.cancel());paint(offset.current.x+delta[e.key][0],offset.current.y+delta[e.key][1]);}}}/>
+    <div ref={tool} className="fd-empty-tool physical-footprint physical-loupe">
+      <PhysicalView kind="loupe" active={shown||held} host={tool} interaction={{onPress:setHeld,onSelect:inspect,onCancel:()=>{drag.current=null;home();},onTranslate:(x,y,phase)=>{
+        if(phase==='start'){cancelAnimationFrame(frame.current);drag.current={x:x-offset.current.x,y:y-offset.current.y};moved.current=false;}
+        else if(phase==='move'&&drag.current){moved.current=true;paint(x-drag.current.x,y-drag.current.y);}
+        else if(phase==='end'){drag.current=null;if(moved.current)home();}
+      }}}/>
+      <button type="button" className="physical-accessible" aria-label={shown?message:'Inspect empty tray; arrows move, Escape returns'} onClick={inspect} onKeyDown={e=>{const delta:Record<string,number[]>={ArrowLeft:[-24,0],ArrowRight:[24,0],ArrowUp:[0,-24],ArrowDown:[0,24]};if(e.key==='Escape'){home();e.preventDefault();}else if(delta[e.key]){e.preventDefault();cancelAnimationFrame(frame.current);paint(offset.current.x+delta[e.key][0],offset.current.y+delta[e.key][1]);}}}/>
+    </div>
     <span className="sr-only" role="status">{shown?message:''}</span>
   </>;
 }

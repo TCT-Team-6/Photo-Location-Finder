@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState,type MutableRefObject } from "react";
-import { CropMarks, UploadReceipt } from './field-desk';
+import { UploadReceipt } from './field-desk';
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, FileImage, Film, LoaderCircle, RotateCcw, ScanSearch, Upload, X } from "lucide-react";
 import {
@@ -9,6 +9,8 @@ import {
   useCreateInvestigation,
   useGetLocatorHealth,
   useRequestUploadUrl,
+  getInvestigation,
+  retryInvestigationAnalysis,
 } from "@workspace/api-client-react";
 import { AnalysisProgress, type AnalysisStage } from "@/components/analysis-status";
 import { planSelection, runIntakeItem, type IntakeItem } from "@/lib/original-intake";
@@ -16,6 +18,10 @@ import { MAX_ORIGINAL_PHOTOS } from "@/lib/media-types";
 import {movePrint} from '@/lib/investigation-steps';
 import {PrintInspector} from './desk-controls';
 import {departPrint} from '@/lib/print-motion';
+import {PhysicalTray} from './physical-controls';
+import {useReportOperation} from './report-operation';
+import {awaitCompletedReport,SavedAnalysisFailure} from '@/lib/report-polling';
+import {TrayMediaStack} from './tray-media-stack';
 
 type Props = {
   title: string;
@@ -46,11 +52,13 @@ function ItemPreview({ item }: { item: IntakeItem }) {
 }
 
 export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSelected, onOpen, onRunningChange,onSelectionCountChange,controlsRef,onStageChange,maxItems=6 }: Props) {
+  const operation=useReportOperation();
   const [items, setItems] = useState<IntakeItem[]>([]);
   const selectionCallback=useRef(onSelectionCountChange);selectionCallback.current=onSelectionCountChange;
   useEffect(()=>{selectionCallback.current?.(items.length);},[items.length]);
   const [messages, setMessages] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
+  const lastDestination=useRef('/library');
   const [stage, setStage] = useState<AnalysisStage>("uploading");
   const stageCallback=useRef(onStageChange);stageCallback.current=onStageChange;useEffect(()=>{stageCallback.current?.(stage);},[stage]);
   const dragged=useRef<string|null>(null),listRef=useRef<HTMLUListElement>(null);
@@ -89,7 +97,7 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
 
   const run = async (ids?: string[]) => {
     if (runningRef.current) return false;
-    const queue = itemsRef.current.filter((item) => item.status !== "saved" && (!ids || ids.includes(item.id)));
+    const queue = itemsRef.current.filter((item) => (item.status !== "saved" || item.analysisStatus==='analyzing' || item.analysisStatus==='failed') && (!ids || ids.includes(item.id)));
     if (!queue.length) { if(itemsRef.current.length&&itemsRef.current.every(item=>item.status==='saved'))return true;setMessages(["Choose at least one photo before starting the investigation."]); return false; }
     runningRef.current = true;
     setRunning(true);
@@ -99,15 +107,28 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
     const savedIds: string[] = [];
     const savedSet = new Set(itemsRef.current.filter((item) => item.status === "saved").map((item) => item.id));
     const total = itemsRef.current.length;
+    let lastError='';
     try {
-      for (const item of queue) {
+      for (const [index,item] of queue.entries()) {
+        if(operation.stopped())break;
+        operation.item(item.file,index+1);
+        if(item.savedId){
+          try{
+            operation.phase('analyzing');
+            if(item.analysisStatus==='failed')await retryInvestigationAnalysis(item.savedId);
+            await awaitCompletedReport(item.savedId,{get:id=>getInvestigation(id),stopped:operation.stopped});
+            patch(item.id,{status:'saved',analysisStatus:'done',error:undefined});savedIds.push(item.savedId);savedSet.add(item.id);
+          }catch(error){lastError=error instanceof Error?error.message:'Saved report could not be checked.';patch(item.id,{status:'error',...(error instanceof SavedAnalysisFailure?{analysisStatus:'failed' as const}:{}),error:lastError});}
+          continue;
+        }
         patch(item.id, { status: "uploading", error: undefined });
         setStage("uploading");
         const outcome = await runIntakeItem(item, {
           title, context, shotAt, apiKey,
+          signal:operation.signal(),
           requestUploadUrl: (variables) => requestUploadUrlRef.current(variables),
           uploadFile: async (uploadURL, file, contentType) => {
-            const response = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": contentType }, body: file });
+            const response = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": contentType }, body: file,signal:operation.signal() });
             if (!response.ok) {
               const error = new Error("The file could not be stored. Please try again.") as Error & { status: number };
               error.status = response.status;
@@ -115,10 +136,15 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
             }
           },
           createInvestigation: (variables) => createRef.current(variables),
-          onPhase: (phase) => { setStage(phase); patch(item.id, { status: phase }); },
+          onPhase: (phase) => { setStage(phase);operation.phase(phase); patch(item.id, { status: phase }); },
         });
         patch(item.id, outcome);
+        if(outcome.status==='error')lastError=outcome.error??'This file could not be analyzed.';
         if (outcome.status === "saved" && outcome.savedId) {
+          if(outcome.analysisStatus==='analyzing'||outcome.analysisStatus==='failed'){
+            try{await awaitCompletedReport(outcome.savedId,{get:id=>getInvestigation(id),stopped:operation.stopped});patch(item.id,{analysisStatus:'done'});}
+            catch(error){lastError=error instanceof Error?error.message:'Unable to check the saved report.';patch(item.id,{status:'error',...(error instanceof SavedAnalysisFailure?{analysisStatus:'failed' as const}:{}),error:lastError});continue;}
+          }
           savedIds.push(outcome.savedId);
           savedSet.add(item.id);
           await Promise.all([
@@ -132,12 +158,15 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       setRunning(false);
       onRunningChangeRef.current?.(false);
     }
-    const allSaved = savedSet.size === total;
+    const allSaved = savedSet.size === total&&!operation.stopped();
     if (allSaved && savedIds.length) {
-      onOpen(savedIds.length === 1 && total === 1 ? `/investigation/${encodeURIComponent(savedIds[0])}` : "/library");
+      lastDestination.current=savedIds.length === 1 && total === 1 ? `/investigation/${encodeURIComponent(savedIds[0])}` : "/library";
+      onOpen(lastDestination.current);
     }
+    if(!allSaved)throw Error(lastError||'Queue stopped. Accepted server analysis may continue; your selected media is retained.');
     return allSaved;
   };
+  const retryRun=async(ids?:string[])=>{operation.begin(title,itemsRef.current.length,itemsRef.current.find(item=>!ids||ids.includes(item.id))?.file);operation.setRetry(()=>{void retryRun(ids);});try{if(await run(ids))operation.complete(lastDestination.current);else operation.fail('Choose media before starting.');}catch(error){operation.fail(error instanceof Error?error.message:'The investigation could not finish.');}};
   if(controlsRef)controlsRef.current=()=>run();
 
   const remove = (id: string) => { if (!running) { departPrint(listRef.current?.children[itemsRef.current.findIndex(item=>item.id===id)]);setItems((current) => current.filter((item) => item.id !== id)); setMessages([]); } };
@@ -161,11 +190,13 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
         onDrop={(event) => { event.preventDefault(); event.stopPropagation(); setDragging(false); addFiles(event.dataTransfer.files); }}
         className={`photo-upload-dropzone relative overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${running ? "cursor-wait opacity-70" : ""}`}
         data-testid="dropzone-photo-upload"
+        data-selected={items.some(item=>item.kind==='image')}
       >
-        <CropMarks/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':items.length?`${String(items.length).padStart(2,'0')} ITEMS / LOCAL SELECTION`:'TRAY EMPTY / 00 ITEMS'}</span>
+        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':items.length?`${String(items.length).padStart(2,'0')} ITEMS / LOCAL SELECTION`:'TRAY EMPTY / 00 ITEMS'}</span>
+        <TrayMediaStack items={items} onRemove={id=>remove(id)}/><span className="tray-browse-caption" aria-hidden="true">BROWSE / ADD MEDIA</span>
         <input id="photo-upload-original" type="file" multiple={!activeVideo} accept={accept} disabled={running} className="sr-only" data-testid="input-photo-file"
           onChange={(event) => { addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
-        <label htmlFor="photo-upload-original" className={`flex cursor-pointer flex-col items-center justify-center px-4 ${items.length ? "py-4" : "h-[210px] py-5"}`}>
+        <label htmlFor="photo-upload-original" className="flex cursor-pointer flex-col items-center justify-center px-4 h-[250px] py-5">
           <span className="photo-upload-icon grid h-12 w-12 place-items-center rounded-full"><Upload size={21} strokeWidth={1.6} /></span>
           <p className="mt-3 font-editorial text-lg">{items.length ? "Add more" : "Drop a photo"}</p>
           <p className="mt-1 text-xs text-[#77847a]">or browse</p>
@@ -206,7 +237,7 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
                     <button type="button" disabled={running||index===0} onClick={()=>setItems(current=>movePrint(current,item.id,index-1))} className="text-[10px]" aria-label={`Move ${item.file.name} earlier`}>←</button>
                     <button type="button" disabled={running||index===items.length-1} onClick={()=>setItems(current=>movePrint(current,item.id,index+1))} className="text-[10px]" aria-label={`Move ${item.file.name} later`}>→</button>
                     {item.status === "error" && (
-                      <button type="button" disabled={running} onClick={() => void run([item.id])} data-testid={`button-retry-item-${index}`} className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-[#385e51] disabled:opacity-50"><RotateCcw size={12} />Try again</button>
+                      <button type="button" disabled={running} onClick={() => void retryRun([item.id])} data-testid={`button-retry-item-${index}`} className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-[#385e51] disabled:opacity-50"><RotateCcw size={12} />Try again</button>
                     )}
                     {item.status !== "saved" && (
                       <button type="button" disabled={running} onClick={() => remove(item.id)} data-testid={index === 0 ? "button-remove-photo" : `button-remove-photo-${index}`} className="photo-upload-remove inline-flex min-h-8 items-center gap-1 text-[11px] disabled:opacity-50"><X size={12} />Remove</button>
@@ -220,7 +251,7 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       )}
       {!controlsRef&&running && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={items.length} desk="original" video={activeVideo && stage === "analyzing"} />}
       {!controlsRef&&!running && items.length > 0 && pendingCount > 0 && (
-        <button type="button" onClick={() => void run()} data-testid="button-analyze-photo" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044]">
+        <button type="button" onClick={() => void retryRun()} data-testid="button-analyze-photo" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044]">
           {activeVideo ? "Analyze video" : `Analyze ${pendingCount} photo${pendingCount === 1 ? "" : "s"}`} <ScanSearch size={16} />
         </button>
       )}

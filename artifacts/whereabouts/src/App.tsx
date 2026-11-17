@@ -62,6 +62,13 @@ import {BatchPrints,DeskMargin,FlipChecklist,HangingTag,HelpNote,RotaryDial} fro
 import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
 import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
 import type {SavedInvestigationPhoto} from '@/lib/investigation-photo-uploads';
+import {PhysicalWorkspace} from '@/components/physical-workspace';
+import {OperatorAvatar} from '@/components/operator-avatar';
+import {SafeRequestError} from '@/components/safe-request-error';
+import {DeskFilterKeys,PhysicalSwitch,ShutterButton,SwatchBook,TallyCounter} from '@/components/physical-controls';
+import {ReportChip,ReportOperationProvider,useReportOperation} from '@/components/report-operation';
+import {deskMatchesFilter} from '@/lib/desk-filters';
+import './styles/physical-desk.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
@@ -351,6 +358,7 @@ function ClerkQueryClientCacheInvalidator() {
   const { setApiKey } = useApiKey();
   const { reset: resetGuideDraft } = useGuideDraft();
   const resetDraftRef = useRef(resetGuideDraft);
+  const operation=useReportOperation(),resetOperation=useRef(operation.reset);resetOperation.current=operation.reset;
   resetDraftRef.current = resetGuideDraft;
   useEffect(() => {
     let prior: string | null | undefined;
@@ -358,6 +366,7 @@ function ClerkQueryClientCacheInvalidator() {
       const current = user?.id ?? null;
       if (prior !== undefined && prior !== current) {
         client.clear();
+        resetOperation.current();
         setApiKey('');
         // Keep an anonymous draft through sign-in; drop it on sign-out or account switch.
         if (prior !== null) resetDraftRef.current();
@@ -381,6 +390,7 @@ function ClerkProviderWithRoutes() {
     routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
   >
     <ClerkQueryClientCacheInvalidator />
+    <PersistentInvestigation />
     <Switch>
       <Route path="/" component={HomeRedirect} />
       <Route path="/demo" component={DemoRoute} />
@@ -411,7 +421,13 @@ function Protected({ children }: { children: ReactNode }) {
 }
 
 function PortalRoute() { return <Protected><AppShell><DashboardPage /></AppShell></Protected>; }
-function InvestigateRoute() { return <Protected><AppShell><InvestigatePage /></AppShell></Protected>; }
+function InvestigateRoute() { return <Protected>{null}</Protected>; }
+/** Keep File objects and in-flight queue callbacks alive across workspace navigation. */
+function PersistentInvestigation(){
+  const[location]=useLocation();
+  const{user}=useUser();
+  return <Show when="signed-in"><div hidden={location!=='/investigate'} data-report-background><AppShell><InvestigatePage key={user?.id}/></AppShell></div></Show>;
+}
 function GuideStartRoute() { return <Protected><AppShell><GuideStartPage /></AppShell></Protected>; }
 function GuideCaseRoute() { return <Protected><AppShell><GuideCasePage /></AppShell></Protected>; }
 function CasesRoute() { return <Protected><AppShell><CasesPage /></AppShell></Protected>; }
@@ -451,7 +467,7 @@ function AppShell({ children }: { children: ReactNode }) {
     { href: '/start', label: 'AI Guide', icon: <ScanSearch size={17} /> },
   ];
   const deskLinks = fieldDesks.map((desk) => ({ href: `/desk/${desk.id}`, ...desk }));
-  return <div className="wa-shell min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
+  return <div data-report-background className="wa-shell min-h-[100dvh] bg-[#f4f0e6] text-[#263d36] md:flex">
     <aside className="wa-sidebar hidden shrink-0 flex-col px-5 pb-5 pt-6 md:flex">
       <Mark inverse />
       <p className="wa-eyebrow mb-3 mt-10 px-3">Your workspace</p>
@@ -462,7 +478,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <div className="mt-auto">
         <details className="fd-id-tag relative mb-4">
           <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
-            {user?.imageUrl&&user.hasImage ? <img src={user.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <span className="fd-initial-avatar">{firstName.charAt(0).toUpperCase()||initials.charAt(0)}</span>}
+            <OperatorAvatar accountId={user?.id} imageUrl={user?.hasImage?user.imageUrl:undefined} name={firstName||initials}/>
             <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em]">OPERATOR 001</span></span>
           </summary>
           <form className="absolute bottom-14 left-0 z-30 w-[220px] rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 text-[#263d36] shadow-xl" onSubmit={async (event) => { event.preventDefault(); try { await user?.update({ unsafeMetadata: { ...user.unsafeMetadata, whereaboutsDisplayName: profileName.trim() } }); setProfileStatus('Profile saved.'); } catch { setProfileStatus('Could not save your profile.'); } }}>
@@ -480,7 +496,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <header className="wa-topbar sticky top-0 z-20 flex items-center justify-between border-b border-[#d8d1c2] px-5 md:px-8">
         <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" aria-expanded={mobileNav} data-testid="button-toggle-navigation" className="grid h-11 w-11 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
         <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {location==='/settings'?'SETTINGS':navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
-        <span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
+        <ReportChip/><span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
       </header>
       <DeskRuler/>
       {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)} onKeyDown={(event) => { if (event.key === 'Escape') setMobileNav(false); }}>
@@ -493,7 +509,7 @@ function AppShell({ children }: { children: ReactNode }) {
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
         </nav>
       </div>}
-      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-8 md:pt-9"><FieldSheet key={location} code={`${String([...navLinks,...deskLinks,{href:'/settings'}].findIndex(item=>item.href===location)+1||10).padStart(2,'0')} / FIELD DESK`}>{children}</FieldSheet></main>
+      <main className="mx-auto max-w-[1440px] px-5 pb-20 pt-8 md:px-8 md:pt-9"><FieldSheet code={`${String([...navLinks,...deskLinks,{href:'/settings'}].findIndex(item=>item.href===location)+1||10).padStart(2,'0')} / FIELD DESK`}><ErrorBoundary resetKey={location}>{children}</ErrorBoundary></FieldSheet></main>
     </div>
   </div>;
 }
@@ -502,9 +518,10 @@ function PageEyebrow({ children }: { children: ReactNode }) { return <p classNam
 
 function SkeletonBlock({ className = '' }: { className?: string }) { return <div className={`skeleton rounded-xl ${className}`} aria-hidden="true" />; }
 
-function QueryError({ retry, text = 'We could not reach your field notes.' }: { retry: () => void; text?: string }) {
-  return <div role="alert" className="rounded-2xl border border-[#dfc6b6] bg-[#f9eee6] p-7 text-[#704f3d]" data-testid="status-query-error">
-    <p className="font-editorial text-2xl">{text}</p><p className="mt-2 text-sm text-[#886d5a]">Your work is safe. Give it another try.</p>
+function QueryError({ retry, text = 'We could not reach your field notes.',error }: { retry: () => void; text?: string;error?:unknown }) {
+  return <div role="alert" className="instrument-error rounded-2xl border p-7" data-testid="status-query-error">
+    <span className="instrument-error-label">ERROR / 01</span><p className="font-editorial text-2xl">{text}</p><p className="mt-2 text-sm">Your work is safe. Give it another try.</p>
+    {Boolean(error)&&<SafeRequestError error={error}/>}
     <button type="button" onClick={retry} data-testid="button-retry" className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#b98d6d] px-4 py-2 text-xs font-semibold"><LoaderCircle size={14} />Try again</button>
   </div>;
 }
@@ -528,8 +545,7 @@ function DashboardPage() {
         <Stat label="This month" value={summary.data?.thisMonth ?? 0} total={summary.data?.total??0} caption="Investigations opened" icon={<Crosshair size={18} />} />
         <HangingTag><p className="font-data text-[9px] uppercase tracking-[.17em]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold">Open trail <ArrowRight size={14} /></Link>}</HangingTag>
       </div>}
-    <DeskMargin/>
-    <div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
+    <DeskMargin/><div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
       <Link href="/library" data-testid="link-view-library" className="inline-flex items-center gap-2 text-xs font-semibold text-[#62776b] hover:text-[#c8794d]">View library <ArrowRight size={14} /></Link>
     </div>
@@ -542,8 +558,8 @@ function DashboardPage() {
 
 function Stat({ label, value, caption, icon,total }: { label: string; value: number; caption: string; icon: ReactNode;total:number }) {
   return <div className="wa-stat">
-    <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div>
-    <p className="mt-5 font-editorial text-4xl tracking-[-.04em]" data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}><Odometer value={value}/></p><div className="fd-stat-ruler" title={`${value} of ${total} saved investigations`} aria-hidden="true"><span style={{width:`${total?Math.min(100,value/total*100):0}%`}}/></div><p className="mt-3 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
+    <div data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}><TallyCounter value={value} label={label}/></div>
+    <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div><div className="fd-stat-ruler" title={`${value} of ${total} saved investigations`} aria-hidden="true"><span style={{width:`${total?Math.min(100,value/total*100):0}%`}}/></div><p className="mt-3 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
   </div>;
 }
 
@@ -625,6 +641,7 @@ function FieldDeskPage() {
 }
 
 function InvestigatePage() {
+  const operation=useReportOperation(),operationRef=useRef(operation);operationRef.current=operation;
   const [activeSlotId, setActiveSlotId] = useState<PhotoUploadSlotId>('original');
   const [files, setFiles] = useState<Record<PhotoUploadSlotId, File | null>>({
     original: null,
@@ -661,7 +678,6 @@ function InvestigatePage() {
   const create = useCreateInvestigation();
   const client = useQueryClient();
   const { apiKey } = useApiKey();
-  const [, setLocation] = useLocation();
   const selectedCount = investigationPhotoSlots.filter(
     (slot) => files[slot.id],
   ).length;
@@ -733,6 +749,8 @@ function InvestigatePage() {
     if(flowStep!==3){setFlowStep(advanceInvestigationStep(flowStep,totalCount));return;}
     if(!canSubmitInvestigation(flowStep,totalCount,submitting||originalRunning))return;
     deskSound('shutter');
+    operation.begin(title,totalCount,printEntries[0]?.file);
+    operation.setRetry(()=>{(document.getElementById('investigate-form') as HTMLFormElement|null)?.requestSubmit();});
     setExtraFileErrors({});
     setLocalError('');
     setBatchStatus('');
@@ -747,10 +765,10 @@ function InvestigatePage() {
     selected.sort((a,b)=>{const ai=a.extraId??`slot:${a.slot.id}`,bi=b.extraId??`slot:${b.slot.id}`;return(printOrder.includes(ai)?printOrder.indexOf(ai):999)-(printOrder.includes(bi)?printOrder.indexOf(bi):999);});
     if(originalCount){
       setSubmitting(true);setStage('uploading');setStartedAt(Date.now());
-      try{const complete=await originalRunner.current?.();if(!complete){setLocalError('Some Investigations files need attention. Return to step 01 to review or retry them.');return;}}
-      catch(error){setLocalError(error instanceof Error?error.message:'The upload could not finish. Your selected files remain available to retry.');return;}
+      try{const complete=await originalRunner.current?.();if(!complete){const message='Some Investigations files need attention. Return to step 01 to review or retry them.';setLocalError(message);operation.fail(message);return;}}
+      catch(error){const message=error instanceof Error?error.message:'The upload could not finish. Your selected files remain available to retry.';setLocalError(message);operation.fail(message);return;}
       finally{setSubmitting(false);}
-      if(!selected.length){setLocation(originalDestination.current);return;}
+      if(!selected.length){operation.complete(originalDestination.current);return;}
     }
     setSlotErrors((current) =>
       clearErrorsForSelectedPhotoSlots(
@@ -769,13 +787,14 @@ function InvestigatePage() {
     let reportIdToOpen: string | null = null;
     try {
       const created:SavedInvestigationPhoto[]=[],failed:Partial<Record<PhotoUploadSlotId,string>>={};let failedFileCount=0;
-      for(const queued of selected){const result = await processInvestigationPhotoUploads({
+      for(const [queueIndex,queued] of selected.entries()){if(operation.stopped())break;operation.item(queued.file,originalCount+queueIndex+1);const result = await processInvestigationPhotoUploads({
         selected:[queued],
         title,
         context,
         journalismQuestion,
         apiKey,
         shotAt,
+        signal:operation.signal(),
         getContentType: imageContentType,
         requestUploadUrl: (variables) => uploadUrl.mutateAsync(variables),
         uploadFile: async (uploadURL, file, contentType) => {
@@ -783,6 +802,7 @@ function InvestigatePage() {
             method: 'PUT',
             headers: { 'Content-Type': contentType },
             body: file,
+            signal:operation.signal(),
           });
           if (!response.ok) {
             const error = new Error('The photograph could not be stored. Please try again.') as Error & { status: number };
@@ -795,6 +815,7 @@ function InvestigatePage() {
           setAnalysisDesk(slotId);
           setProgress(`${message.startsWith('Analyzing')?'ANALYZE':'UPLOAD'} / ${queued.file.name}`);
           setStage(message.startsWith('Analyzing') ? 'analyzing' : 'uploading');
+          operation.phase(message.startsWith('Analyzing')?'analyzing':'uploading');
         },
         onSaved: (slotId) => {
           if(queued.extraId){setExtraFiles(current=>current.filter(row=>row.id!==queued.extraId));return;}
@@ -814,7 +835,7 @@ function InvestigatePage() {
       if (created.length) {
         const failedCount = failedFileCount;
         if (failedCount === 0) {
-          reportIdToOpen = originalCount?'__batch__':created[0].id;
+          reportIdToOpen = totalCount>1?'__batch__':created[0].id;
         } else {
           setBatchStatus(
             `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. ${failedCount} photo${failedCount === 1 ? '' : 's'} could not be processed; retry the remaining upload${failedCount === 1 ? '' : 's'} below.`,
@@ -827,9 +848,13 @@ function InvestigatePage() {
     } finally {
       setSubmitting(false);
       setProgress('');
+      operation.settled();
     }
-    if (reportIdToOpen) setLocation(reportIdToOpen==='__batch__'?'/library':`/investigation/${encodeURIComponent(reportIdToOpen)}`);
+    if(operation.stopped())return;
+    if (reportIdToOpen) operation.complete(reportIdToOpen==='__batch__'?'/library':`/investigation/${encodeURIComponent(reportIdToOpen)}`);
+    else operation.fail('Some files could not be processed. Your remaining files and context are retained. Review the upload errors or try again.');
   };
+  useEffect(()=>{operationRef.current.setRetry(()=>{(document.getElementById('investigate-form') as HTMLFormElement|null)?.requestSubmit();});},[]);
 
   return <div className="wa-intake fade-up investigation-theme mx-auto" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
@@ -872,6 +897,8 @@ function InvestigatePage() {
             key={activeSlot.id}
             slot={activeSlot}
               trayOnly onSelectFiles={list=>{setLocalError('');addDeskFiles(list);}}
+              trayFiles={printEntries.filter(item=>item.label===activeSlot.label)}
+              onRemoveTrayFile={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}
             file={files[activeSlot.id]}
             error={slotErrors[activeSlot.id]}
             disabled={pending || originalRunning}
@@ -907,12 +934,12 @@ function InvestigatePage() {
         <footer><button type="button" onClick={()=>setFlowStep(3)}>Skip</button><button type="button" className="fd-primary px-6 py-3" onClick={()=>setFlowStep(3)}>Next →</button></footer>
       </div>
       <div hidden={flowStep!==3} className="fd-wizard-step desk-theme-panel">
-        <p className="font-data text-xs leading-7">FILES {String(totalCount).padStart(2,'0')} / ACTIVE DESK {activeSlot.label}<br/>CASE {title.trim()||'Filename titles'}<br/>All selected desks are processed; videos retain their existing workflow.</p>
+        <dl className="fd-summary"><dt>PHOTOS</dt><dd>{String(totalCount).padStart(2,'0')}</dd><dt>DESK</dt><dd>{['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM'][activeDeskIndex]}</dd><dt>CASE</dt><dd>{title.trim()||'Untitled (uses file names)'}</dd></dl><HelpNote>All selected desks are processed; videos retain their existing workflow. Each media item keeps its assigned desk.</HelpNote>
         <FlipChecklist/>
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         {(pending||originalRunning) && <div className="fd-live-stage" role="status">{progress||(stage==='uploading'?'UPLOAD / transferring selected media…':'PROCESSING / waiting for the saved report…')}<span className="block text-[10px] mt-2">Indeterminate · {analysisDesk} · started {new Date(startedAt).toLocaleTimeString()}</span></div>}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
-        <div className="fd-shutter-wrap"><button type="submit" aria-label="Analyze selected media" onKeyDown={event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();}} disabled={pending||originalRunning||totalCount===0} data-busy={pending||originalRunning} data-testid="button-analyze-photo-desks" className="fd-shutter"><Crosshair size={30} className="mx-auto"/></button><span>ANALYZE</span></div>
+        <div className="fd-shutter-wrap"><ShutterButton type="submit" aria-label="Analyze selected media" onKeyDown={event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();}} disabled={pending||originalRunning||totalCount===0} data-testid="button-analyze-photo-desks"/><span>ANALYZE</span></div>
         <p className="fd-model-reference" aria-label="Illustrative pipeline, not live stage progress">ILLUSTRATIVE MODEL, NOT LIVE PROGRESS<br/>UPLOAD → READ SCENE → COMPARE CLUES → RANK FINDINGS → SAVE REPORT</p>
         <p className="text-xs text-center">Selected media goes to its desk's analysis provider.<HelpNote>Image Locator handles location estimates. OpenAI handles Journalism image analysis. Shared case names, notes and dates stay in the private record; an optional Journalism question is sent for that desk. No new private missing-person analysis is enabled.</HelpNote></p>
         {batchStatus && (
@@ -946,6 +973,7 @@ function InvestigatePage() {
 }
 
 function LibraryPage() {
+  const[deskFilter,setDeskFilter]=useState(0);
   const [search, setSearch] = useState('');
   const query = useListInvestigations(search.trim() ? { query: search.trim() } : undefined, { query: { queryKey: getListInvestigationsQueryKey(search.trim() ? { query: search.trim() } : undefined), refetchInterval: pollListWhileAnalyzing,placeholderData:previous=>previous } });
   const remove = useDeleteInvestigation();
@@ -955,7 +983,7 @@ function LibraryPage() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [actionMessage, setActionMessage] = useState('');
-  const rows = useMemo(()=>{const term=search.trim().toLocaleLowerCase(),matches=(item:Investigation)=>JSON.stringify([item.title,item.context,item.summary,item.candidates]).toLocaleLowerCase().includes(term);return [...(query.data??[])].sort((a,b)=>Number(matches(b))-Number(matches(a)));},[query.data,search]);
+  const rows = useMemo(()=>{const term=search.trim().toLocaleLowerCase(),matches=(item:Investigation)=>JSON.stringify([item.title,item.context,item.summary,item.candidates]).toLocaleLowerCase().includes(term);return [...(query.data??[])].filter(item=>deskMatchesFilter(item.desk,deskFilter)).sort((a,b)=>Number(matches(b))-Number(matches(a)));},[query.data,search,deskFilter]);
   const selectedRows = rows.filter((item) => selectedIds.has(item.id));
   const toggleSelect = (item: Investigation) => setSelectedIds((current) => {
     const next = new Set(current);
@@ -1006,17 +1034,18 @@ function LibraryPage() {
     <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><PageEyebrow>Personal archive / index</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-6xl">Your library.</DeskHeadline><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
     </div>
-    <div className="mb-7 flex flex-col gap-3 sm:flex-row">
+    <div className="mb-7 library-instruments">
       <label className="fd-search-ruler relative block max-w-[560px] flex-1"><span className="sr-only">Search your library</span><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full pr-4 text-sm" /></label>
-      <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={query.data.length}/>: '—'} saved {query.isFetching&&<span> / UPDATING INDEX</span>}</div>
+      <DeskFilterKeys value={deskFilter} onChange={value=>{setDeskFilter(value);setSelectedIds(new Set());}}/>
+      <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={rows.length}/>: '—'} saved <span style={{visibility:query.isFetching?'visible':'hidden'}}> / UPDATING INDEX</span></div>
       <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>
       {selectMode && <button type="button" onClick={deleteSelected} disabled={!selectedRows.length || remove.isPending} data-testid="button-delete-selected-investigations" className="rounded-full bg-[#a65044] px-5 py-3 text-xs font-semibold text-white disabled:opacity-45">Delete selected ({selectedRows.length})</button>}
     </div>
     {deleteError && <p role="alert" className="mb-5 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-sm text-[#875545]" data-testid="status-delete-error">{deleteError}</p>}
     {actionMessage && <p role="status" className="mb-5 text-sm text-[#476450]" data-testid="status-library-action">{actionMessage}</p>}
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
-      : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." />
-      : (query.data ?? []).length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search ? 'No matching notes' : 'The index is open'} title={search ? 'Nothing found here.' : 'Your library is still empty.'} text={search ? 'Try another place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search ? <button type="button" onClick={() => setSearch('')} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear search</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
+      : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." error={query.error}/>
+      : rows.length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search||deskFilter ? 'No matching notes' : 'The index is open'} title={search||deskFilter ? 'Nothing found here.' : 'Your library is still empty.'} text={search||deskFilter ? 'Try another desk, place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search||deskFilter ? <button type="button" onClick={() => {setSearch('');setDeskFilter(0);}} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear filters</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
       : <ContactSheet orderKey={`${search}:${rows.map(row=>row.id).join(',')}`}>{rows.map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</ContactSheet>}
   </div>;
 }
@@ -1289,23 +1318,21 @@ function SettingsPage() {
     <p className="mt-3 text-sm text-[#718078]">Make the desk your own.<HelpNote>Adjust how Whereabouts looks and reads on this device.</HelpNote></p>
     <section className="fd-preference-section mt-8">
       <h2 className="font-editorial text-2xl">Color theme</h2>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {([
-          ['rescue', 'Instrument', '#242723', '#f4f4f2'],
-          ['field', 'Field notebook', '#27352d', '#e4eadc'],
-          ['ocean', 'Coastal graphite', '#293039', '#e0e8ee'],
-          ['sunset', 'Warm graphite', '#352c28', '#efe2d7'],
-          ['mono', 'Monochrome', '#171917', '#e6e6e6'],
-        ] as const).map(([value, label, ink, paper]) => <button key={value} type="button" onClick={() => {update('theme', value);deskSound('switch');}} aria-pressed={preferences.theme === value} data-testid={`theme-${value}`} className="fd-theme-chip"><span className="fd-chip-colors" aria-hidden="true"><i style={{background:paper}}/><i style={{background:ink}}/><i style={{background:({rescue:'#b6382e',field:'#a23e34',ocean:'#9f3e39',sunset:'#aa3b30',mono:'#a1322b'})[value]}}/></span><span>{label}{preferences.theme===value?' / applied':''}</span></button>)}
-      </div>
-      <button type="button" role="switch" aria-checked={preferences.highContrast} onClick={()=>{update('highContrast',!preferences.highContrast);deskSound('switch');}} data-testid="toggle-high-contrast" className="fd-lever mt-6"><span>High contrast</span><span className="fd-lever-track" aria-hidden="true"/></button>
+      <SwatchBook themes={[
+        {id:'rescue',label:'Instrument',colors:['#f4f4f2','#242723','#b6382e']},
+        {id:'field',label:'Field notebook',colors:['#e4eadc','#27352d','#a23e34']},
+        {id:'ocean',label:'Coastal graphite',colors:['#e0e8ee','#293039','#9f3e39']},
+        {id:'sunset',label:'Warm graphite',colors:['#efe2d7','#352c28','#aa3b30']},
+        {id:'mono',label:'Monochrome',colors:['#e6e6e6','#171917','#a1322b']},
+      ]} selected={preferences.theme} onSelect={id=>update('theme',id as AppPreferences['theme'])}/>
+      <div className="fd-lever mt-6"><span>High contrast</span><PhysicalSwitch kind="lever" value={preferences.highContrast} onChange={value=>update('highContrast',value)} label="High contrast" testId="toggle-high-contrast"/></div>
     </section>
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-2xl">Text font</h2>
       <div className="fd-type-options" role="group" aria-label="Text font">{([['default','Bricolage + DM Sans','"Bricolage Grotesque",sans-serif'],['sans','DM Sans','"DM Sans",sans-serif'],['dyslexic','Atkinson Hyperlegible','"Atkinson Hyperlegible",sans-serif']] as const).map(([value,label,font])=><button type="button" key={value} className="fd-type-card" style={{'--specimen':font} as React.CSSProperties} aria-pressed={preferences.font===value} data-testid={`font-${value}`} onClick={()=>update('font',value)}><strong>Aa</strong><span>{label}</span></button>)}</div>
       <p className="mt-3 text-xs leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
     </section>
-    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><button type="button" role="switch" aria-checked={sound} data-testid="toggle-desk-sound" className="fd-lever" onClick={()=>{setSound(!sound);setSoundEnabled(!sound);if(!sound)deskSound('switch');}}><span>Sound / {sound?'on':'off'}</span><span className="fd-lever-track" aria-hidden="true"/></button><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration for dial detents and the shutter where supported. No microphone access or audio recording.</HelpNote></p></section>
+    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span>Sound / {sound?'on':'off'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-xl">Your analysis API key</h2>
       <p className="mt-1 text-xs text-[#718078]">Optional · session memory only.<HelpNote>Your key is kept in memory for this session only, never saved in browser storage.</HelpNote></p>
@@ -1358,7 +1385,7 @@ function App() {
         <FieldDeskFilingNotice/>
         <TooltipProvider>
           <WouterRouter base={basePath}>
-            <GuideDraftProvider><RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary></GuideDraftProvider>
+            <PhysicalWorkspace><ReportOperationProvider><GuideDraftProvider><RoutedErrorBoundary><ClerkProviderWithRoutes /></RoutedErrorBoundary></GuideDraftProvider></ReportOperationProvider></PhysicalWorkspace>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

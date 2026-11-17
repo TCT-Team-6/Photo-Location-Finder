@@ -38,6 +38,24 @@ Prefer fewer objects with richer optional interactions. New Investigation is a o
 
 **How to apply:** Preserve existing capabilities and backend contracts while simplifying presentation. Keep the loupe decrypt on a fixed character grid: one-second dwell, approximately 600ms lock/scramble/radial resolve, immediate approximately 250ms reverse on movement; reduced motion uses a 150ms crossfade.
 
+Workspace physical controls should share one demand-driven R3F Canvas with separate drei Views, matching lights and themed materials. Fixed breakpoint-specific footprints must not change with state; use working static-image fallbacks and normal keyboard controls.
+
+**Why:** The user rejected flat dial/shutter controls and layout jumps, requesting the homepage loupe's dimensional quality throughout.
+
+**How to apply:** Keep progress off the shutter and in a dismissible/reopenable paper sheet. Stage transitions require real events; unavailable detail must be labeled estimated. Preserve inputs on failure, distinguish stopping queued client work from stopping accepted server analysis, and keep motion optional.
+
+The latest control brief requires flat-to-screen, top-down narrow-perspective geometry, not tilted objects. Use real physical materials, softbox reflections and mesh depth; no CSS/SVG imitation metal. Fallbacks must be PNG frames rendered from the same models. Visible control labels appear once only.
+
+**Why:** The user rejected the prior controls as fake-looking and reported duplicated labels and a clipped swatch book.
+
+**How to apply:** Keep one shared canvas, move light subtly rather than tilting controls, and reserve room for the swatch fan. Avatar initials must replace both missing URLs and failed image loads; the user has repeated this correction.
+
+Do not put an effectful renderer-failure detector in R3F Canvas's `fallback` prop.
+
+**Why:** Fiber mounts that fallback as children of the HTML canvas even when canvas is supported. A fallback component's effect can falsely declare WebGL unavailable and unmount the real renderer.
+
+**How to apply:** Use inert fallback content and detect real renderer creation errors or context loss separately. The user explicitly requires stopping and reporting actual 3D rendering failures rather than substituting CSS.
+
 Canvas glyph calibration must use a positive total glyph height, measured with an alphabetic baseline, with a finite bounded fallback.
 
 **Why:** Some browsers return negative ascent under a top baseline; treating ascent alone as height can silently produce a blank data wall despite passing unit/build checks.

@@ -40,6 +40,7 @@ export type InvestigationPhotoUploadOptions = {
   }) => Promise<Pick<SavedInvestigationPhoto, "id" | "title">>;
   onProgress?: (message: string, slotId: PhotoUploadSlotId) => void;
   onSaved?: (slotId: PhotoUploadSlotId) => void;
+  signal?: AbortSignal;
 };
 
 export type InvestigationPhotoUploadResult = {
@@ -87,11 +88,13 @@ export async function processInvestigationPhotoUploads({
   createInvestigation,
   onProgress,
   onSaved,
+  signal,
 }: InvestigationPhotoUploadOptions): Promise<InvestigationPhotoUploadResult> {
   const created: SavedInvestigationPhoto[] = [];
   const failed: Partial<Record<PhotoUploadSlotId, string>> = {};
 
   for (const [index, { slot, file, requestId }] of selected.entries()) {
+    if(signal?.aborted)break;
     const contentType = getContentType(file);
     if (!contentType) {
       failed[slot.id] = "Choose a supported image format.";
@@ -103,7 +106,9 @@ export async function processInvestigationPhotoUploads({
       const upload = await requestUploadUrl({
         data: { name: file.name, size: file.size, contentType },
       });
-      await retryOnce(() => uploadFile(upload.uploadURL, file, contentType));
+      signal?.throwIfAborted();
+      await retryOnce(() => {signal?.throwIfAborted();return uploadFile(upload.uploadURL, file, contentType);});
+      signal?.throwIfAborted();
 
       onProgress?.(`Analyzing ${index + 1} of ${selected.length}: ${slot.label}`, slot.id);
       const fileTitle = file.name
@@ -114,7 +119,7 @@ export async function processInvestigationPhotoUploads({
         0,
         120,
       );
-      const result = await retryOnce(() => createInvestigation({
+      const result = await retryOnce(() => {signal?.throwIfAborted();return createInvestigation({
         data: {
           objectPath: upload.objectPath,
           clientRequestId: requestId,
@@ -129,7 +134,7 @@ export async function processInvestigationPhotoUploads({
           ...(shotAt ? { shotAt: new Date(shotAt).toISOString() } : {}),
           title: caseTitle,
         },
-      }));
+      });});
 
       created.push({ id: result.id, title: result.title, slotLabel: slot.label });
       onSaved?.(slot.id);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FileImage, Upload, X } from "lucide-react";
-import { CropMarks } from './field-desk';
+import { PhysicalTray } from './physical-controls';
+import { TrayMediaStack } from './tray-media-stack';
 
 export type PhotoUploadSlotId = "original" | "recreation" | "fake-news";
 
@@ -19,6 +20,8 @@ type PhotoUploadSlotProps = {
   onSelectFiles?:(files:File[])=>void;
   trayOnly?:boolean;
   onRemoveFile: () => void;
+  trayFiles?:{id:string;file:File}[];
+  onRemoveTrayFile?:(id:string)=>void;
 };
 
 export function PhotoUploadSlot({
@@ -29,6 +32,7 @@ export function PhotoUploadSlot({
   onSelectFile,
   onRemoveFile,
   onSelectFiles,trayOnly=false,
+  trayFiles,onRemoveTrayFile,
 }: PhotoUploadSlotProps) {
   const [dragging, setDragging] = useState(false);
   const [previewUnavailable, setPreviewUnavailable] = useState(false);
@@ -103,8 +107,10 @@ export function PhotoUploadSlot({
         }}
         className={`photo-upload-dropzone relative h-[210px] overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${disabled ? "cursor-wait opacity-70" : "cursor-pointer"}`}
         data-testid={dropzoneTestId}
+        data-selected={Boolean(trayFiles?.length||file)}
       >
-        <CropMarks/><span className="fd-drag-label" aria-live="polite">{onSelectFiles?'DROP TO ADD':dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
+        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{onSelectFiles?'DROP TO ADD':dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
+        {trayOnly&&<><TrayMediaStack items={trayFiles??(file?[{id:slot.id,file}]:[])} onRemove={id=>onRemoveTrayFile?onRemoveTrayFile(id):onRemoveFile()}/><span className="tray-browse-caption" aria-hidden="true">BROWSE / ADD MEDIA</span></>}
         <input
           id={inputId}
           type="file"

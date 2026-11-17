@@ -54,6 +54,7 @@ export type RunItemDeps = {
   uploadFile: (uploadURL: string, file: File, contentType: NonNullable<ReturnType<typeof mediaContentType>>) => Promise<void>;
   createInvestigation: (variables: { data: InvestigationInput }) => Promise<Investigation>;
   onPhase?: (phase: "uploading" | "analyzing") => void;
+  signal?: AbortSignal;
 };
 
 /** Uploads and analyzes one item. Reuses the item's stable requestId so retries never duplicate it. */
@@ -65,6 +66,7 @@ export async function runIntakeItem(item: IntakeItem, deps: RunItemDeps): Promis
     context: deps.context,
     apiKey: deps.apiKey,
     shotAt: deps.shotAt,
+    signal: deps.signal,
     getContentType: mediaContentType,
     requestUploadUrl: deps.requestUploadUrl,
     uploadFile: deps.uploadFile,

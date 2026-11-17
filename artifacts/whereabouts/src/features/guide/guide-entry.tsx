@@ -1,40 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, Lock, Mic, MicOff, Paperclip, X } from 'lucide-react';
+import { ArrowRight, Lock, Paperclip, X } from 'lucide-react';
 import { guideExamples } from '@/lib/guide-state';
 import { validatePhoto } from '@/features/cases/shared';
 import { guideGhost, guidePrimary, useGuideDraft } from './guide-ui';
 import { DeskHeadline } from '@/components/field-desk';
 import { createPromptTypewriter } from '@/lib/prompt-typewriter';
-
-type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
-function speechCtor(): (new () => Recognition) | null {
-  if (typeof window === 'undefined') return null;
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
-
-export function useSpeechInput(onText: (t: string) => void) {
-  const [listening, setListening] = useState(false);
-  const [error, setError] = useState('');
-  const rec = useRef<Recognition | null>(null);
-  const cb = useRef(onText); cb.current = onText;
-  const supported = !!speechCtor();
-  useEffect(() => () => rec.current?.stop(), []);
-  function toggle() {
-    const C = speechCtor();
-    if (!C) { setError('Voice input is not available in this browser. Please type instead.'); return; }
-    if (listening) { rec.current?.stop(); return; }
-    const r = new C();
-    r.lang = navigator.language || 'en-US'; r.interimResults = false; r.continuous = false;
-    r.onresult = (e) => { const t = Array.from(e.results).map((x) => x[0]?.transcript ?? '').join(' ').trim(); if (t) cb.current(t); };
-    r.onend = () => setListening(false);
-    r.onerror = () => { setListening(false); setError('We could not hear that. Please try again or type instead.'); };
-    rec.current = r; setError(''); setListening(true);
-    try { r.start(); } catch { setListening(false); setError('Voice input could not start. Please type instead.'); }
-  }
-  return { listening, supported, error, toggle };
-}
+import { GuideVoiceControl } from '@/components/guide-voice-control';
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -50,7 +22,6 @@ export function GuideEntry({ signedIn, tone = 'light' }: { signedIn: boolean; to
   const flights=useRef<HTMLElement[]>([]);
   const[cardOver,setCardOver]=useState(false);
   useEffect(()=>()=>{writer.current?.stop();flights.current.forEach(node=>node.remove());},[]);
-  const speech = useSpeechInput((t) => {writer.current?.stop();setText((p) => (p ? `${p} ${t}` : t));});
   const fileRef = useRef<HTMLInputElement>(null);
 
   function go() {
@@ -69,15 +40,14 @@ export function GuideEntry({ signedIn, tone = 'light' }: { signedIn: boolean; to
     <div className="fd-notebook-drop mt-4 rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] focus-within:border-[#668675] focus-within:ring-4 focus-within:ring-[#385e51]/10" data-over={cardOver} onDragOver={event=>{if(event.dataTransfer.types.includes('application/x-whereabouts-prompt')){event.preventDefault();event.dataTransfer.dropEffect='copy';setCardOver(true);}}} onDragLeave={()=>setCardOver(false)} onDrop={event=>{const raw=event.dataTransfer.getData('application/x-whereabouts-prompt');setCardOver(false);if(!/^[0-2]$/.test(raw))return;event.preventDefault();writer.current?.start(guideExamples[Number(raw)],matchMedia('(prefers-reduced-motion: reduce)').matches);document.getElementById('guide-entry-text')?.focus({preventScroll:true});}}>
       <textarea id="guide-entry-text" aria-label="Tell us what happened." data-testid="input-guide-entry" rows={4} maxLength={6000} value={text} onBeforeInput={()=>writer.current?.stop()} onCompositionStart={()=>writer.current?.stop()} onPaste={()=>writer.current?.stop()} onKeyDown={event=>{if(event.key.length===1||event.key==='Backspace'||event.key==='Delete')writer.current?.stop();}} onChange={(e) => {writer.current?.stop();setText(e.target.value);}} placeholder="For example: my dad has dementia and left the house around 3 PM..." className="block w-full resize-none rounded-t-2xl bg-transparent px-4 py-3 text-base leading-7 text-[#263d36] outline-none placeholder:text-[#89948a]" />
       <div className="flex flex-wrap items-center gap-2 border-t border-[#e1dbce] px-2 py-2">
-        <button type="button" onClick={speech.toggle} aria-pressed={speech.listening} data-testid="button-guide-voice" className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold ${speech.listening ? 'bg-[#a64e43] text-[#fbf9f3]' : 'text-[#385e51] hover:bg-[#e8e4d8]'}`} aria-label={speech.listening ? 'Stop voice input' : 'Speak instead of typing'}>{speech.listening ? <MicOff size={18} /> : <Mic size={18} />}<span className="hidden sm:inline">{speech.listening ? 'Listening' : 'Speak'}</span></button>
+        <GuideVoiceControl onText={t=>{writer.current?.stop();setText(p=>p?`${p} ${t}`:t);}}/>
         <button type="button" onClick={() => fileRef.current?.click()} data-testid="button-guide-attach" className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold text-[#385e51] hover:bg-[#e8e4d8]" aria-label="Attach the last photo (optional)"><Paperclip size={18} /><span className="hidden sm:inline">Last photo</span></button>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} data-testid="input-guide-photo" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; const m = validatePhoto(f); if (m) { setErr(m); return; } setErr(''); setFile(f); }} />
         {file && <span className="inline-flex min-h-11 max-w-[220px] items-center gap-1 rounded-full bg-[#e9ede3] pl-3 text-xs text-[#385e51]" data-testid="text-guide-attachment"><span className="truncate">{file.name}</span><button type="button" onClick={() => setFile(null)} className="grid h-11 w-11 place-items-center" aria-label="Remove photo" data-testid="button-guide-remove-photo"><X size={14} /></button></span>}
         <button type="button" onClick={go} className={`${needsSignIn?'fd-guide-secondary':guidePrimary} ml-auto`} data-testid="button-guide-start">Continue <ArrowRight size={16} /></button>
       </div>
     </div>
-    {!speech.supported && <p className="mt-2 text-xs text-[#718078]">Voice input is not available in this browser. Typing works everywhere.</p>}
-    {(err || speech.error) && <p role="alert" className="mt-2 text-xs font-medium text-[#a64e43]">{err || speech.error}</p>}
+    {err && <p role="alert" className="mt-2 text-xs font-medium text-[#a64e43]">{err}</p>}
     <div className="fd-example-grid mt-4" aria-label="Examples">
       {guideExamples.map((ex, i) => <button key={ex} type="button" draggable={!matchMedia('(prefers-reduced-motion: reduce)').matches} onDragStart={event=>{event.dataTransfer.setData('application/x-whereabouts-prompt',String(i));event.dataTransfer.effectAllowed='copy';}} data-card-number={`PROMPT / ${String(i+1).padStart(2,'0')}`} data-cursor-crop="" onClick={event=>{
         const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
