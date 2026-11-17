@@ -4,6 +4,7 @@ import { useRequestUploadUrl } from '@workspace/api-client-react';
 import type { CasePhoto } from '@workspace/api-client-react';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { CropMarks } from '@/components/field-desk';
+import {HelpNote} from '@/components/desk-controls';
 
 export const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
@@ -50,16 +51,11 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 
 export function PrivacyNotice({ compact = false }: { compact?: boolean }) {
   return <aside className="wa-case-privacy border border-[#d8d1c2] bg-[#e9ede3] p-5" data-testid="notice-privacy">
-    <p className="flex items-center gap-2 font-data text-[10px] uppercase tracking-[.16em] text-[#385e51]"><ShieldCheck size={14} />Private workspace</p>
-    <ul className="mt-3 space-y-2 text-xs leading-5 text-[#465c50]">
-      <li>This is not an emergency service. If someone is in danger or missing, contact your local emergency number or police first.</li>
-      <li>Only you can see your cases, leads and photos. Nothing is shared or published.</li>
-      {!compact && <>
-        <li>Names and roles are self-declared and are not verified.</li>
-        <li>Whereabouts does not search social media, crawl links, match faces, analyze images automatically, or claim any person's identity or location.</li>
-        <li>A headshot is a reference for you only. Review labels record your assessment; they do not independently verify a lead.</li>
-      </>}
-    </ul>
+    <p className="fd-privacy-line text-xs"><ShieldCheck size={14} aria-hidden="true"/><span>Private / not emergency help</span><HelpNote>
+      This is not an emergency service. If someone is in danger or missing, contact your local emergency number or police first.<br/>
+      Only you can see your cases, leads and photos. Nothing is shared or published.
+      {!compact&&<><br/>Names and roles are self-declared and are not verified.<br/>Whereabouts does not search social media, crawl links, match faces, analyze images automatically, or claim any person's identity or location.<br/>A headshot is a reference for you only. Review labels record your assessment; they do not independently verify a lead.</>}
+    </HelpNote></p>
   </aside>;
 }
 

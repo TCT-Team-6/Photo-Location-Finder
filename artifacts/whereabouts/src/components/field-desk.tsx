@@ -2,6 +2,10 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type CSSP
 import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { isFilingAcknowledged } from '@/lib/filing-signals';
+import {EmptyTrayLoupe} from './desk-controls';
+import {deskSound} from '@/lib/desk-sound';
+import {ODOMETER_CELL_EM,odometerTransform} from '@/lib/odometer-layout';
+import {useLocation} from 'wouter';
 
 const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function FieldDeskFilingNotice(){
@@ -9,13 +13,14 @@ export function FieldDeskFilingNotice(){
   useEffect(()=>{let timer:ReturnType<typeof setTimeout>|undefined;const unsubscribe=client.getMutationCache().subscribe(event=>{
     if(event.type==='removed'){setStamp(0);return;}
     if(event.type!=='updated'||event.action.type!=='success'||!isFilingAcknowledged(event.mutation.options.mutationKey,event.mutation.state.data))return;
-    clearTimeout(timer);setStamp(previous=>previous+1);timer=setTimeout(()=>setStamp(0),1150);
+    clearTimeout(timer);deskSound('stamp');setStamp(previous=>previous+1);timer=setTimeout(()=>setStamp(0),1150);
   });return()=>{unsubscribe();clearTimeout(timer);};},[client]);
   return stamp?<div key={stamp} className="fd-global-filed" data-testid="status-field-desk-filed" role="status"><strong>FILED</strong><span>Record saved</span></div>:null;
 }
 export function CropMarks(){return <>{[0,1,2,3].map(n=><i key={n} className={`fd-crop fd-crop-${n}`} aria-hidden="true"/>)}</>;}
 export function SpecimenTray({label='TRAY EMPTY / 00 ITEMS',title,text,action,testId='content-empty-state'}:{label?:string;title:string;text:string;action?:ReactNode;testId?:string}){
-  return <div className="fd-tray" data-testid={testId}><CropMarks/><p>{label}</p><h3>{title}</h3><p>{text}</p>{action}</div>;
+  const[location]=useLocation();const playful=location==='/library'||location==='/cases'||location.startsWith('/desk/');
+  return <div className="fd-tray" data-testid={testId} data-drag-region={playful?'empty-tray':undefined}><CropMarks/><p>{label}</p><h3>{title}</h3><p>{text}</p>{action}{playful&&<EmptyTrayLoupe message={location==='/cases'?'a careful beginning.':location==='/library'?'nothing here yet. yet.':'room for another question.'}/>}</div>;
 }
 export function DeskRuler(){
   const marker=useRef<HTMLDivElement>(null),ruler=useRef<HTMLDivElement>(null);
@@ -38,7 +43,7 @@ export function DeskHeadline({children,className='',as='h1',testId}:{children:st
 export function FieldSheet({children,code,className=''}:{children:ReactNode;code:string;className?:string}){
   const ref=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{const el=ref.current;if(!el)return;const animation=el.animate([{opacity:0,transform:reduced()?'none':'translateY(12px)'},{opacity:1,transform:'none'}],{duration:350,easing:'cubic-bezier(.2,.7,.2,1)'});return()=>animation.cancel();},[]);
-  return <div ref={ref} className={`fd-sheet ${className}`} data-testid="field-desk-sheet"><p className="fd-sheet-code">{code}</p>{children}</div>;
+  return <div ref={ref} className={`fd-sheet ${className}`} data-sheet-code={code} data-testid="field-desk-sheet">{children}</div>;
 }
 export type IndexItem={href:string;label:string;testId?:string};
 let lastVisibleIndexTop:number|undefined;
@@ -53,7 +58,7 @@ export function FieldIndex({items,location,start=1,onNavigate,label='Index'}:{it
 export function Odometer({value,digits=2}:{value:number;digits?:number}){
   const ref=useRef<HTMLSpanElement>(null),text=Math.max(0,Math.round(value)).toString().padStart(digits,'0');
   useLayoutEffect(()=>{if(reduced())return;const animations=Array.from(ref.current?.querySelectorAll<HTMLElement>('.fd-odo-digit')??[]).map((column,i)=>column.animate([{transform:'translateY(0)'},{transform:column.style.transform}],{duration:300,delay:Math.min(100,i*25),fill:'backwards',easing:'cubic-bezier(.2,.7,.2,1)'}));return()=>animations.forEach(a=>a.cancel());},[text]);
-  return <span ref={ref} className="fd-odo" role="img" aria-label={String(value)} data-value={value}>{text.split('').map((digit,i)=><span key={i} className="fd-odo-window" aria-hidden="true"><span className="fd-odo-digit" style={{transform:`translateY(-${Number(digit)*10}%)`}}>{Array.from({length:10},(_,n)=><span key={n}>{n}</span>)}</span></span>)}</span>;
+  return <span ref={ref} className="fd-odo" role="img" aria-label={String(value)} data-value={value} style={{'--fd-digit-height':`${ODOMETER_CELL_EM}em`} as CSSProperties}>{text.split('').map((digit,i)=><span key={i} className="fd-odo-window" aria-hidden="true"><span className="fd-odo-digit" style={{transform:odometerTransform(digit)}}>{Array.from({length:10},(_,n)=><span key={n} data-active-digit={n===Number(digit)}>{n}</span>)}</span></span>)}</span>;
 }
 export function ContactSheet({children,orderKey,className=''}:{children:ReactNode;orderKey?:string;className?:string}){
   const ref=useRef<HTMLDivElement>(null),positions=useRef(new Map<string,{left:number;top:number}>());

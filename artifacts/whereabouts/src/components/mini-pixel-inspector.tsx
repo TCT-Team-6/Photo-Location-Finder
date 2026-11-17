@@ -1,0 +1,16 @@
+import {useEffect,useRef,useState} from 'react';
+/** Local-file pixel inspection only: no upload, scene inference, or location analysis. */
+export function MiniPixelInspector({src,alt}:{src:string;alt:string}){
+  const image=useRef<HTMLImageElement>(null),canvas=useRef<HTMLCanvasElement>(null),root=useRef<HTMLDivElement>(null),pixels=useRef<ImageData|null>(null),point=useRef({x:0,y:0}),[error,setError]=useState(false);
+  useEffect(()=>()=>{pixels.current=null;if(canvas.current)canvas.current.width=canvas.current.height=1;},[]);
+  const paint=(x:number,y:number)=>{
+    const data=pixels.current,c=canvas.current,host=root.current,img=image.current;if(!data||!c||!host||!img)return;
+    const rect=img.getBoundingClientRect(),s=Math.min(rect.width/data.width,rect.height/data.height),ox=(rect.width-data.width*s)/2,oy=(rect.height-data.height*s)/2;
+    point.current={x:Math.max(0,Math.min(data.width-1,x)),y:Math.max(0,Math.min(data.height-1,y))};
+    const context=c.getContext('2d');if(!context)return;c.width=c.height=120;context.fillStyle='#20221f';context.fillRect(0,0,120,120);
+    for(let row=0;row<20;row++)for(let col=0;col<20;col++){const px=Math.max(0,Math.min(data.width-1,Math.floor(point.current.x)+col-10)),py=Math.max(0,Math.min(data.height-1,Math.floor(point.current.y)+row-10)),index=(py*data.width+px)*4;for(let channel=0;channel<3;channel++){const color=[0,0,0];color[channel]=data.data[index+channel];context.fillStyle=`rgb(${color.join(',')})`;context.fillRect(col*6+channel*2,row*6,1.65,5.5);}}
+    c.style.left=`${Math.max(60,Math.min(rect.width-60,ox+point.current.x*s))}px`;c.style.top=`${Math.max(60,Math.min(rect.height-60,oy+point.current.y*s))}px`;
+  };
+  const load=()=>{const img=image.current;if(!img)return;try{const source=document.createElement('canvas'),scale=Math.min(1,2048/Math.max(img.naturalWidth,img.naturalHeight));source.width=Math.max(1,Math.round(img.naturalWidth*scale));source.height=Math.max(1,Math.round(img.naturalHeight*scale));const context=source.getContext('2d',{willReadFrequently:true});if(!context)throw Error('Canvas unavailable');context.drawImage(img,0,0,source.width,source.height);pixels.current=context.getImageData(0,0,source.width,source.height);paint(source.width/2,source.height/2);source.width=source.height=1;}catch{setError(true);}};
+  return <><div ref={root} className="fd-mini-inspection" tabIndex={0} role="group" aria-label="Local pixel inspector; pointer or arrow keys move the six-times RGB loupe" onPointerMove={event=>{const img=image.current,data=pixels.current;if(!img||!data)return;const r=img.getBoundingClientRect(),s=Math.min(r.width/data.width,r.height/data.height);paint((event.clientX-r.left-(r.width-data.width*s)/2)/s,(event.clientY-r.top-(r.height-data.height*s)/2)/s);}} onKeyDown={event=>{const deltas:Record<string,number[]>={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,-5],ArrowDown:[0,5]};if(deltas[event.key]){event.preventDefault();paint(point.current.x+deltas[event.key][0],point.current.y+deltas[event.key][1]);}}}><img ref={image} src={src} alt={alt} onLoad={load} onError={()=>setError(true)}/>{!error&&<canvas ref={canvas} aria-hidden="true"/>}</div><p className="font-data text-[10px] mt-4">{error?'This format cannot be previewed here. The selected file remains intact.':'6× RGB pixels · pointer / arrows · local preview only'}</p></>;
+}

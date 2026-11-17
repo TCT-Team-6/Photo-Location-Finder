@@ -29,7 +29,7 @@ export function SiteCursor() {
     const updateTarget=(target:EventTarget|null)=>{
       const element=target instanceof Element?target:null;
       interactive=!!element?.closest('a,button,[role="button"],summary,select');
-      ring.dataset.cursorShape=element?.closest('[data-cursor-crop],.fd-folder,.fd-example-card,.wa-photo-card,.wa-sample-card')?'crop':'round';
+      ring.dataset.cursorShape='round';
       input=!!element?.closest('input,textarea,[contenteditable="true"],[role="textbox"]');
     };
     const move=(event:PointerEvent)=>{

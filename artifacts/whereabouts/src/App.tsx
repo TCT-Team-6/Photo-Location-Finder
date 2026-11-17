@@ -33,7 +33,7 @@ import {
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { AnalysisFailed, AnalysisProgress, type AnalysisStage } from '@/components/analysis-status';
+import { AnalysisFailed, type AnalysisStage } from '@/components/analysis-status';
 import { BestGuessCard } from '@/components/best-guess-card';
 import { HealthUrgencyCard } from '@/components/health-urgency-card';
 import { buildLeadSummary } from '@/lib/lead-summary';
@@ -43,9 +43,9 @@ import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from 
 import { DemoExperience } from '@/components/demo-experience';
 import { PhotoInstrument } from '@/components/photo-instrument';
 import { SiteCursor } from '@/components/site-cursor';
-import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray, stepProgress } from '@/components/field-desk';
+import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray } from '@/components/field-desk';
 import { useLandingMotion } from '@/hooks/use-landing-motion';
-import { FiveStagePipeline, GeolocationMethods, IntakeFieldGuide, TechnologyNotes } from '@/components/field-notes';
+import { FiveStagePipeline, GeolocationMethods, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
@@ -57,6 +57,11 @@ import { GuideEntry } from '@/features/guide/guide-entry';
 import { GuideDraftProvider, useGuideDraft } from '@/features/guide/guide-ui';
 import './index.css';
 import './styles/field-desk.css';
+import './styles/desk-refinements.css';
+import {BatchPrints,DeskMargin,FlipChecklist,HangingTag,HelpNote,RotaryDial} from '@/components/desk-controls';
+import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
+import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
+import type {SavedInvestigationPhoto} from '@/lib/investigation-photo-uploads';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
@@ -457,7 +462,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <div className="mt-auto">
         <details className="fd-id-tag relative mb-4">
           <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
-            {user?.imageUrl ? <img src={user.imageUrl} alt="" data-default-avatar={!user.hasImage} className="h-9 w-9 rounded-full object-cover" /> : <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d78b5a] text-xs font-semibold text-[#263d36]">{initials}</span>}
+            {user?.imageUrl&&user.hasImage ? <img src={user.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <span className="fd-initial-avatar">{firstName.charAt(0).toUpperCase()||initials.charAt(0)}</span>}
             <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em]">OPERATOR 001</span></span>
           </summary>
           <form className="absolute bottom-14 left-0 z-30 w-[220px] rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 text-[#263d36] shadow-xl" onSubmit={async (event) => { event.preventDefault(); try { await user?.update({ unsafeMetadata: { ...user.unsafeMetadata, whereaboutsDisplayName: profileName.trim() } }); setProfileStatus('Profile saved.'); } catch { setProfileStatus('Could not save your profile.'); } }}>
@@ -474,7 +479,7 @@ function AppShell({ children }: { children: ReactNode }) {
     <div className="wa-workspace min-w-0 flex-1">
       <header className="wa-topbar sticky top-0 z-20 flex items-center justify-between border-b border-[#d8d1c2] px-5 md:px-8">
         <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" aria-expanded={mobileNav} data-testid="button-toggle-navigation" className="grid h-11 w-11 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
-        <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
+        <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {location==='/settings'?'SETTINGS':navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
         <span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
       </header>
       <DeskRuler/>
@@ -514,15 +519,16 @@ function DashboardPage() {
       <div><PageEyebrow>Your private instrument / overview</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-7xl">Back at the desk.</DeskHeadline><p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Your photographs, possible places, and next questions. Pick up an investigation or open a separate private case.</p></div>
       <div className="wa-dashboard-actions"><Link href="/cases" data-testid="link-dashboard-cases" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ShieldCheck size={16} />Private cases</Link>
       <Link href="/start" data-testid="link-dashboard-guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d8d1c2] bg-[#fbf9f3] px-6 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8]"><ScanSearch size={16} />AI Guide</Link>
-      <Link href="/investigate" data-testid="button-start-investigation" className="wa-action inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"><ImagePlus size={16} />Investigate an image <ArrowRight size={16} /></Link></div>
+      {(rows.length>0||!investigations.isSuccess)&&<Link href="/investigate" data-testid="button-start-investigation" className="wa-action inline-flex min-h-12 items-center justify-center gap-2 px-6 text-sm font-semibold"><ImagePlus size={16} />Investigate an image <ArrowRight size={16} /></Link>}</div>
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
       : summary.isError ? <div className="mb-8"><QueryError retry={() => summary.refetch()} text="Your archive summary is taking a moment." /></div>
       : <div className="wa-stats mb-9">
         <Stat label="Saved investigations" value={summary.data?.total ?? 0} total={summary.data?.total??0} caption="In your image archive" icon={<Layers3 size={18} />} />
         <Stat label="This month" value={summary.data?.thisMonth ?? 0} total={summary.data?.total??0} caption="Investigations opened" icon={<Crosshair size={18} />} />
-        <div className="fd-tag" data-cursor-crop=""><p className="font-data text-[9px] uppercase tracking-[.17em]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold">Open trail <ArrowRight size={14} /></Link>}</div>
+        <HangingTag><p className="font-data text-[9px] uppercase tracking-[.17em]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold">Open trail <ArrowRight size={14} /></Link>}</HangingTag>
       </div>}
+    <DeskMargin/>
     <div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
       <Link href="/library" data-testid="link-view-library" className="inline-flex items-center gap-2 text-xs font-semibold text-[#62776b] hover:text-[#c8794d]">View library <ArrowRight size={14} /></Link>
@@ -535,7 +541,7 @@ function DashboardPage() {
 }
 
 function Stat({ label, value, caption, icon,total }: { label: string; value: number; caption: string; icon: ReactNode;total:number }) {
-  return <div className="wa-stat border border-[#d8d1c2] bg-[#f8f5ec]">
+  return <div className="wa-stat">
     <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div>
     <p className="mt-5 font-editorial text-4xl tracking-[-.04em]" data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}><Odometer value={value}/></p><div className="fd-stat-ruler" title={`${value} of ${total} saved investigations`} aria-hidden="true"><span style={{width:`${total?Math.min(100,value/total*100):0}%`}}/></div><p className="mt-3 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
   </div>;
@@ -663,9 +669,18 @@ function InvestigatePage() {
   const activeDeskIndex = fieldDesks.findIndex((desk) => desk.id === activeSlotId);
   const [originalRunning, setOriginalRunning] = useState(false);
   const [originalCount,setOriginalCount]=useState(0);
+  const[flowStep,setFlowStep]=useState<InvestigationStep>(1),[questionTab,setQuestionTab]=useState(false);
+  useEffect(()=>{if(flowStep===2)document.getElementById('investigation-title')?.focus({preventScroll:true});else if(flowStep===3)document.querySelector<HTMLButtonElement>('[data-testid="button-analyze-photo-desks"]')?.focus({preventScroll:true});},[flowStep]);
+  const[extraFileErrors,setExtraFileErrors]=useState<Record<string,string>>({});
+  const originalRunner=useRef<(()=>Promise<boolean>)|null>(null),originalDestination=useRef('/library');
+  const[extraFiles,setExtraFiles]=useState<{id:string;desk:PhotoUploadSlotId;file:File}[]>([]),[printOrder,setPrintOrder]=useState<string[]>([]);
+  const totalCount=originalCount+selectedCount+extraFiles.length;
+  const printEntries=[...investigationPhotoSlots.flatMap(slot=>files[slot.id]?[{id:`slot:${slot.id}`,file:files[slot.id]!,label:slot.label}]:[]),...extraFiles.map(row=>({id:row.id,file:row.file,label:investigationPhotoSlots.find(slot=>slot.id===row.desk)!.label}))].sort((a,b)=>(printOrder.includes(a.id)?printOrder.indexOf(a.id):999)-(printOrder.includes(b.id)?printOrder.indexOf(b.id):999));
+  const addDeskFiles=(list:FileList|File[]|null)=>{let available=6-totalCount,main=Boolean(files[activeSlotId]);const additions:typeof extraFiles=[];for(const file of Array.from(list??[])){const contentType=imageContentType(file);if(available<=0){setLocalError('Up to six selected files. Existing selections were kept.');break;}if(!contentType||!visualModelImageTypes.has(contentType)||file.size>25*1024*1024){setLocalError('For this desk, use a supported JPEG, PNG, WebP or GIF image up to 25 MB.');continue;}if(!main){setSelectedFile(activeSlotId,file);main=true;}else additions.push({id:crypto.randomUUID(),desk:activeSlotId,file});available--;}if(additions.length)setExtraFiles(current=>[...current,...additions]);};
   useEffect(()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const pane=document.querySelector('[data-active-desk]');const animation=pane?.animate([{transform:'translateX(12px)',opacity:.5},{transform:'translateX(0)',opacity:1}],{duration:250,easing:'ease-out'});return()=>animation?.cancel();},[activeSlotId]);
   const pending = submitting || uploadUrl.isPending || create.isPending;
   const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
+    if(!files[slotId]&&totalCount>=6){setLocalError('Up to six selected media items. Remove a print before adding another.');return;}
     setLocalError('');
     setBatchStatus('');
     setSlotErrors((current) => ({ ...current, [slotId]: undefined }));
@@ -715,16 +730,28 @@ function InvestigatePage() {
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (activeSlotId === 'original' || originalRunning) return;
+    if(flowStep!==3){setFlowStep(advanceInvestigationStep(flowStep,totalCount));return;}
+    if(!canSubmitInvestigation(flowStep,totalCount,submitting||originalRunning))return;
+    deskSound('shutter');
+    setExtraFileErrors({});
     setLocalError('');
     setBatchStatus('');
     setFailureMessage('');
     setSavedInvestigations([]);
-    const selected = investigationPhotoSlots.flatMap((slot) => {
+    const selected:Array<{slot:PhotoUploadSlotDefinition;file:File;requestId:string;extraId?:string}> = investigationPhotoSlots.flatMap((slot) => {
       const file = files[slot.id];
       const requestId = requestIds[slot.id];
       return file && requestId ? [{ slot, file, requestId }] : [];
     });
+    selected.push(...extraFiles.map(row=>({slot:investigationPhotoSlots.find(slot=>slot.id===row.desk)!,file:row.file,requestId:row.id,extraId:row.id})));
+    selected.sort((a,b)=>{const ai=a.extraId??`slot:${a.slot.id}`,bi=b.extraId??`slot:${b.slot.id}`;return(printOrder.includes(ai)?printOrder.indexOf(ai):999)-(printOrder.includes(bi)?printOrder.indexOf(bi):999);});
+    if(originalCount){
+      setSubmitting(true);setStage('uploading');setStartedAt(Date.now());
+      try{const complete=await originalRunner.current?.();if(!complete){setLocalError('Some Investigations files need attention. Return to step 01 to review or retry them.');return;}}
+      catch(error){setLocalError(error instanceof Error?error.message:'The upload could not finish. Your selected files remain available to retry.');return;}
+      finally{setSubmitting(false);}
+      if(!selected.length){setLocation(originalDestination.current);return;}
+    }
     setSlotErrors((current) =>
       clearErrorsForSelectedPhotoSlots(
         current,
@@ -741,8 +768,9 @@ function InvestigatePage() {
     setStartedAt(Date.now());
     let reportIdToOpen: string | null = null;
     try {
-      const { created, failed } = await processInvestigationPhotoUploads({
-        selected,
+      const created:SavedInvestigationPhoto[]=[],failed:Partial<Record<PhotoUploadSlotId,string>>={};let failedFileCount=0;
+      for(const queued of selected){const result = await processInvestigationPhotoUploads({
+        selected:[queued],
         title,
         context,
         journalismQuestion,
@@ -765,14 +793,15 @@ function InvestigatePage() {
         createInvestigation: (variables) => create.mutateAsync(variables),
         onProgress: (message, slotId) => {
           setAnalysisDesk(slotId);
-          setProgress(message);
+          setProgress(`${message.startsWith('Analyzing')?'ANALYZE':'UPLOAD'} / ${queued.file.name}`);
           setStage(message.startsWith('Analyzing') ? 'analyzing' : 'uploading');
         },
         onSaved: (slotId) => {
+          if(queued.extraId){setExtraFiles(current=>current.filter(row=>row.id!==queued.extraId));return;}
           setFiles((current) => ({ ...current, [slotId]: null }));
           setRequestIds((current) => ({ ...current, [slotId]: null }));
         },
-      });
+      });created.push(...result.created);Object.assign(failed,result.failed);if(Object.keys(result.failed).length){failedFileCount++;if(queued.extraId){const id=queued.extraId;setExtraFileErrors(current=>({...current,[id]:Object.values(result.failed).join(' ')}));}}}
 
       if (created.length) {
         setSavedInvestigations((current) => [...current, ...created]);
@@ -783,9 +812,9 @@ function InvestigatePage() {
       }
       setSlotErrors((current) => ({ ...current, ...failed }));
       if (created.length) {
-        const failedCount = Object.keys(failed).length;
+        const failedCount = failedFileCount;
         if (failedCount === 0) {
-          reportIdToOpen = created[0].id;
+          reportIdToOpen = originalCount?'__batch__':created[0].id;
         } else {
           setBatchStatus(
             `Saved ${created.length} separate investigation${created.length === 1 ? '' : 's'}. ${failedCount} photo${failedCount === 1 ? '' : 's'} could not be processed; retry the remaining upload${failedCount === 1 ? '' : 's'} below.`,
@@ -799,20 +828,21 @@ function InvestigatePage() {
       setSubmitting(false);
       setProgress('');
     }
-    if (reportIdToOpen) setLocation(`/investigation/${encodeURIComponent(reportIdToOpen)}`);
+    if (reportIdToOpen) setLocation(reportIdToOpen==='__batch__'?'/library':`/investigation/${encodeURIComponent(reportIdToOpen)}`);
   };
 
   return <div className="wa-intake fade-up investigation-theme mx-auto" data-desk-theme={activeSlotId}>
     <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Start with what you see.</DeskHeadline><p className="mt-3 max-w-2xl text-sm leading-6 text-[#718078]">{activeSlotId === 'original' ? 'Investigations estimates where a photograph may have been taken from its visual clues.' : activeSlotId === 'recreation' ? 'Recreation helps you discover where your personal, travel, and leisure photos may have been taken. Image Locator compares visible landmarks and scene clues to suggest possible places.' : 'Journalism reviews visible signs of AI generation, CGI, or editing and can answer a question about the image. Visual analysis is not forensic proof.'} Each image is processed separately and saved to its selected desk.</p></div>
-    <p className="wa-mode-note mb-6">This is image analysis, not the private missing-person evidence workspace. For authorized case organization without automatic image analysis, use <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> or the <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link>.</p>
-    <form id="investigate-form" onSubmit={submit} className="space-y-6" style={stepProgress(originalCount+selectedCount>0,Boolean(title.trim()||context.trim()||shotAt))}>
-      <section className="desk-theme-panel rounded-3xl border p-4 transition-colors duration-300 md:p-6">
-        <div className="mb-5">
+     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Start with what you see.</DeskHeadline></div>
+    <p className="wa-mode-note mb-6 text-xs">Image analysis · <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> · <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link><HelpNote>This is image analysis, not the private missing-person evidence workspace. Private cases organize authorized evidence without automatic image analysis. Each selected image stays assigned to its desk.</HelpNote></p>
+    <form id="investigate-form" onSubmit={submit} className="fd-wizard space-y-6" data-drag-region={flowStep===1?'new-investigation':undefined} onKeyDown={event=>{const target=event.target as HTMLInputElement;if(event.key==='Enter'&&flowStep!==3&&target.tagName!=='TEXTAREA'&&target.tagName!=='BUTTON'&&target.type!=='file'){event.preventDefault();setFlowStep(advanceInvestigationStep(flowStep,totalCount));}}}>
+      <nav className="fd-step-count" aria-label="Investigation steps">{([1,2,3] as InvestigationStep[]).map(step=><button type="button" key={step} aria-current={flowStep===step?'step':undefined} disabled={pending||originalRunning||step>flowStep} onClick={()=>setFlowStep(step)}>0{step}</button>)}</nav>
+      <section hidden={flowStep!==1} className="fd-wizard-step desk-theme-panel">
+        <div className="mb-5" hidden>
           <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
           <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
-        <div className="desk-toggle mb-4 grid grid-cols-3 rounded-2xl border p-1.5" role="group" aria-label="Choose photo field desk" data-testid="toggle-group-photo-desk">
+        <div className="desk-toggle mb-4 grid grid-cols-3 rounded-2xl border p-1.5" hidden role="group" aria-label="Choose photo field desk" data-testid="toggle-group-photo-desk">
           <span className="desk-toggle-thumb" aria-hidden="true" style={{ transform: `translateX(${activeDeskIndex * 100}%)` }} />
           {fieldDesks.map((desk) => {
             const isActive = activeSlotId === desk.id;
@@ -835,11 +865,13 @@ function InvestigatePage() {
             </button>;
           })}
         </div>
+        <div className="fd-source-desk"><RotaryDial label="Desk" labels={['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM']} value={activeDeskIndex} onChange={index=>setActiveSlotId(fieldDesks[index].id)} disabled={pending||originalRunning}/>
         <div role="region" className="fd-desk-page" aria-label={`${activeSlot.label} photo upload`} data-active-desk={activeSlotId}>
-          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake onSelectionCountChange={setOriginalCount} onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => setLocation(path)} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
+          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake controlsRef={originalRunner} onStageChange={setStage} maxItems={6-selectedCount-extraFiles.length} onSelectionCountChange={setOriginalCount} onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => {originalDestination.current=path;}} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
           {activeSlot.id !== 'original' && <PhotoUploadSlot
             key={activeSlot.id}
             slot={activeSlot}
+              trayOnly onSelectFiles={list=>{setLocalError('');addDeskFiles(list);}}
             file={files[activeSlot.id]}
             error={slotErrors[activeSlot.id]}
             disabled={pending || originalRunning}
@@ -847,8 +879,12 @@ function InvestigatePage() {
             onRemoveFile={() => removeSelectedFile(activeSlot.id)}
           />}
         </div>
+        </div>
+        {activeSlot.id!=='original'&&<BatchPrints items={printEntries} errors={extraFileErrors} onOrder={setPrintOrder} onRemove={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}/>}
+        {localError&&<p role="alert" className="mt-4 text-xs">{localError}</p>}
+        {totalCount>0&&<footer><button type="button" className="fd-next fd-primary px-6 py-3" data-testid="button-investigation-next-photo" onClick={()=>setFlowStep(2)}>Next →</button><span className="font-data text-[10px]">{totalCount} media item{totalCount===1?'':'s'} across selected desks</span></footer>}
       </section>
-      <div className="desk-theme-panel mx-auto max-w-[720px] rounded-3xl border p-6 transition-colors duration-300 md:p-7">
+      <div hidden={flowStep!==2} className="fd-wizard-step desk-theme-panel max-w-[720px]">
         <details open className="optional-details group" data-testid="details-optional-fields">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl" data-testid="toggle-optional-fields">
           <span className="min-w-0">
@@ -857,25 +893,28 @@ function InvestigatePage() {
           </span>
           <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-[#718078] transition-transform group-open:rotate-180" />
         </summary>
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Shared case name <span className="font-normal text-[#97a095]">optional</span></label>
+        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Case name <span className="font-normal text-[#97a095]">optional</span><HelpNote>Each title includes its desk label. Without a case name, the photo filename is used.</HelpNote></label>
         <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
-        <p className="mt-1 text-xs text-[#87938a]">Each title also includes its upload label; without a name, the photo filename is used.</p>
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know? <span className="font-normal text-[#97a095]">optional</span></label>
-        <p className="mt-1 text-xs text-[#87938a]">Saved with your report so the whole story stays together. The location finder looks only at the photo.</p>
-        <textarea id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
+        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Context stays in your private report. The location finder receives only the image. Journalism's optional analyst question is sent for that desk's image analysis.</HelpNote></label>
+        {activeSlotId==='fake-news'&&<div className="flex gap-5 text-xs my-3" role="group" aria-label="Context editor"><button type="button" aria-pressed={!questionTab} onClick={()=>setQuestionTab(false)}>Record notes</button><button type="button" aria-pressed={questionTab} onClick={()=>setQuestionTab(true)}>Analyst question · optional</button></div>}
+        <textarea hidden={activeSlotId==='fake-news'&&questionTab} id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         <p className="mt-1 text-right font-data text-[9px] text-[#a1a79d]">{context.length} / 3000</p>
-        {activeSlotId === 'fake-news' && <><label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="journalism-question">Ask the image analyst a question <span className="font-normal text-[#97a095]">optional</span></label><textarea id="journalism-question" value={journalismQuestion} maxLength={1000} onChange={(event) => setJournalismQuestion(event.target.value)} rows={3} placeholder="What detail in this photo could reveal when it was taken?" data-testid="input-journalism-question" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" /></>}
-        <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span></label>
+        {activeSlotId === 'fake-news' && questionTab&&<textarea aria-label="Journalism analyst question optional" id="journalism-question" value={journalismQuestion} maxLength={1000} onChange={(event) => setJournalismQuestion(event.target.value)} rows={5} placeholder="What detail in this photo could reveal when it was taken?" data-testid="input-journalism-question" className="mt-2 w-full resize-y px-4 py-3 text-sm" />}
+        <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Use a date you know, or leave it blank. A supplied date stays in the report, not the image-model request. A real camera date is prefilled only when the selected image contains it.</HelpNote></label>
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => { setShotAt(event.target.value); setDateFromPhoto(false); }} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
         {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
         </details>
+        <footer><button type="button" onClick={()=>setFlowStep(3)}>Skip</button><button type="button" className="fd-primary px-6 py-3" onClick={()=>setFlowStep(3)}>Next →</button></footer>
+      </div>
+      <div hidden={flowStep!==3} className="fd-wizard-step desk-theme-panel">
+        <p className="font-data text-xs leading-7">FILES {String(totalCount).padStart(2,'0')} / ACTIVE DESK {activeSlot.label}<br/>CASE {title.trim()||'Filename titles'}<br/>All selected desks are processed; videos retain their existing workflow.</p>
+        <FlipChecklist/>
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
-        {pending && <AnalysisProgress stage={stage} startedAt={startedAt} photoCount={selectedCount} desk={analysisDesk} />}
+        {(pending||originalRunning) && <div className="fd-live-stage" role="status">{progress||(stage==='uploading'?'UPLOAD / transferring selected media…':'PROCESSING / waiting for the saved report…')}<span className="block text-[10px] mt-2">Indeterminate · {analysisDesk} · started {new Date(startedAt).toLocaleTimeString()}</span></div>}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
-        <button type="submit" disabled={pending||selectedCount===0} hidden={pending || Boolean(failureMessage) || activeSlotId === 'original'} data-testid="button-analyze-photo-desks" className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] transition hover:bg-[#2e5044] disabled:cursor-wait disabled:opacity-70 [&[hidden]]:hidden">
-          {pending ? <><LoaderCircle size={17} className="animate-spin" />{progress || 'Preparing photo analysis…'}</> : <>{selectedCount ? `Analyze ${selectedCount} photo${selectedCount === 1 ? '' : 's'}` : 'Select photos to analyze'} <ScanSearch size={16} /></>}
-        </button>
-         <p className="mt-3 text-center text-[10px] leading-5 text-[#718078]">{activeSlotId !== 'fake-news' ? 'The selected photo is sent to Image Locator for location analysis.' : 'The selected photo is sent to OpenAI for the selected desk’s image analysis.'} Your shared name, notes, and date stay in your private record.</p>
+        <div className="fd-shutter-wrap"><button type="submit" aria-label="Analyze selected media" onKeyDown={event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();}} disabled={pending||originalRunning||totalCount===0} data-busy={pending||originalRunning} data-testid="button-analyze-photo-desks" className="fd-shutter"><Crosshair size={30} className="mx-auto"/></button><span>ANALYZE</span></div>
+        <p className="fd-model-reference" aria-label="Illustrative pipeline, not live stage progress">ILLUSTRATIVE MODEL, NOT LIVE PROGRESS<br/>UPLOAD → READ SCENE → COMPARE CLUES → RANK FINDINGS → SAVE REPORT</p>
+        <p className="text-xs text-center">Selected media goes to its desk's analysis provider.<HelpNote>Image Locator handles location estimates. OpenAI handles Journalism image analysis. Shared case names, notes and dates stay in the private record; an optional Journalism question is sent for that desk. No new private missing-person analysis is enabled.</HelpNote></p>
         {batchStatus && (
           <div
             role="status"
@@ -903,7 +942,6 @@ function InvestigatePage() {
         )}
       </div>
     </form>
-    <IntakeFieldGuide />
   </div>;
 }
 
@@ -1242,38 +1280,35 @@ function SettingsPage() {
   const { apiKey, setApiKey } = useApiKey();
   const [draftKey, setDraftKey] = useState(apiKey);
   const [keyStatus, setKeyStatus] = useState('');
+  const[sound,setSound]=useState(soundEnabled);
   const update = <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) =>
     setPreferences({ ...preferences, [key]: value });
   return <div className="wa-settings fade-up mx-auto max-w-3xl">
-    <PageEyebrow>Personal archive / preferences</PageEyebrow>
+    <PageEyebrow>PREFERENCES</PageEyebrow>
     <DeskHeadline className="mt-3 text-5xl">Settings</DeskHeadline>
-    <p className="mt-3 text-sm text-[#718078]">Adjust how Whereabouts looks and reads on this device.</p>
-    <section className="mt-8 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+    <p className="mt-3 text-sm text-[#718078]">Make the desk your own.<HelpNote>Adjust how Whereabouts looks and reads on this device.</HelpNote></p>
+    <section className="fd-preference-section mt-8">
       <h2 className="font-editorial text-2xl">Color theme</h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {([
           ['rescue', 'Instrument', '#242723', '#f4f4f2'],
-          ['field', 'Field notebook', '#20221f', '#f4f4f2'],
-          ['ocean', 'Coastal graphite', '#202122', '#f4f4f2'],
-          ['sunset', 'Warm graphite', '#252422', '#f4f4f2'],
-          ['mono', 'Monochrome', '#1a1a1a', '#f4f4f2'],
-        ] as const).map(([value, label, accent, paper]) => <button key={value} type="button" onClick={() => update('theme', value)} aria-pressed={preferences.theme === value} data-testid={`theme-${value}`} className={`flex items-center gap-3 rounded-xl border p-3 text-left text-sm ${preferences.theme === value ? 'border-[#385e51] ring-2 ring-[#385e51]/20' : 'border-[#d8d1c2]'}`}><span className="h-9 w-9 border" style={{ background:paper,borderBottom:`7px solid ${accent}` }} />{label}{preferences.theme === value && <Check size={15} className="ml-auto" />}</button>)}
+          ['field', 'Field notebook', '#27352d', '#e4eadc'],
+          ['ocean', 'Coastal graphite', '#293039', '#e0e8ee'],
+          ['sunset', 'Warm graphite', '#352c28', '#efe2d7'],
+          ['mono', 'Monochrome', '#171917', '#e6e6e6'],
+        ] as const).map(([value, label, ink, paper]) => <button key={value} type="button" onClick={() => {update('theme', value);deskSound('switch');}} aria-pressed={preferences.theme === value} data-testid={`theme-${value}`} className="fd-theme-chip"><span className="fd-chip-colors" aria-hidden="true"><i style={{background:paper}}/><i style={{background:ink}}/><i style={{background:({rescue:'#b6382e',field:'#a23e34',ocean:'#9f3e39',sunset:'#aa3b30',mono:'#a1322b'})[value]}}/></span><span>{label}{preferences.theme===value?' / applied':''}</span></button>)}
       </div>
-      <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 border-t border-[#e1dbce] pt-5 text-sm"><span><strong className="block">High contrast</strong><span className="mt-1 block text-xs text-[#718078]">Strengthen text and border contrast throughout the app.</span></span><input type="checkbox" checked={preferences.highContrast} onChange={(event) => update('highContrast', event.target.checked)} data-testid="toggle-high-contrast" className="h-5 w-5 accent-[#385e51]" /></label>
+      <button type="button" role="switch" aria-checked={preferences.highContrast} onClick={()=>{update('highContrast',!preferences.highContrast);deskSound('switch');}} data-testid="toggle-high-contrast" className="fd-lever mt-6"><span>High contrast</span><span className="fd-lever-track" aria-hidden="true"/></button>
     </section>
-    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
+    <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-2xl">Text font</h2>
-      <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="setting-font">Choose a font</label>
-      <select id="setting-font" value={preferences.font} onChange={(event) => update('font', event.target.value as AppPreferences['font'])} data-testid="select-text-font" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm">
-        <option value="default">Default (Bricolage Grotesque and DM Sans)</option>
-        <option value="sans">Simple sans-serif</option>
-        <option value="dyslexic">Dyslexia-friendly (Atkinson Hyperlegible)</option>
-      </select>
-      <p className="mt-3 text-xs leading-5 text-[#718078]">Your choices are saved in this browser and apply across the app.</p>
+      <div className="fd-type-options" role="group" aria-label="Text font">{([['default','Bricolage + DM Sans','"Bricolage Grotesque",sans-serif'],['sans','DM Sans','"DM Sans",sans-serif'],['dyslexic','Atkinson Hyperlegible','"Atkinson Hyperlegible",sans-serif']] as const).map(([value,label,font])=><button type="button" key={value} className="fd-type-card" style={{'--specimen':font} as React.CSSProperties} aria-pressed={preferences.font===value} data-testid={`font-${value}`} onClick={()=>update('font',value)}><strong>Aa</strong><span>{label}</span></button>)}</div>
+      <p className="mt-3 text-xs leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
     </section>
-    <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
+    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><button type="button" role="switch" aria-checked={sound} data-testid="toggle-desk-sound" className="fd-lever" onClick={()=>{setSound(!sound);setSoundEnabled(!sound);if(!sound)deskSound('switch');}}><span>Sound / {sound?'on':'off'}</span><span className="fd-lever-track" aria-hidden="true"/></button><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration for dial detents and the shutter where supported. No microphone access or audio recording.</HelpNote></p></section>
+    <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-xl">Your analysis API key</h2>
-      <p className="mt-1 text-xs text-[#718078]">Optional. Kept in memory for this session only; never saved in browser storage.</p>
+      <p className="mt-1 text-xs text-[#718078]">Optional · session memory only.<HelpNote>Your key is kept in memory for this session only, never saved in browser storage.</HelpNote></p>
       <div className="mt-3 flex gap-2">
         <input type="password" autoComplete="off" value={draftKey} onChange={(event) => setDraftKey(event.target.value)} placeholder="Paste your API key" aria-label="Your analysis API key" data-testid="input-personal-api-key" className="h-10 min-w-0 flex-1 rounded-lg border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm" />
         <button type="button" onClick={() => { setApiKey(draftKey.trim()); setKeyStatus(draftKey.trim() ? 'Key set for this session.' : 'Session key cleared.'); }} data-testid="button-save-personal-api-key" className="rounded-lg bg-[#385e51] px-3 text-xs font-semibold text-white">Use key</button>
@@ -1313,6 +1348,8 @@ function App() {
   const [apiKey, setApiKey] = useState('');
   useEffect(() => {
     localStorage.setItem('whereabouts-preferences', JSON.stringify(preferences));
+    const root=document.documentElement;root.dataset.appTheme=preferences.theme;root.dataset.highContrast=String(preferences.highContrast);root.dataset.appFont=preferences.font;
+    return()=>{delete root.dataset.appTheme;delete root.dataset.highContrast;delete root.dataset.appFont;};
   }, [preferences]);
   return <ApiKeyContext.Provider value={{ apiKey, setApiKey }}><PreferencesContext.Provider value={{ preferences, setPreferences }}>
     <div data-app-theme={preferences.theme} data-high-contrast={preferences.highContrast} data-app-font={preferences.font}>

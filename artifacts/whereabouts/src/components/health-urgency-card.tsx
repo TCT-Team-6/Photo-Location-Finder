@@ -16,8 +16,8 @@ export type StoredUrgencyAssessment = {
 const badgeStyles: Record<UrgencyLevel, { backgroundColor: string; color: string; borderColor: string }> = {
   Low: { backgroundColor: "var(--paper)", color: "var(--ink)", borderColor: "var(--line)" },
   Moderate: { backgroundColor: "var(--recess)", color: "var(--ink)", borderColor: "var(--ink)" },
-  High: { backgroundColor: "var(--ink)", color: "var(--paper)", borderColor: "var(--ink)" },
-  Critical: { backgroundColor: "var(--fd-red)", color: "var(--paper)", borderColor: "var(--fd-red)" },
+  High: { backgroundColor: "var(--quiet)", color: "var(--paper)", borderColor: "var(--quiet)" },
+  Critical: { backgroundColor: "var(--ink)", color: "var(--paper)", borderColor: "var(--ink)" },
 };
 
 export function HealthUrgencyCard({ investigation, stored, person, demo = false }: {

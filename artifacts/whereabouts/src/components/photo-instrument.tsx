@@ -8,8 +8,9 @@ import { applyScrollLight, instrumentLayout } from '@/lib/instrument-layout';
 import type { OpticalRenderer } from '@/lib/optical-loupe';
 import type { ToolMode } from '@/lib/loupe-kinematics';
 import { ToolPanel } from '@/components/tool-panel';
-import { useLoupeDwell } from '@/hooks/use-loupe-dwell';
-import type { LoupePoint } from '@/lib/loupe-dwell';
+import type { LoupePoint,LoupePhase } from '@/lib/loupe-dwell';
+import {useMemo} from 'react';
+import {RotaryDial} from './desk-controls';
 
 type RenderStatus='loading'|'ready'|'fallback'|'lost'|'image-error';
 const base=import.meta.env.BASE_URL;
@@ -31,7 +32,7 @@ export function PhotoInstrument(){
     return()=>controller.abort();
   },[attempt]);
   const count=demoSamples.length+1,sample=index>0?demoSamples[index-1]:undefined;
-  const frame:Frame|null=sample?{id:sample.investigation.id,title:sample.investigation.title,imageUrl:sample.imageUrl,sample}:example?{id:example.photo.id,title:example.photo.title,imageUrl:publicUrl(example.photo.image),...example}:null;
+  const frame=useMemo<Frame|null>(()=>sample?{id:sample.investigation.id,title:sample.investigation.title,imageUrl:sample.imageUrl,sample}:example?{id:example.photo.id,title:example.photo.title,imageUrl:publicUrl(example.photo.image),...example}:null,[sample,example]);
   const next=()=>setIndex(value=>(value+1)%count);
   if(!frame)return <div className="wa-optical-bench"><div className="wa-optical-stage skeleton" role="status"><p className="wa-optical-load-label">{error||'Loading supplied example and editable region map…'}</p></div>{error&&<div className="wa-optical-controls"><button type="button" onClick={()=>setAttempt(value=>value+1)}>Retry example</button><button type="button" onClick={next}>Browse existing samples <ArrowRight size={15}/></button></div>}</div>;
   return <InspectionBench key={frame.id} frame={frame} index={index} count={count} onPrevious={()=>setIndex(value=>(value+count-1)%count)} onNext={next}/>;
@@ -65,23 +66,22 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
   const[status,setStatus]=useState<RenderStatus>('loading'),[attempt,setAttempt]=useState(0),[snapshot,setSnapshot]=useState('');
   const[stageVisible,setStageVisible]=useState(false);
   const[mode,setMode]=useState<ToolMode>('docked'),[used,setUsed]=useState(false),[hasDownload,setHasDownload]=useState(false);
-  const{phase,move,leave,reset}=useLoupeDwell(frame.id);const phaseRef=useRef(phase);phaseRef.current=phase;
+  const[phase,setPhase]=useState<LoupePhase>('binary'),[captureStatus,setCaptureStatus]=useState('capturing'),[zoomIndex,setZoomIndex]=useState(1);const phaseRef=useRef(phase);phaseRef.current=phase;
   const basic=status==='fallback'||status==='lost';
   useEffect(()=>{if(status!=='loading')window.dispatchEvent(new Event('whereabouts:bench-ready'));},[status]);
   useEffect(()=>{
-    rendererRef.current?.setPhase(phase);
     if(phase==='json'&&readingRef.current){settledRef.current=readingRef.current;setHasDownload(true);setSnapshot(JSON.stringify(readingRef.current.record));}
   },[phase]);
   useEffect(()=>{
     const canvas=canvasRef.current,stage=stageRef.current;if(!canvas||!stage)return;
     let alive=true,renderer:OpticalRenderer|null=null,resizeObserver:ResizeObserver|null=null,intersection:IntersectionObserver|null=null;
-    setStatus('loading');reset();applyScrollLight(stage,0);
+    setStatus('loading');setPhase('binary');applyScrollLight(stage,0);
     const image=new Image();image.crossOrigin='anonymous';
     const resize=()=>{const rect=stage.getBoundingClientRect();renderer?.resize(rect.width,rect.height);};
-    const lost=(event:Event)=>{event.preventDefault();reset();renderer?.setVisible(false);setStatus('lost');modeRef.current='docked';setMode('docked');window.dispatchEvent(new CustomEvent('whereabouts:loupe-mode',{detail:'docked'}));};
+    const lost=(event:Event)=>{event.preventDefault();setPhase('binary');renderer?.setVisible(false);setStatus('lost');modeRef.current='docked';setMode('docked');window.dispatchEvent(new CustomEvent('whereabouts:loupe-mode',{detail:'docked'}));};
     const restored=()=>{if(alive)setAttempt(value=>value+1);};
-    const visibility=()=>{if(document.hidden){leave();renderer?.release();}};
-    const blur=()=>{leave();reset();renderer?.release();};
+    const visibility=()=>{if(document.hidden)renderer?.release();};
+    const blur=()=>{renderer?.release();};
     const hover=(event:globalThis.PointerEvent)=>{
       if(event.pointerType==='touch'||modeRef.current!=='docked')return;
       const rect=stage.getBoundingClientRect();renderer?.hover({x:event.clientX-rect.left,y:event.clientY-rect.top});
@@ -91,7 +91,8 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
     const updateMode=(next:ToolMode)=>{
       modeRef.current=next;setMode(next);stage.dataset.toolMode=next;
       if(next==='held')setUsed(true);
-      else{leave();reset();inspectingRef.current=false;if(panelReadoutRef.current)panelReadoutRef.current.textContent='X — / Y —';}
+      else{setPhase('binary');inspectingRef.current=false;if(panelReadoutRef.current)panelReadoutRef.current.textContent='X — / Y —';}
+      const bounds=stage.getBoundingClientRect(),shown=next!=='docked'||bounds.bottom>0&&bounds.top<innerHeight;renderer?.setVisible(shown);setStageVisible(shown);
       window.dispatchEvent(new CustomEvent('whereabouts:loupe-mode',{detail:next}));
     };
     document.addEventListener('visibilitychange',visibility);window.addEventListener('blur',blur);window.addEventListener('pointermove',hover,{passive:true});stage.addEventListener('whereabouts:photo-scale',zoom);stage.addEventListener('whereabouts:light',lighting);
@@ -105,7 +106,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
         readingRef.current=probe({x:layout.photoWidth/2,y:layout.photoHeight/2},{width:layout.photoWidth,height:layout.photoHeight},layout.heldRadius);
         const{createOpticalRenderer}=await import('@/lib/optical-loupe');if(!alive)return;
         renderer=createOpticalRenderer(canvas,image,{
-          photo:config.photo,regions:config.regions.regions,sampleIndex:index,readPixels:probe,onMode:updateMode,
+          photo:config.photo,regions:config.regions.regions,sampleIndex:index,readPixels:probe,onMode:updateMode,onPhase:setPhase,onCapture:setCaptureStatus,
           onReading:(reading,renderPhase)=>{
             readingRef.current=reading;
             if(phaseRef.current==='json'&&renderPhase==='json'){settledRef.current=reading;setSnapshot(JSON.stringify(reading.record));}
@@ -113,16 +114,16 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
             if(coordinatesRef.current)coordinatesRef.current.textContent=`ORIGINAL IMAGE X ${x} / Y ${y} px`;
             if(panelReadoutRef.current)panelReadoutRef.current.textContent=`X ${x} / Y ${y}`;
           },
-          onFrame:(point,_progress,state)=>{
+          onFrame:(point,cycleProgress,state)=>{
             pointRef.current=point;
             if(targetRef.current){const radius=state.radius,rect=stage.getBoundingClientRect();targetRef.current.style.width=`${radius*2.4}px`;targetRef.current.style.height=`${radius*3.6}px`;targetRef.current.style.transform=`translate(${rect.left+point.x-radius*1.2}px,${rect.top+point.y-radius*1.2}px)`;}
             if(state.inspecting){
               const cycle=cycleRef.current;
               if(!inspectingRef.current||Math.hypot(point.x-cycle.anchor.x,point.y-cycle.anchor.y)>=3){cycle.anchor={...point};cycle.started=performance.now();}
-              move(point);inspectingRef.current=true;
+              inspectingRef.current=true;
             }
-            else if(inspectingRef.current){leave();reset();renderer?.cancelReveal();inspectingRef.current=false;}
-            const progress=!state.inspecting?0:phaseRef.current==='json'?100:Math.min(99,Math.floor((performance.now()-cycleRef.current.started)/15));
+            else if(inspectingRef.current){inspectingRef.current=false;}
+            const progress=state.inspecting?cycleProgress:0;
             if(progressRef.current)progressRef.current.textContent=`LOCAL REVEAL ${String(progress).padStart(3,'0')}%`;
             if(!state.inspecting&&panelReadoutRef.current)panelReadoutRef.current.textContent='X — / Y —';
             stage.dataset.returnCount=String(state.returnCount);
@@ -130,7 +131,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
         });
         rendererRef.current=renderer;resize();renderer.setLighting(Number(stage.dataset.lightProgress||0));
         resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);
-        intersection=new IntersectionObserver(([entry])=>{renderer?.setVisible(entry.isIntersecting);setStageVisible(entry.isIntersecting);},{rootMargin:'100px'});intersection.observe(stage);
+        intersection=new IntersectionObserver(([entry])=>{const shown=entry.isIntersecting||modeRef.current!=='docked';renderer?.setVisible(shown);setStageVisible(shown);},{rootMargin:'100px'});intersection.observe(stage);
         setStatus('ready');
       }catch{if(alive){renderer?.dispose();renderer=null;rendererRef.current=null;setStatus('fallback');}}
     };
@@ -142,14 +143,14 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
       document.removeEventListener('visibilitychange',visibility);window.removeEventListener('blur',blur);window.removeEventListener('pointermove',hover);rendererRef.current=null;renderer?.dispose();
       window.dispatchEvent(new CustomEvent('whereabouts:loupe-mode',{detail:'docked'}));
     };
-  },[frame,attempt,reset,leave,move]);
+  },[frame,attempt]);
   useEffect(()=>()=>{if(urlRef.current)URL.revokeObjectURL(urlRef.current);},[]);
   useEffect(()=>{const sync=()=>{const stage=stageRef.current,target=targetRef.current,canvas=canvasRef.current;if(!stage||!target||!canvas)return;const rect=stage.getBoundingClientRect(),radius=Number(canvas.dataset.loupeRadius)||90;target.style.transform=`translate(${rect.left+pointRef.current.x-radius*1.2}px,${rect.top+pointRef.current.y-radius*1.2}px)`;};window.addEventListener('scroll',sync,{passive:true});return()=>window.removeEventListener('scroll',sync);},[]);
   const position=(event:PointerEvent<HTMLDivElement>)=>{
     const r=event.currentTarget.getBoundingClientRect();return{x:event.clientX-r.left,y:event.clientY-r.top};
   };
   const release=()=>{
-    rendererRef.current?.release();leave();reset();
+    rendererRef.current?.release();
   };
   const pointerMove=(event:PointerEvent<HTMLDivElement>)=>{
     const point=position(event);rendererRef.current?.hover(point);
@@ -168,7 +169,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
     if(modeRef.current!=='held')rendererRef.current?.pickup(pointRef.current);
     const rect=stageRef.current!.getBoundingClientRect(),layout=instrumentLayout(rect.width,rect.height),step=event.shiftKey?34:12;
     const delta={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[event.key]??[0,0];
-    rendererRef.current?.draw(event.key==='Home'?{x:layout.photoWidth/2,y:layout.photoHeight/2}:{x:Math.max(0,Math.min(rect.width,pointRef.current.x+delta[0])),y:Math.max(0,Math.min(rect.height,pointRef.current.y+delta[1]))});
+    rendererRef.current?.draw(event.key==='Home'?{x:layout.photoWidth/2,y:layout.photoHeight/2}:{x:Math.max(-rect.left,Math.min(innerWidth-rect.left,pointRef.current.x+delta[0])),y:Math.max(-rect.top,Math.min(innerHeight-rect.top,pointRef.current.y+delta[1]))});
   };
   const download=()=>{
     const photo=photoRef.current,reading=phase==='json'?readingRef.current:settledRef.current??(basic?readingRef.current:null);
@@ -188,6 +189,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
       <div className="wa-instrument-photo" data-testid="inspection-photo"><img src={frame.imageUrl} alt="" draggable={false}/></div>
       <ToolPanel photo={photoRef.current??frame.photo??null} used={used} index={index} available={status==='ready'} readoutRef={panelReadoutRef}/>
       <canvas key="stage-base-2d" ref={canvasRef} className={status==='ready'?'':'wa-optical-canvas-hidden'} data-testid="canvas-optical-loupe" aria-hidden="true"/>
+      <div className="wa-zoom-control" onPointerDown={event=>event.stopPropagation()} onKeyDown={event=>event.stopPropagation()}><RotaryDial label="Zoom" labels={['3×','6×','10×']} value={zoomIndex} onChange={value=>{setZoomIndex(value);rendererRef.current?.setMagnification([3,6,10][value]);}} disabled={status!=='ready'}/></div>
       {status==='loading'&&<div className="wa-optical-loading skeleton" aria-hidden="true"/>}
       {createPortal(<button ref={targetRef} type="button" disabled={status!=='ready'||!stageVisible} style={{visibility:status==='ready'&&stageVisible?'visible':'hidden'}} aria-label={mode==='held'?'Return loupe to cradle':'Hold to lift loupe; Enter or Space toggles pickup'} aria-describedby="loupe-instructions" aria-pressed={mode==='held'} data-testid="button-loupe-pickup" className="wa-loupe-hit-target"
         onBlur={()=>{if(modeRef.current==='held')release();}}
@@ -196,6 +198,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
     </div>
     <div className="wa-instrument-instructions"><p id="loupe-instructions">Hold the loupe to lift. Drag across the photo; release to return.<br/>Keyboard: Enter / Space to lift or return. Home centers on photo. Arrows move, Shift steps farther. Escape returns. Tab stays free.</p><span><span ref={coordinatesRef} data-testid="text-loupe-image-coordinates">ORIGINAL IMAGE COORDINATES / px</span><br/><span ref={progressRef} data-testid="text-loupe-reveal-counter">LOCAL REVEAL 000%</span></span></div>
     {(basic||status==='image-error')&&<div className="wa-optical-notice" role="status"><p>The 3D engine or photo is unavailable. No optical effect is simulated. A loaded image’s center reading remains downloadable.</p><button type="button" onClick={()=>setAttempt(value=>value+1)} data-testid="button-retry-optics"><RotateCcw size={13}/>Retry</button></div>}
+    {captureStatus==='failed'&&<p className="wa-optical-notice" role="status">Page capture unavailable. Live photo/panel optics still work; header capture is not available.<button type="button" onClick={()=>rendererRef.current?.refreshCapture()}>Retry page capture</button></p>}
     <p className="sr-only" aria-live="polite" data-testid="status-loupe-phase">{mode==='docked'?'Loupe is in its holder.':mode==='returning'?'Returning to the cradle.':phase==='json'?'The lens shows minified region JSON. Supplied coordinates are approximate, not verified.':phase==='decoding'?'Morphing binary wall to JSON wall.':'Loupe held. Reading the aligned RGB binary wall.'}</p>
     {phase==='json'&&<pre className="sr-only" data-testid="text-loupe-json">{snapshot}</pre>}
     <div className="wa-optical-controls">

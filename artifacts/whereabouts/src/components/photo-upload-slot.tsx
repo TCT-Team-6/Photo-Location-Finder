@@ -16,6 +16,8 @@ type PhotoUploadSlotProps = {
   error?: string;
   disabled?: boolean;
   onSelectFile: (file: File) => void;
+  onSelectFiles?:(files:File[])=>void;
+  trayOnly?:boolean;
   onRemoveFile: () => void;
 };
 
@@ -26,12 +28,13 @@ export function PhotoUploadSlot({
   disabled = false,
   onSelectFile,
   onRemoveFile,
+  onSelectFiles,trayOnly=false,
 }: PhotoUploadSlotProps) {
   const [dragging, setDragging] = useState(false);
   const [previewUnavailable, setPreviewUnavailable] = useState(false);
   const preview = useMemo(
-    () => (file ? URL.createObjectURL(file) : ""),
-    [file],
+    () => (file&&!trayOnly ? URL.createObjectURL(file) : ""),
+    [file,trayOnly],
   );
 
   useEffect(() => {
@@ -90,25 +93,27 @@ export function PhotoUploadSlot({
           event.stopPropagation();
           setDragging(false);
           if (disabled) return;
+          if(onSelectFiles&&event.dataTransfer.files.length){onSelectFiles(Array.from(event.dataTransfer.files));return;}
           const droppedFile = event.dataTransfer.files?.[0]
             ?? Array.from(event.dataTransfer.items)
               .find((item) => item.kind === "file")
               ?.getAsFile()
             ?? null;
-          if (droppedFile) onSelectFile(droppedFile);
+          if (droppedFile){if(onSelectFiles)onSelectFiles([droppedFile]);else onSelectFile(droppedFile);}
         }}
         className={`photo-upload-dropzone relative h-[210px] overflow-hidden rounded-xl border border-dashed text-center transition ${dragging ? "is-dragging" : ""} ${disabled ? "cursor-wait opacity-70" : "cursor-pointer"}`}
         data-testid={dropzoneTestId}
       >
-        <CropMarks/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
+        <CropMarks/><span className="fd-drag-label" aria-live="polite">{onSelectFiles?'DROP TO ADD':dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
         <input
           id={inputId}
           type="file"
+          multiple={Boolean(onSelectFiles)}
           accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
           disabled={disabled}
           onChange={(event) => {
             const selected = event.currentTarget.files?.[0];
-            if (selected) onSelectFile(selected);
+            if(onSelectFiles)onSelectFiles(Array.from(event.currentTarget.files??[]));else if (selected) onSelectFile(selected);
             event.currentTarget.value = "";
           }}
           className="sr-only"
@@ -118,7 +123,7 @@ export function PhotoUploadSlot({
           htmlFor={inputId}
           className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center overflow-hidden px-4 py-5"
         >
-          {file ? (
+          {file&&!trayOnly ? (
             <>
               {previewUnavailable ? (
                 <div className="photo-upload-fallback flex h-full w-full flex-col items-center justify-center gap-3 rounded-lg px-4 text-center text-xs leading-5">
@@ -150,8 +155,8 @@ export function PhotoUploadSlot({
               <span className="photo-upload-icon grid h-12 w-12 place-items-center rounded-full">
                 <Upload size={21} strokeWidth={1.6} />
               </span>
-              <p className="mt-4 font-editorial text-lg">Drop photo here</p>
-              <p className="mt-1 text-xs text-[#77847a]">or browse files</p>
+              <p className="mt-4 font-editorial text-lg">Drop a photo</p>
+              <p className="mt-1 text-xs text-[#77847a]">or browse · up to 6 images, 25 MB each</p>
               <span className="photo-upload-optional mt-4 rounded-full border px-3 py-1.5 font-data text-[8px] uppercase tracking-[.1em]">
                 Image · up to 25 MB
               </span>

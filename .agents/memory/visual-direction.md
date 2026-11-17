@@ -20,7 +20,7 @@ The glass must refract the actual scene behind it everywhere, including the dock
 
 **Why:** The user explicitly corrected empty-looking docked glass, excessive pickup growth, abrupt binary switching, and abrupt cursor feedback.
 
-The latest optical direction is a magnifying glass in front of a display: approximately 2.5× nearest-neighbor pixel zoom, readable 18–22px magnified glyphs, subtle LCD subpixel stripes, and barrel distortion only at the outer rim. This supersedes the earlier 1.6× smooth optics.
+The latest optical direction is a macro view of a display: 6× default zoom with 3×/6×/10× detents, distinct channel-brightness RGB light strips, dark screen-door gaps, subtle bloom, and consistent optics over all page surfaces. This supersedes the earlier 2.5× pixel-block view.
 
 **Why:** The user found the binary and JSON blurry and requested visibly sharp pixel blocks.
 
@@ -32,11 +32,23 @@ Workspace screens should follow “The Field Desk”: precise paper sheets, numb
 
 **How to apply:** Apply the shared treatment to populated and empty states, not just the shell; never delay interaction for animation or fabricate upload progress.
 
+Prefer fewer objects with richer optional interactions. New Investigation is a one-step-at-a-time photo/context/analyze flow. Workspace pages have at most one bordered box and one visible primary action; longer helper copy belongs in tooltips. All physical controls need click and keyboard alternatives, and only one draggable area per screen. Sound is off by default; reduced motion removes physics.
+
+**Why:** The user explicitly requested less clutter and more usable, camera-like physical controls.
+
+**How to apply:** Preserve existing capabilities and backend contracts while simplifying presentation. Keep the loupe decrypt on a fixed character grid: one-second dwell, approximately 600ms lock/scramble/radial resolve, immediate approximately 250ms reverse on movement; reduced motion uses a 150ms crossfade.
+
 Canvas glyph calibration must use a positive total glyph height, measured with an alphabetic baseline, with a finite bounded fallback.
 
 **Why:** Some browsers return negative ascent under a top baseline; treating ascent alone as height can silently produce a blank data wall despite passing unit/build checks.
 
 **How to apply:** Validate metric signs and range before deriving text size or loop spacing, and verify visible GPU text rather than trusting phase/status attributes alone.
+
+Live Three.js canvas textures must be reallocated when their canvas dimensions change, not merely marked for update.
+
+**Why:** Three r187 uses immutable GPU texture storage; resizing a canvas and reusing its allocation can leave the loupe black or sampling stale content despite correct UI state.
+
+**How to apply:** Track allocated dimensions separately from the mutable canvas, upload a replacement texture on resize, update its sampler binding, and dispose the old resource. Verify rendered pixels as well as timing attributes.
 
 **Why:** The user explicitly corrected the button-driven magnifier, its static-image optical illusion, and then the sidebar reveal and timing.
 **How to apply:** Preserve free dragging and in-lens reveal; provide touch and keyboard equivalents. Distinguish pixel measurements, extracted metadata, and user-authored regional estimates. Use paper (#f4f4f2), ink, and one red accent. The user wants a viewport-height photo/tool-panel section with shared scroll-driven lighting across 3D and CSS surfaces, plus a site-wide pointer cursor with native text input behavior. GSAP/Lenis independent scroll-driven animations supersede the earlier no-animation rule. Preserve existing routes, data, API calls, and logic.

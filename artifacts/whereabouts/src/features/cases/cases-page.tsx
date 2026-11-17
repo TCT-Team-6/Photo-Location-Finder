@@ -14,7 +14,7 @@ export default function CasesPage() {
   return <div className="wa-case-list fade-up">
     <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div><p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private cases</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Case files.</DeskHeadline><p className="mt-3 max-w-lg text-sm text-[#718078]">A careful place to organize authorized photos, links and tips. Visible only to you.</p></div>
-      <Link href="/cases/new" data-testid="button-new-case" className={primaryBtn}><FolderPlus size={16} />Open a case</Link>
+      {(!q.isSuccess||rows.length>0)&&<Link href="/cases/new" data-testid="button-new-case" className={primaryBtn}><FolderPlus size={16} />Open a case</Link>}
     </div>
     <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
       <div>
