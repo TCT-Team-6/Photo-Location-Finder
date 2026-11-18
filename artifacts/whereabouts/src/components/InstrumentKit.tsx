@@ -5,7 +5,7 @@ import {DirectionalLight} from 'three';
 import {PhysicalModel,type InstrumentKind,type InstrumentPalette,type SwatchMotion} from './physical-models';
 import type {InstrumentInteraction} from './instrument-meshes';
 import {installLayoutMonitor} from '@/lib/control-layout';
-import {INSTRUMENT_FOV,instrumentRenderer,instrumentSoftboxes,pixelCameraDistance} from '@/lib/instrument-kit';
+import {INSTRUMENT_FOV,instrumentRenderer,instrumentSoftboxes,instrumentStudioSurround,pixelCameraDistance} from '@/lib/instrument-kit';
 import {cacheInstrumentFrame,cachedInstrumentFrame,instrumentFrameKey} from '@/lib/instrument-fallback';
 import {instrumentPNGs} from '@/lib/instrument-pngs';
 import {feedbackSpring} from '@/lib/lens-feedback';
@@ -23,15 +23,14 @@ export function InstrumentKit({children}:{children:ReactNode}){
   const fail=(detail:string)=>{console.error('[InstrumentKit] 3D renderer failed:',detail);setState({available:false,error:detail});};
   useEffect(()=>import.meta.env.DEV?installLayoutMonitor():undefined,[]);
   return <Rendering.Provider value={{...state,retry:()=>setState({available:true,error:''})}}>{exportMode?<InstrumentExportGallery/>:children}{state.available&&<Boundary fail={fail}>
-    <Canvas aria-hidden="true" eventSource={document.body} eventPrefix="client" dpr={[1,2]} frameloop="demand" shadows="soft"
+    <Canvas aria-hidden="true" eventSource={document.body} eventPrefix="client" dpr={[1,2]} frameloop="demand" shadows={{type:instrumentRenderer.shadowType}}
       gl={{alpha:true,antialias:true,powerPreference:'low-power',toneMapping:instrumentRenderer.toneMapping,outputColorSpace:instrumentRenderer.outputColorSpace}}
       onCreated={({gl})=>{gl.setClearAlpha(0);gl.shadowMap.type=instrumentRenderer.shadowType;gl.debug.onShaderError=(context,program,vertex,fragment)=>fail(`Instrument shader compilation failed: ${[context.getProgramInfoLog(program),context.getShaderInfoLog(vertex),context.getShaderInfoLog(fragment)].filter(Boolean).join(' ').slice(0,2400)}`);gl.domElement.addEventListener('webglcontextlost',()=>fail('WebGL context lost.'),{once:true});}}
-      fallback={<RendererFailed fail={fail}/>} style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:'var(--instrument-layer,1)'}}>
+      fallback={<span>3D requires a browser with canvas support.</span>} style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:'var(--instrument-layer,1)'}}>
       <View.Port/><FrameCoordinator/>
     </Canvas>
   </Boundary>}</Rendering.Provider>;
 }
-function RendererFailed({fail}:{fail:(message:string)=>void}){const callback=useRef(fail);callback.current=fail;useEffect(()=>{callback.current('WebGL could not initialize. No imitation controls have been substituted.');},[]);return null;}
 type ExportedFrame={kind:InstrumentKind;png:string;width:number;height:number};
 declare global{interface Window{InstrumentKitExport?:()=>Promise<ExportedFrame[]>}}
 function FrameCoordinator(){
@@ -41,7 +40,7 @@ function FrameCoordinator(){
     window.InstrumentKitExport=async()=>{await document.fonts.ready;return new Promise(resolve=>{pending.current=resolve;invalidate();});};
     return()=>{delete window.InstrumentKitExport;window.removeEventListener('scroll',refresh,true);window.removeEventListener('resize',refresh);window.removeEventListener('whereabouts:instrument-motion',refresh);document.removeEventListener('visibilitychange',refresh);};
   },[invalidate]);
-  useFrame(()=>{gl.setScissorTest(false);gl.setRenderTarget(null);gl.clear(true,true,true);},0);
+  useFrame(()=>{gl.setScissorTest(false);gl.setRenderTarget(null);gl.setClearAlpha(0);gl.clear(true,true,true);},0);
   useFrame(()=>{
     if(!pending.current)return;
     const frames:ExportedFrame[]=[],canvasRect=gl.domElement.getBoundingClientRect(),ratio=gl.domElement.width/canvasRect.width;
@@ -99,7 +98,7 @@ export function InstrumentView({kind,value=0,active=false,pressed=false,amount=0
     {!rendering.available&&<div className="physical-render-error" role="alert"><p>3D unavailable.</p><small>{rendering.error}</small><button type="button" onClick={rendering.retry}>Retry 3D</button></div>}
   </>;
 }
-const SoftboxEnvironment=memo(function SoftboxEnvironment(){return <Environment frames={1} resolution={128}>{instrumentSoftboxes.map((box,i)=><Lightformer key={i} {...box} color="#faf9f4"/>)}</Environment>;});
+const SoftboxEnvironment=memo(function SoftboxEnvironment(){return <Environment frames={1} resolution={256} near={1} far={2000}><color attach="background" args={[instrumentStudioSurround]}/>{instrumentSoftboxes.map((box,i)=><Lightformer key={i} {...box} color="#faf9f4"/>)}</Environment>;});
 function InvalidateModel({children,value,amount,active,pressed,swatch,host}:{children:ReactNode;value:number;amount:number;active:boolean;pressed:boolean;swatch?:SwatchMotion;host:RefObject<HTMLElement|null>}){
   const invalidate=useThree(s=>s.invalidate);
   useEffect(()=>invalidate(),[value,amount,active,pressed,swatch,invalidate]);

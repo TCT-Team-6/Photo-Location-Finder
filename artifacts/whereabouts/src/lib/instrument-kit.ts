@@ -1,6 +1,9 @@
-import {ACESFilmicToneMapping,SRGBColorSpace,PCFSoftShadowMap,Color,DoubleSide,Mesh,MeshBasicMaterial,PlaneGeometry,PMREMGenerator,Scene,type WebGLRenderer,type MeshPhysicalMaterialParameters} from 'three';
+import {ACESFilmicToneMapping,SRGBColorSpace,PCFShadowMap,Color,DoubleSide,Mesh,MeshBasicMaterial,PlaneGeometry,PMREMGenerator,Scene,type WebGLRenderer,type MeshPhysicalMaterialParameters} from 'three';
 
-export const instrumentRenderer={toneMapping:ACESFilmicToneMapping,outputColorSpace:SRGBColorSpace,shadowType:PCFSoftShadowMap};
+export const instrumentRenderer={toneMapping:ACESFilmicToneMapping,outputColorSpace:SRGBColorSpace,shadowType:PCFShadowMap};
+/** A lit neutral studio surround, not a black void. Flat chrome faces reflect
+ * the surround when their normal does not point at either off-axis softbox. */
+export const instrumentStudioSurround='#b8b9b2';
 export const INSTRUMENT_FOV=18;
 /** At z=0 the vertical view frustum is exactly the CSS pixel height. */
 export function pixelCameraDistance(cssHeight:number){return cssHeight/(2*Math.tan(INSTRUMENT_FOV*Math.PI/360));}
@@ -13,7 +16,7 @@ export function instrumentMaterial(name:MaterialName,paper:string):MeshPhysicalM
     case 'Black anodized':return{name,color:'#1c1c1c',metalness:.6,roughness:.45};
     case 'Rubber':return{name,color:'#222222',metalness:0,roughness:.9};
     case 'Paper':return{name,color:paper,metalness:0,roughness:.85};
-    case 'Glass':return{name,color:'#f6f5ee',metalness:0,transmission:1,roughness:.05,thickness:2,clearcoat:1,ior:1.5,transparent:true};
+    case 'Glass':return{name,color:'#f6f5ee',metalness:0,transmission:1,roughness:.05,thickness:2,clearcoat:1,ior:1.5,transparent:true,depthWrite:false};
   }
 }
 /** Shared softboxes; the homepage's geometry is shared separately without changing its optical shader. */
@@ -26,6 +29,7 @@ export const instrumentSoftboxes=[
  */
 export function createInstrumentEnvironment(renderer:WebGLRenderer){
   const room=new Scene(),resources:{geometry:PlaneGeometry;material:MeshBasicMaterial}[]=[];
+  room.background=new Color(instrumentStudioSurround);
   for(const box of instrumentSoftboxes){
     const geometry=new PlaneGeometry(box.scale[0],box.scale[1]),material=new MeshBasicMaterial({color:new Color('#faf9f4').multiplyScalar(box.intensity),side:DoubleSide,toneMapped:false});
     const softbox=new Mesh(geometry,material);softbox.position.set(...box.position);room.add(softbox);resources.push({geometry,material});

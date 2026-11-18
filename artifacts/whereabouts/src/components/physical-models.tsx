@@ -5,6 +5,8 @@ import {Annulus,ArcText,Disc,EngravedText,GlassCover,Interactive,Material,Render
 import {PhysicalPhotoPrint} from './physical-photo-print';
 import {createLoupeAssembly} from '@/lib/loupe-model';
 import {instrumentMaterial} from '@/lib/instrument-kit';
+import {counterDrum,counterDrumRotation,createCounterApertureGeometry} from '@/lib/instrument-counter';
+import {SWATCH_CLOSE_MS,SWATCH_SELECTION_MS} from '@/lib/instrument-interaction';
 
 export type InstrumentKind='dial'|'shutter'|'tally'|'keys'|'drawer'|'voice'|'swatch'|'lever'|'rocker'|'loupe'|'tray'|'print';
 export type InstrumentPalette={paper:string;ink:string;accent:string;metal:string};
@@ -79,7 +81,7 @@ function Keys({value,palette:p,interaction}:Props){
       <Annulus inner={26} outer={30} height={5} at={[0,0,13]} palette={p}/>
       <Disc radius={25.9} height={1} at={[0,0,14.5]} palette={p} name="Paper"/>
       <Surface circle width={51.5} height={51.5} at={[0,0,15.03]} palette={p} deps={[p.paper,p.ink,value,i]} paint={c=>{c.fillStyle=p.paper;c.fillRect(0,0,51.5,51.5);c.fillStyle=p.ink;c.font='24px "DM Mono",monospace';c.fillText('ABC'[i],25.75,25.75);if(value&(1<<i)){c.fillStyle=p.accent;c.beginPath();c.arc(39,38,2.5,0,Math.PI*2);c.fill();}}}/>
-      <mesh position={[0,0,16.5]} scale={[1,1,3/26]}><sphereGeometry args={[26,64,32]}/><Material name="Glass" palette={p}/></mesh>
+      <mesh position={[0,0,15.12]} rotation={[Math.PI/2,0,0]} scale={[1,3/26,1]}><sphereGeometry args={[26,64,32,0,Math.PI*2,0,Math.PI/2]}/><Material name="Glass" palette={p}/></mesh>
     </Spring></Interactive>
     <Solid size={[40,14,2]} at={[0,-45,1]} palette={p}/>
     <EngravedText text={['INV','REC','JRN'][i]} width={38} height={12} at={[0,-45,2.04]} palette={p} dark/>
@@ -134,13 +136,19 @@ function RectangularFrame({width,height,holeWidth,holeHeight,depth,palette:p,chr
   useEffect(()=>()=>geometry.dispose(),[geometry]);return <mesh geometry={geometry} castShadow receiveShadow><Material name={chrome?'Polished chrome':'Black anodized'} palette={p}/></mesh>;
 }
 function NumberDrum({digit,x,palette:p,pressed}:{digit:number;x:number;palette:InstrumentPalette;pressed:boolean}){
-  const map=useEngraving(320,64,c=>{c.fillStyle='#1c1c1c';c.fillRect(0,0,320,64);c.fillStyle=p.paper;c.font='27px "DM Mono",monospace';for(let i=0;i<10;i++){c.save();c.translate(i*32+16,32);c.rotate(-Math.PI/2);c.fillText(String(i),0,0);c.restore();}},[p.paper]);
-  return <group position={[x,-3,-9]} rotation={[0,0,Math.PI/2]}><Spring axis="y" target={pressed?-Math.PI/5:0} stiffness={440} damping={23}><mesh rotation={[0,-Math.PI*2*(digit+.5)/10,0]} castShadow><cylinderGeometry args={[26,26,48,128,1,true]}/><Material name="Black anodized" palette={p} map={map} color="#ffffff"/></mesh></Spring></group>;
+  const map=useEngraving(counterDrum.atlasWidth,counterDrum.atlasHeight,c=>{c.fillStyle='#1c1c1c';c.fillRect(0,0,counterDrum.atlasWidth,counterDrum.atlasHeight);c.fillStyle=p.paper;c.font=`${counterDrum.fontSize}px "DM Mono",monospace`;for(let i=0;i<10;i++){c.save();c.translate(i*32+16,counterDrum.atlasHeight/2);c.rotate(counterDrum.textRotation);c.fillText(String(i),0,0);c.restore();}},[p.paper]);
+  return <group position={[x,counterDrum.centerY,counterDrum.centerZ]} rotation={[0,0,Math.PI/2]}><Spring axis="y" target={pressed?-Math.PI/5:0} stiffness={440} damping={23}><mesh rotation={[0,counterDrumRotation(digit),0]} castShadow><cylinderGeometry args={[counterDrum.radius,counterDrum.radius,counterDrum.width,128,1,true]}/><Material name="Black anodized" palette={p} map={map} color="#ffffff"/></mesh></Spring></group>;
+}
+function CounterAperture({palette}:{palette:InstrumentPalette}){
+  const geometry=useMemo(createCounterApertureGeometry,[]);
+  useEffect(()=>()=>geometry.dispose(),[geometry]);
+  return <mesh geometry={geometry} position={[-12,0,17.15]} receiveShadow><Material name="Black anodized" palette={palette}/></mesh>;
 }
 function Tally({amount,pressed,palette:p,interaction}:Props){
   return <group><Solid size={[200,90,2]} at={[0,0,-34]} palette={p}/>
     <group position={[-12,0,0]}><RectangularFrame width={176} height={90} holeWidth={124} holeHeight={58} depth={16} palette={p}/></group>
     <Solid size={[24,90,16]} at={[88,0,8]} palette={p}/><NumberDrum digit={(Math.floor(amount/10)+Math.max(0,amount%10-9))%10} x={-41} palette={p} pressed={pressed}/><NumberDrum digit={amount%10} x={11} palette={p} pressed={pressed}/>
+    <CounterAperture palette={p}/>
     <GlassCover width={124} height={58} at={[-12,0,19]} palette={p}/>
     <Interactive interaction={interaction}><Spring position target={pressed?-4:0}><Disc radius={11} height={7} at={[82,30,20]} name="Polished chrome" palette={p}/></Spring></Interactive>
   </group>;
@@ -173,8 +181,8 @@ function Swatch({value,active,palette:p,colors=[],labels=[],swatch,interaction,w
   return <group scale={scale} position={[0,0,0]}><group position={reduced?[-210,148,0]:[-220,-150,0]}>
     {[...order].reverse().map(i=>{const rank=order.indexOf(i),strip=colors[i]??[p.paper,p.ink,p.accent],selected=value===i,open=phase==='open'||phase==='select',selecting=phase==='select'&&swatch?.closingSelection===i;
       return <group key={i} position={[reduced?0:rank,reduced?-rank*67:-rank,(order.length-rank)*1.4+(selecting?12:0)]}>
-        <Spring motionKey={phase} target={reduced?0:selecting?0:open?rank*11*Math.PI/180:0} delay={reduced?0:(open?rank:order.length-1-rank)*30} stiffness={430} damping={29} onRest={()=>{if(currentPhase.current!=='closing')return;settled.current.add(i);if(settled.current.size===order.length)interaction?.onSettled?.();}}>
-          <Spring position axis="x" target={!reduced&&highlight===i&&open?16:0}><Spring position target={highlight===i&&open?4:0}>
+        <Spring motionKey={phase} target={reduced?0:selecting?0:open?rank*11*Math.PI/180:0} delay={reduced?0:(open?rank:order.length-1-rank)*30} stiffness={!open?1800:selecting?900:430} damping={!open?76:selecting?52:29} settleWithinMs={phase==='closing'?SWATCH_CLOSE_MS:SWATCH_SELECTION_MS} onRest={()=>{if(currentPhase.current!=='closing')return;settled.current.add(i);if(settled.current.size===order.length)interaction?.onSettled?.();}}>
+          <Spring position axis="x" stiffness={open?340:1800} damping={open?27:76} settleWithinMs={phase==='closing'?SWATCH_CLOSE_MS:SWATCH_SELECTION_MS} target={!reduced&&highlight===i&&open?16:0}><Spring position stiffness={open?340:1800} damping={open?27:76} settleWithinMs={phase==='closing'?SWATCH_CLOSE_MS:SWATCH_SELECTION_MS} target={highlight===i&&open?4:0}>
             <Interactive interaction={interaction} index={i}><group position={[190,0,0]}>
               <Solid size={[420,56,1]} palette={{...p,paper:strip[0]}} name="Paper" at={[0,0,.5]} radius={.3}/>
               <Surface width={420} height={56} at={[0,0,1.04]} palette={{...p,paper:strip[0]}} deps={[...strip,labels[i],selected]} paint={c=>{

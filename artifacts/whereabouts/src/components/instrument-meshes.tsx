@@ -3,6 +3,7 @@ import {useFrame,useThree,type ThreeEvent} from '@react-three/fiber';
 import {RoundedBox} from '@react-three/drei';
 import {CanvasTexture,DoubleSide,ExtrudeGeometry,Group,Plane,Shape,Path,SRGBColorSpace,Vector2,Vector3,type MeshPhysicalMaterialParameters} from 'three';
 import {instrumentMaterial,type MaterialName} from '@/lib/instrument-kit';
+import {feedbackSpring} from '@/lib/lens-feedback';
 import type {InstrumentPalette} from './physical-models';
 
 export const RenderedMesh=createContext<()=>void>(()=>{});
@@ -39,15 +40,17 @@ export function ToothedRing({radius,inner=0,depth,teeth,toothDepth=1.5,palette,a
   const ready=useContext(RenderedMesh);useEffect(()=>()=>geometry.dispose(),[geometry]);
   return <mesh geometry={geometry} position={at} castShadow receiveShadow onAfterRender={ready}><Material name="Silver aluminum" palette={palette}/></mesh>;
 }
-export function Spring({target=0,axis='z',position=false,delay=0,stiffness=340,damping=27,children,onRest,motionKey}:{target?:number;axis?:'x'|'y'|'z';position?:boolean;delay?:number;stiffness?:number;damping?:number;children:ReactNode;onRest?:()=>void;motionKey?:string}){
-  const group=useRef<Group>(null),velocity=useRef(0),start=useRef(0),invalidate=useThree(s=>s.invalidate),wanted=useRef(target);
+export function Spring({target=0,axis='z',position=false,delay=0,stiffness=340,damping=27,children,onRest,motionKey,settleWithinMs}:{target?:number;axis?:'x'|'y'|'z';position?:boolean;delay?:number;stiffness?:number;damping?:number;children:ReactNode;onRest?:()=>void;motionKey?:string;settleWithinMs?:number}){
+  const group=useRef<Group>(null),velocity=useRef(0),start=useRef(0),deadline=useRef(Infinity),invalidate=useThree(s=>s.invalidate),wanted=useRef(target);
   const resting=useRef(false),restCallback=useRef(onRest);restCallback.current=onRest;
-  useEffect(()=>{start.current=performance.now()+delay;wanted.current=target;resting.current=false;invalidate();},[target,delay,motionKey,invalidate]);
+  useEffect(()=>{const now=performance.now();start.current=now+delay;deadline.current=settleWithinMs===undefined?Infinity:now+settleWithinMs;wanted.current=target;resting.current=false;invalidate();},[target,delay,motionKey,settleWithinMs,invalidate]);
   useFrame((_,delta)=>{
     const node=group.current;if(!node||document.hidden)return;const property=position?node.position:node.rotation;
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches){property[axis]=wanted.current;if(!resting.current){resting.current=true;restCallback.current?.();}return;}
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||performance.now()>=deadline.current){property[axis]=wanted.current;velocity.current=0;if(!resting.current){resting.current=true;restCallback.current?.();}return;}
     if(performance.now()<start.current){invalidate();return;}
-    const dt=Math.min(.016,delta);velocity.current+=((wanted.current-property[axis])*stiffness-velocity.current*damping)*dt;property[axis]+=velocity.current*dt;
+    // Analytic integration advances real elapsed time even at software-rendered
+    // frame rates; a 16ms simulation cap stretched 450ms motions into seconds.
+    const next=feedbackSpring({position:property[axis],velocity:velocity.current},wanted.current,delta,stiffness,damping);property[axis]=next.position;velocity.current=next.velocity;
     if(Math.abs(wanted.current-property[axis])+Math.abs(velocity.current)>.001)invalidate();else{property[axis]=wanted.current;velocity.current=0;if(!resting.current){resting.current=true;restCallback.current?.();}}
   });
   return <group ref={group}>{children}</group>;
@@ -60,7 +63,10 @@ export function useEngraving(width:number,height:number,paint:(ctx:CanvasRenderi
 }
 export function Surface({width,height,palette,paint,deps,at=[0,0,.1],engraved=false,dark=false,circle=false,name='Paper'}:{width:number;height:number;palette:InstrumentPalette;paint:(ctx:CanvasRenderingContext2D)=>void;deps:unknown[];at?:[number,number,number];engraved?:boolean;dark?:boolean;circle?:boolean;name?:MaterialName}){
   const map=useEngraving(width,height,paint,deps),ready=useContext(RenderedMesh);
-  return <mesh position={at} receiveShadow onAfterRender={ready}>{circle?<circleGeometry args={[width/2,128]}/>:<planeGeometry args={[width,height]}/>}<Material name={name} palette={palette} color="#ffffff" map={map} bumpMap={engraved?map:undefined} bumpScale={engraved?(dark?-.6:.6):0} transparent side={DoubleSide}/></mesh>;
+  // Every surface painter fills its background; its shape is defined by actual
+  // plane/circle geometry. It must be opaque: Three's transmission pass only
+  // includes opaque objects, so transparent printed faces disappear under glass.
+  return <mesh position={at} receiveShadow onAfterRender={ready}>{circle?<circleGeometry args={[width/2,128]}/>:<planeGeometry args={[width,height]}/>}<Material name={name} palette={palette} color="#ffffff" map={map} bumpMap={engraved?map:undefined} bumpScale={engraved?(dark?-.6:.6):0} transparent={false} side={DoubleSide}/></mesh>;
 }
 export function EngravedText({text,width,height,palette,at=[0,0,0],dark=false}:{text:string;width:number;height:number;palette:InstrumentPalette;at?:[number,number,number];dark?:boolean}){
   return <Surface width={width} height={height} palette={palette} at={at} engraved dark={dark} name={dark?'Black anodized':'Silver aluminum'} deps={[text,palette.paper,palette.ink,dark]} paint={ctx=>{ctx.fillStyle=dark?'#1c1c1c':'#c9c9c4';ctx.fillRect(0,0,width,height);ctx.fillStyle=dark?palette.paper:palette.ink;ctx.font=`${Math.min(11,height*.7)}px "DM Mono",monospace`;ctx.fillText(text,width/2,height/2,width-2);}}/>;

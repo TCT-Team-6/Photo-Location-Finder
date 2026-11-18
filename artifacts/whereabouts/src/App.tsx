@@ -68,6 +68,7 @@ import {SafeRequestError} from '@/components/safe-request-error';
 import {DeskFilterKeys,PhysicalSwitch,ShutterButton,SwatchBook,TallyCounter} from '@/components/physical-controls';
 import {ReportChip,ReportOperationProvider,useReportOperation} from '@/components/report-operation';
 import {deskMatchesFilter} from '@/lib/desk-filters';
+import {constrainLibrarySearch,LIBRARY_SEARCH_MAX_LENGTH} from '@/lib/library-search';
 import './styles/physical-desk.css';
 
 const queryClient = new QueryClient({
@@ -1035,7 +1036,7 @@ function LibraryPage() {
       <div><PageEyebrow>Personal archive / index</PageEyebrow><DeskHeadline className="mt-3 text-5xl md:text-6xl">Your library.</DeskHeadline><p className="mt-3 text-sm text-[#718078]">Every photograph, clue, and possible place you’ve kept.</p></div>
     </div>
     <div className="mb-7 library-instruments">
-      <label className="fd-search-ruler relative block max-w-[560px] flex-1"><span className="sr-only">Search your library</span><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full pr-4 text-sm" /></label>
+      <label className="fd-search-ruler relative block max-w-[560px] flex-1"><span className="sr-only">Search your library</span><input type="search" value={search} maxLength={LIBRARY_SEARCH_MAX_LENGTH} onChange={(event) => { setSearch(constrainLibrarySearch(event.target.value)); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full pr-4 text-sm" /></label>
       <DeskFilterKeys value={deskFilter} onChange={value=>{setDeskFilter(value);setSelectedIds(new Set());}}/>
       <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={rows.length}/>: '—'} saved <span style={{visibility:query.isFetching?'visible':'hidden'}}> / UPDATING INDEX</span></div>
       <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>

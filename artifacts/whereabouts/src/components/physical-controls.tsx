@@ -7,6 +7,7 @@ import {useReducedInstrumentMotion} from '@/hooks/use-instrument-motion';
 import {crossfadeInstrumentTheme} from '@/lib/instrument-theme-transition';
 import type {SwatchMotion} from './physical-models';
 import {feedbackSpring} from '@/lib/lens-feedback';
+import {activateInstrumentButton,SWATCH_SELECTION_MS,SWATCH_SELECTED_RETURN_MS,SWATCH_THEME_FADE_MS} from '@/lib/instrument-interaction';
 
 export function ShutterButton(props:ButtonHTMLAttributes<HTMLButtonElement>){
   const[pressed,setPressed]=useState(false),button=useRef<HTMLButtonElement>(null),down=useRef(0),timers=useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -39,7 +40,7 @@ export function DeskFilterKeys({value,onChange}:{value:number;onChange:(value:nu
 export function PhysicalSwitch({kind,value,onChange,label,testId}:{kind:'lever'|'rocker';value:boolean;onChange:(next:boolean)=>void;label:string;testId?:string}){
   const flip=()=>{onChange(!value);if(kind!=='rocker')deskSound('switch');};
   return <div className={`physical-footprint physical-${kind}`} data-control={label}>
-    <PhysicalView kind={kind} active={value} interaction={{onSelect:flip}}/><button type="button" className="physical-accessible" role="switch" aria-checked={value} aria-label={label} data-testid={testId} onClick={flip}/>
+    <PhysicalView kind={kind} active={value} interaction={{onSelect:flip}}/><button type="button" className="physical-accessible" role="switch" aria-checked={value} aria-label={label} data-testid={testId} onClick={event=>{event.stopPropagation();flip();}} onKeyDown={event=>activateInstrumentButton(event,'down')} onKeyUp={event=>activateInstrumentButton(event,'up')}/>
   </div>;
 }
 export function FileDrawer({items,createRef}:{items:{id:string;title:string}[];createRef?:MutableRefObject<(()=>Promise<void>)|null>}){
@@ -70,7 +71,7 @@ type Theme={id:string;label:string;colors:string[]};
 export function SwatchBook({themes,selected,onSelect}:{themes:Theme[];selected:string;onSelect:(id:string)=>void}){
   const selectedIndex=Math.max(0,themes.findIndex(t=>t.id===selected)),reduced=useReducedInstrumentMotion(),[phase,setPhase]=useState<SwatchMotion['phase']>('closed');
   const[order,setOrder]=useState(()=>[selectedIndex,...themes.map((_,i)=>i).filter(i=>i!==selectedIndex)]),[highlight,setHighlight]=useState(-1),[selection,setSelection]=useState<number|null>(null);
-  const refs=useRef<(HTMLButtonElement|null)[]>([]),leaveTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),timers=useRef<ReturnType<typeof setTimeout>[]>([]),alive=useRef(true),tapOpened=useRef(false),phaseRef=useRef(phase);
+  const refs=useRef<(HTMLButtonElement|null)[]>([]),leaveTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),timers=useRef<ReturnType<typeof setTimeout>[]>([]),alive=useRef(true),tapOpened=useRef(false),phaseRef=useRef(phase),pendingSelection=useRef<number|null>(null);
   phaseRef.current=phase;
   useEffect(()=>{setOrder(previous=>[selectedIndex,...previous.filter(i=>i!==selectedIndex)]);},[selectedIndex]);
   useEffect(()=>{alive.current=true;return()=>{alive.current=false;clearTimeout(leaveTimer.current);timers.current.forEach(clearTimeout);};},[]);
@@ -78,18 +79,20 @@ export function SwatchBook({themes,selected,onSelect}:{themes:Theme[];selected:s
   const close=()=>{clearTimeout(leaveTimer.current);if(phaseRef.current==='select'||phaseRef.current==='closing')return;setHighlight(-1);setPhase('closed');};
   const closeRef=useRef(close);closeRef.current=close;
   useEffect(()=>{if(phase!=='open')return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();closeRef.current();}};document.addEventListener('keydown',escape);return()=>document.removeEventListener('keydown',escape);},[phase]);
+  const finishSelection=()=>{const index=pendingSelection.current;if(index===null||!alive.current)return;pendingSelection.current=null;setPhase('closed');setSelection(null);crossfadeInstrumentTheme(()=>onSelect(themes[index].id),SWATCH_THEME_FADE_MS);};
+  const finishRef=useRef(finishSelection);finishRef.current=finishSelection;
   const choose=(i:number)=>{
     if(tapOpened.current){tapOpened.current=false;return;}if(phaseRef.current==='select'||phaseRef.current==='closing')return;
     if(!reduced&&phaseRef.current==='closed'){open();return;}deskSound('switch');clearTimeout(leaveTimer.current);setHighlight(i);setSelection(i);
     if(reduced){setPhase('closed');crossfadeInstrumentTheme(()=>onSelect(themes[i].id),150);return;}
-    setPhase('select');timers.current.push(setTimeout(()=>{if(!alive.current)return;setOrder(previous=>[i,...previous.filter(index=>index!==i)]);setPhase('closing');setHighlight(-1);},190));
+    pendingSelection.current=i;setPhase('select');timers.current.push(setTimeout(()=>{if(!alive.current)return;setOrder(previous=>[i,...previous.filter(index=>index!==i)]);setPhase('closing');setHighlight(-1);},SWATCH_SELECTED_RETURN_MS));
+    timers.current.push(setTimeout(()=>finishRef.current(),SWATCH_SELECTION_MS));
   };
-  const finishSelection=()=>{if(phaseRef.current!=='closing'||selection===null)return;setPhase('closed');setSelection(null);crossfadeInstrumentTheme(()=>onSelect(themes[selection].id),300);};
   return <div className="physical-footprint physical-swatch" data-reduced={reduced} data-fan-state={phase} data-control="Theme swatch book" aria-label="Color theme swatch book"
     onPointerEnter={event=>{if(event.pointerType!=='touch')open();}} onPointerLeave={()=>{clearTimeout(leaveTimer.current);leaveTimer.current=setTimeout(close,400);}}
     onPointerDown={event=>{if(event.pointerType==='touch'&&phaseRef.current==='closed'&&!reduced){tapOpened.current=true;open();}}}
     onFocusCapture={open} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))leaveTimer.current=setTimeout(close,400);}}>
-    <PhysicalView kind="swatch" value={selectedIndex} active={phase!=='closed'} colors={themes.map(theme=>theme.colors)} labels={themes.map(theme=>theme.label)} swatch={{order,highlight,closingSelection:selection,reduced,phase}} interaction={{onSelect:choose,onSettled:finishSelection,onHover:i=>{if(phaseRef.current==='open')setHighlight(i??-1);}}}/>
+    <PhysicalView kind="swatch" value={selectedIndex} active={phase!=='closed'} colors={themes.map(theme=>theme.colors)} labels={themes.map(theme=>theme.label)} swatch={{order,highlight,closingSelection:selection,reduced,phase}} interaction={{onSelect:choose,onSettled:()=>{if(phaseRef.current==='closing')finishRef.current();},onHover:i=>{if(phaseRef.current==='open')setHighlight(i??-1);}}}/>
     <div className="sr-only" role="radiogroup" aria-label="Color theme">{themes.map((theme,i)=><button key={theme.id} type="button" role="radio" className="physical-accessible" aria-checked={selected===theme.id} tabIndex={highlight===i||highlight===-1&&i===selectedIndex?0:-1} data-testid={`button-theme-${theme.id}`} ref={node=>{refs.current[i]=node;}} onFocus={()=>setHighlight(i)} onClick={()=>choose(i)} onKeyDown={event=>{
       if(event.key==='Escape'){event.preventDefault();close();return;}
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const rank=order.indexOf(i),next=event.key==='Home'?order[0]:event.key==='End'?order.at(-1)!:order[(rank+(['ArrowDown','ArrowRight'].includes(event.key)?1:order.length-1))%order.length];refs.current[next]?.focus();}

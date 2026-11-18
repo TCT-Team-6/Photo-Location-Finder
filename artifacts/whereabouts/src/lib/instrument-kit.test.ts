@@ -59,3 +59,10 @@ test('control stylesheet and fallback source contain no drawn metal, SVG proxy, 
   const model=readFileSync(new URL('../components/physical-models.tsx',import.meta.url),'utf8');
   assert.match(model,/root\.current\.traverse/);assert.match(model,/geometry\.index/);assert.match(model,/\[3D\]/);
 });
+test('canvas fallback is inert so mounting HTML canvas children cannot disable WebGL',()=>{
+  const source=readFileSync(new URL('../components/InstrumentKit.tsx',import.meta.url),'utf8');
+  assert.doesNotMatch(source,/RendererFailed/);
+  assert.match(source,/fallback=\{<span>/);
+  assert.match(source,/webglcontextlost/);
+  assert.match(source,/componentDidCatch/);
+});

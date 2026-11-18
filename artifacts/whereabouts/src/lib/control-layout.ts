@@ -13,7 +13,9 @@ export function installLayoutMonitor() {
   const observer = new PerformanceObserver(list => {
     for (const entry of list.getEntries()) {
       if (!interactionShiftIsRelevant(interactedAt, entry.startTime)) continue;
-      const shift = entry as PerformanceEntry & { sources?: { node?: Node }[] };
+      const shift = entry as PerformanceEntry & { value?: number; sources?: { node?: Node }[] };
+      // Text repaint can emit a zero-impact entry without moving any footprint.
+      if (shift.value === 0) continue;
       console.warn('[Control layout shift]', control, shift.sources?.map(s => {const element=s.node instanceof Element?s.node:s.node?.parentElement;return element?.getAttribute('data-testid')??element?.tagName??'unknown';}).join(', '));
     }
   });

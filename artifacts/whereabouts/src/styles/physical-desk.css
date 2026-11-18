@@ -1,4 +1,6 @@
 /* InstrumentKit: layout and accessibility only. All instrument depth is real geometry. */
+html{scrollbar-gutter:stable}
+@supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
 .physical-footprint{position:relative;display:inline-block;flex:none;vertical-align:middle;isolation:auto;touch-action:manipulation;overflow:visible}
 .physical-view{position:absolute!important;inset:0;pointer-events:auto;z-index:1;overflow:visible!important}
 .physical-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0}
@@ -30,8 +32,14 @@
 .wa-topbar{background:var(--paper)!important;z-index:120}
 .wa-sidebar{z-index:120}
 .wa-workspace main{padding-bottom:112px!important}
-.fd-source-desk{grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start;width:100%}
-.fd-desk-page{min-width:0;min-height:310px}
+.wa-shell>.wa-workspace{flex:1 1 0%;min-width:0;max-width:100%}
+.wa-workspace>main,.fd-sheet,.wa-intake,#investigate-form.fd-wizard,.fd-source-desk,.fd-desk-page{box-sizing:border-box;min-width:0}
+.wa-workspace .wa-intake{width:100%;max-width:1120px;justify-self:stretch}
+#investigate-form.fd-wizard{width:100%;max-width:none}
+.fd-source-desk{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start;justify-items:stretch;width:100%;max-width:100%}
+.fd-source-desk>.physical-dial{grid-column:1;grid-row:1;justify-self:start;margin:0}
+.fd-desk-page{grid-column:2;grid-row:1;width:100%;max-width:100%;min-width:0;min-height:310px}
+.fd-desk-page>div,.fd-desk-page .photo-upload-card,.fd-desk-page .photo-upload-dropzone{box-sizing:border-box;width:100%;min-width:0;max-width:none}
 .fd-wizard-step{min-height:860px;width:100%;max-width:none}
 .fd-wizard-step>footer{height:64px}
 .fd-summary{width:100%;max-width:620px;display:grid;grid-template-columns:100px minmax(0,1fr);grid-auto-rows:32px;font:12px/32px var(--app-font-mono)}
@@ -66,7 +74,8 @@
 .instrument-error :is(h2,h3,p,button){color:var(--ink)!important}
 .instrument-error :focus-visible{outline:2px solid var(--fd-red);outline-offset:4px}
 .instrument-avatar{position:relative;display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%!important;background:var(--ink)!important;color:var(--paper)!important;overflow:hidden;font:500 14px var(--app-font-mono)}
-.instrument-avatar img{position:absolute;inset:0;width:36px;height:36px;object-fit:cover}
+.instrument-avatar>.instrument-avatar-initial{position:absolute!important;inset:0!important;display:grid!important;place-items:center;width:36px!important;height:36px!important;margin:0!important;padding:0!important;color:var(--paper)!important;-webkit-text-fill-color:var(--paper)!important;background:transparent!important;font:500 14px/1 var(--app-font-mono)!important;letter-spacing:0!important;text-indent:0!important;opacity:1!important;visibility:visible!important;transform:none!important;z-index:0}
+.instrument-avatar img{position:absolute;inset:0;width:36px;height:36px;object-fit:cover;z-index:1}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:var(--instrument-theme-fade,300ms)}
 @font-face{font-family:"Desk Metric Fallback";src:local("Courier New");size-adjust:96%;ascent-override:93%;descent-override:25%;line-gap-override:0%}
 [data-app-theme]{--app-font-mono:"DM Mono","Desk Metric Fallback",monospace}
@@ -110,6 +119,8 @@ html:has(.physical-progress){--instrument-layer:210}
 @media(max-width:991px) and (min-width:768px){.physical-swatch{width:440px;height:330px}}
 @media(max-width:767px){
   .fd-source-desk{grid-template-columns:minmax(0,1fr)}
+  .fd-source-desk>.physical-dial{grid-column:1;grid-row:1}
+  .fd-source-desk>.fd-desk-page{grid-column:1;grid-row:2}
   .fd-wizard-step{min-height:1280px}
   .physical-swatch{width:300px;height:225px}
   .fd-flip-checklist{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
