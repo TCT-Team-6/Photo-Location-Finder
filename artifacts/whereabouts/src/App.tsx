@@ -58,7 +58,8 @@ import { GuideDraftProvider, useGuideDraft } from '@/features/guide/guide-ui';
 import './index.css';
 import './styles/field-desk.css';
 import './styles/desk-refinements.css';
-import {BatchPrints,DeskMargin,FlipChecklist,HangingTag,HelpNote,RotaryDial} from '@/components/desk-controls';
+import {BatchPrints,DeskMargin,FlipChecklist,HangingTag,HelpNote} from '@/components/desk-controls';
+import {DeskSelector} from '@/components/desk-selector';
 import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
 import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
 import type {SavedInvestigationPhoto} from '@/lib/investigation-photo-uploads';
@@ -868,47 +869,23 @@ function InvestigatePage() {
           <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
           <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
-        <div className="desk-toggle mb-4 grid grid-cols-3 rounded-2xl border p-1.5" hidden role="group" aria-label="Choose photo field desk" data-testid="toggle-group-photo-desk">
-          <span className="desk-toggle-thumb" aria-hidden="true" style={{ transform: `translateX(${activeDeskIndex * 100}%)` }} />
-          {fieldDesks.map((desk) => {
-            const isActive = activeSlotId === desk.id;
-            const hasPhoto = Boolean(files[desk.id]);
-            const hasError = Boolean(slotErrors[desk.id]);
-            return <button
-              key={desk.id}
-              type="button"
-              aria-pressed={isActive}
-              aria-label={`${desk.label}${hasPhoto ? ', photo selected' : ''}${hasError ? ', needs attention' : ''}`}
-              disabled={pending || originalRunning}
-              onClick={() => setActiveSlotId(desk.id)}
-              data-testid={`toggle-photo-desk-${desk.id}`}
-              className="desk-choice relative z-10 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-center text-[10px] font-semibold transition sm:gap-2 sm:px-3 sm:text-xs"
-            >
-              <span className="hidden sm:inline-flex">{desk.icon}</span>
-              <span className="truncate">{desk.shortLabel}</span>
-              {hasPhoto && <Check size={13} aria-hidden="true" className={isActive ? 'text-white' : 'text-[#58755f]'} />}
-              {hasError && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b75d4d]" aria-hidden="true" />}
-            </button>;
-          })}
-        </div>
-        <div className="fd-source-desk"><RotaryDial label="Desk" labels={['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM']} value={activeDeskIndex} onChange={index=>setActiveSlotId(fieldDesks[index].id)} disabled={pending||originalRunning}/>
+        <div className="fd-source-desk"><DeskSelector value={activeDeskIndex} onChange={index=>setActiveSlotId(fieldDesks[index].id)} disabled={pending||originalRunning}/>
         <div role="region" className="fd-desk-page" aria-label={`${activeSlot.label} photo upload`} data-active-desk={activeSlotId}>
-          <div hidden={activeSlot.id !== 'original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake controlsRef={originalRunner} onStageChange={setStage} maxItems={6-selectedCount-extraFiles.length} onSelectionCountChange={setOriginalCount} onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => {originalDestination.current=path;}} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
-          {activeSlot.id !== 'original' && <PhotoUploadSlot
-            key={activeSlot.id}
-            slot={activeSlot}
+          <div data-desk-panel="original" data-active={activeSlot.id==='original'} inert={activeSlot.id!=='original'} aria-hidden={activeSlot.id !== 'original'}><OriginalMediaIntake controlsRef={originalRunner} onStageChange={setStage} maxItems={6-selectedCount-extraFiles.length} onSelectionCountChange={setOriginalCount} onRunningChange={setOriginalRunning} title={title} context={context} shotAt={shotAt} apiKey={apiKey} onOpen={(path) => {originalDestination.current=path;}} onImageSelected={(file) => { if (!shotAt || dateFromPhoto) void readPhotoTakenDate(file).then((taken) => { if (taken) { setShotAt(taken); setDateFromPhoto(true); } }); }} /></div>
+          {investigationPhotoSlots.filter(slot=>slot.id!=='original').map(slot=><div key={slot.id} data-desk-panel={slot.id} data-active={activeSlot.id===slot.id} inert={activeSlot.id!==slot.id} aria-hidden={activeSlot.id!==slot.id}><PhotoUploadSlot
+            slot={slot}
               trayOnly onSelectFiles={list=>{setLocalError('');addDeskFiles(list);}}
-              trayFiles={printEntries.filter(item=>item.label===activeSlot.label)}
+              trayFiles={printEntries.filter(item=>item.label===slot.label)}
               onRemoveTrayFile={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}
-            file={files[activeSlot.id]}
-            error={slotErrors[activeSlot.id]}
+            file={files[slot.id]}
+            error={slotErrors[slot.id]}
             disabled={pending || originalRunning}
-            onSelectFile={(file) => setSelectedFile(activeSlot.id, file)}
-            onRemoveFile={() => removeSelectedFile(activeSlot.id)}
-          />}
+            onSelectFile={(file) => setSelectedFile(slot.id, file)}
+            onRemoveFile={() => removeSelectedFile(slot.id)}
+          /></div>)}
         </div>
         </div>
-        {activeSlot.id!=='original'&&<BatchPrints items={printEntries} errors={extraFileErrors} onOrder={setPrintOrder} onRemove={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}/>}
+        <div className="desk-batch-reserve" data-active={activeSlot.id!=='original'} inert={activeSlot.id==='original'} aria-hidden={activeSlot.id==='original'}><BatchPrints items={printEntries} errors={extraFileErrors} onOrder={setPrintOrder} onRemove={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}/></div>
         {localError&&<p role="alert" className="mt-4 text-xs">{localError}</p>}
         {totalCount>0&&<footer><button type="button" className="fd-next fd-primary px-6 py-3" data-testid="button-investigation-next-photo" onClick={()=>setFlowStep(2)}>Next →</button><span className="font-data text-[10px]">{totalCount} media item{totalCount===1?'':'s'} across selected desks</span></footer>}
       </section>
@@ -1326,14 +1303,14 @@ function SettingsPage() {
         {id:'sunset',label:'Warm graphite',colors:['#efe2d7','#352c28','#aa3b30']},
         {id:'mono',label:'Monochrome',colors:['#e6e6e6','#171917','#a1322b']},
       ]} selected={preferences.theme} onSelect={id=>update('theme',id as AppPreferences['theme'])}/>
-      <div className="fd-lever mt-6"><span>High contrast</span><PhysicalSwitch kind="lever" value={preferences.highContrast} onChange={value=>update('highContrast',value)} label="High contrast" testId="toggle-high-contrast"/></div>
+      <div className="fd-lever mt-6"><span className="physical-switch-state" data-testid="status-high-contrast">High contrast · {preferences.highContrast?'ON':'OFF'}</span><PhysicalSwitch kind="lever" value={preferences.highContrast} onChange={value=>update('highContrast',value)} label="High contrast" testId="toggle-high-contrast"/></div>
     </section>
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-2xl">Text font</h2>
       <div className="fd-type-options" role="group" aria-label="Text font">{([['default','Bricolage + DM Sans','"Bricolage Grotesque",sans-serif'],['sans','DM Sans','"DM Sans",sans-serif'],['dyslexic','Atkinson Hyperlegible','"Atkinson Hyperlegible",sans-serif']] as const).map(([value,label,font])=><button type="button" key={value} className="fd-type-card" style={{'--specimen':font} as React.CSSProperties} aria-pressed={preferences.font===value} data-testid={`font-${value}`} onClick={()=>update('font',value)}><strong>Aa</strong><span>{label}</span></button>)}</div>
       <p className="mt-3 text-xs leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
     </section>
-    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span>Sound / {sound?'on':'off'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
+    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span className="physical-switch-state" data-testid="status-desk-sound">Sound · {sound?'ON':'OFF'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-xl">Your analysis API key</h2>
       <p className="mt-1 text-xs text-[#718078]">Optional · session memory only.<HelpNote>Your key is kept in memory for this session only, never saved in browser storage.</HelpNote></p>

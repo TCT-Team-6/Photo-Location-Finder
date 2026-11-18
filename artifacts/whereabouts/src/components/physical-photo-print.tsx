@@ -21,6 +21,6 @@ export function PhysicalPhotoPrint({file,palette,onRendered}:{file:File;palette:
   });
   return <group ref={group}>
     <mesh castShadow receiveShadow><boxGeometry args={[112,84,1]}/><meshPhysicalMaterial name="Paper" color={palette.paper} metalness={0} roughness={.85}/></mesh>
-    {texture&&<mesh position={[0,0,.52]} onAfterRender={onRendered}><planeGeometry args={[111.8,83.8]}/><meshPhysicalMaterial name="Paper / photo print" map={texture} metalness={0} roughness={.85}/></mesh>}
+    {texture&&<mesh position={[0,0,.8]} onAfterRender={onRendered}><planeGeometry args={[111.8,83.8]}/><meshPhysicalMaterial name="Paper / photo print" map={texture} metalness={0} roughness={.85} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1}/></mesh>}
   </group>;
 }

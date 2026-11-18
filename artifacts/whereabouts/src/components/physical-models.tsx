@@ -1,18 +1,22 @@
-import {useContext,useEffect,useMemo,useRef} from 'react';
-import {useFrame} from '@react-three/fiber';
+import {useContext,useEffect,useMemo,useRef,type RefObject} from 'react';
+import {useFrame,useThree} from '@react-three/fiber';
+import {Center} from '@react-three/drei';
 import {DoubleSide,ExtrudeGeometry,Group,Mesh,MeshPhysicalMaterial,Path,Shape,Vector2,type BufferGeometry} from 'three';
-import {Annulus,ArcText,Disc,EngravedText,GlassCover,Interactive,Material,RenderedMesh,Solid,Spring,Surface,ToothedRing as Toothed,useEngraving,type InstrumentInteraction} from './instrument-meshes';
+import {Annulus,Disc,EngravedText,GlassCover,Interactive,Material,RenderedMesh,Solid,Spring,Surface,TactileRotation,ToothedRing as Toothed,useEngraving,type InstrumentInteraction} from './instrument-meshes';
 import {PhysicalPhotoPrint} from './physical-photo-print';
 import {createLoupeAssembly} from '@/lib/loupe-model';
 import {instrumentMaterial} from '@/lib/instrument-kit';
 import {counterDrum,counterDrumRotation,createCounterApertureGeometry} from '@/lib/instrument-counter';
 import {SWATCH_CLOSE_MS,SWATCH_SELECTION_MS} from '@/lib/instrument-interaction';
+import {createSelectorMotion,crossedDeskDetents,tactileAngle,type SelectorMotion} from '@/lib/desk-selector';
+import {deskSound} from '@/lib/desk-sound';
+import {swatchMotionCenter} from '@/lib/instrument-alignment';
 
 export type InstrumentKind='dial'|'shutter'|'tally'|'keys'|'drawer'|'voice'|'swatch'|'lever'|'rocker'|'loupe'|'tray'|'print';
 export type InstrumentPalette={paper:string;ink:string;accent:string;metal:string};
 export type SwatchMotion={order:number[];highlight:number;closingSelection:number|null;reduced:boolean;phase:'closed'|'open'|'select'|'closing'};
-type Props={kind:InstrumentKind;value:number;active:boolean;pressed:boolean;amount:number;count:number;palette:InstrumentPalette;colors?:string[][];labels?:string[];media?:File;onRendered:()=>void;interaction?:InstrumentInteraction;width?:number;height?:number;swatch?:SwatchMotion;angle?:number};
-const names:Record<InstrumentKind,string>={dial:'Desk dial',shutter:'Shutter button',keys:'Library desk keys',voice:'Guide push-to-talk and VU meter',lever:'High contrast lever',rocker:'Sound rocker',tally:'Tally counter',drawer:'Cases file drawer',swatch:'Theme swatch book',loupe:'Small homepage loupe',tray:'Intake tray',print:'Photo print'};
+type Props={kind:InstrumentKind;value:number;active:boolean;pressed:boolean;amount:number;count:number;palette:InstrumentPalette;colors?:string[][];labels?:string[];media?:File;onRendered:()=>void;interaction?:InstrumentInteraction;width?:number;height?:number;swatch?:SwatchMotion;angle?:number;selector?:RefObject<SelectorMotion>};
+const names:Record<InstrumentKind,string>={dial:'Desk selector knob',shutter:'Shutter button',keys:'Library desk keys',voice:'Guide push-to-talk and VU meter',lever:'High contrast lever',rocker:'Sound rocker',tally:'Tally counter',drawer:'Cases file drawer',swatch:'Theme swatch book',loupe:'Small homepage loupe',tray:'Intake tray',print:'Photo print'};
 export function PhysicalModel(props:Props){
   const root=useRef<Group>(null),ready=useRef(false),logged=useRef(false);
   const rendered=()=>{if(!ready.current){ready.current=true;props.onRendered();}};
@@ -36,36 +40,29 @@ export function PhysicalModel(props:Props){
     case'print':model=props.media?<Interactive interaction={props.interaction}><PhysicalPhotoPrint file={props.media} palette={props.palette} onRendered={rendered}/></Interactive>:null;break;
     default:model=<Tray {...props}/>;
   }
-  return <RenderedMesh.Provider value={rendered}><group ref={root} name={`InstrumentKit / ${names[props.kind]}`} rotation={[0,0,props.angle??0]}>{model}</group></RenderedMesh.Provider>;
+  return <RenderedMesh.Provider value={rendered}><group ref={root} name={`InstrumentKit / ${names[props.kind]}`} rotation={[0,0,props.angle??0]}>{props.kind==='swatch'?model:<Center disableZ cacheKey={`${props.kind}:${props.width}:${props.height}`}>{model}</Center>}</group></RenderedMesh.Provider>;
 }
-function Dial({value,pressed,palette:p,interaction}:Props){
-  const angle=useRef(0),last=useRef(0);
-  if(last.current!==value){let next=value*Math.PI*2/3;while(next-angle.current>Math.PI)next-=Math.PI*2;while(next-angle.current< -Math.PI)next+=Math.PI*2;angle.current=next;last.current=value;}
-  return <group position={[0,22,0]}>
-    <Disc radius={105} height={6} at={[0,0,3]} name="Black anodized" palette={p}/>
-    <Surface width={8} height={13} at={[0,98,6.1]} palette={p} engraved dark deps={[p.accent]} name="Black anodized" paint={c=>{c.fillStyle='#1c1c1c';c.fillRect(0,0,8,13);c.fillStyle=p.accent;c.fillRect(3,1,2,11);}}/>
-    <Spring target={angle.current} stiffness={430} damping={28}>
-      <Interactive interaction={interaction} drag>
-        <Spring position target={pressed?-.7:0}>
-          <ToothedDial palette={p}/>
-          <Surface width={174} height={174} at={[0,0,30.05]} palette={p} engraved circle name="Silver aluminum" deps={[p.ink,p.paper]} paint={c=>{
-            c.fillStyle='#c9c9c4';c.fillRect(0,0,174,174);
-            for(let r=23;r<85;r+=.7){c.strokeStyle=r%1>.4?'#c5c5c0':'#cdcdc8';c.lineWidth=.13;c.beginPath();c.arc(87,87,r,0,Math.PI*2);c.stroke();}
-            c.fillStyle=p.ink;['A · INV','B · REC','C · JRN'].forEach((text,i)=>ArcText(c,text,73,87,i*Math.PI*2/3));
-          }}/>
-          <Disc radius={22} height={3} at={[0,0,31.5]} name="Polished chrome" palette={p}/>
-          <Surface width={38} height={38} at={[0,0,33.04]} palette={p} circle engraved name="Polished chrome" deps={[p.ink,p.paper]} paint={c=>{c.fillStyle='#e2e2de';c.fillRect(0,0,38,38);c.strokeStyle=p.ink;c.lineWidth=.8;c.beginPath();c.arc(19,19,8,0,Math.PI*2);c.moveTo(19,5);c.lineTo(19,14);c.moveTo(19,24);c.lineTo(19,33);c.moveTo(5,19);c.lineTo(14,19);c.moveTo(24,19);c.lineTo(33,19);c.stroke();}}/>
-        </Spring>
-      </Interactive>
-    </Spring>
-  </group>;
-}
-function ToothedDial({palette:p}:{palette:InstrumentPalette}){
-  return <><Toothed radius={90} depth={24} teeth={120} palette={p} at={[0,0,6]}/><Annulus inner={87} outer={90} height={2.2} at={[0,0,27.8]} palette={p}/></>;
+function Dial({value,palette:p,interaction,selector}:Props){
+  const rotating=useRef<Group>(null),fallback=useRef(createSelectorMotion(value)),invalidate=useThree(s=>s.invalidate);
+  const paintMetalness=useEngraving(88,88,c=>{c.fillStyle='#ffffff';c.fillRect(0,0,88,88);c.strokeStyle='#000000';c.lineWidth=3;c.beginPath();c.moveTo(44,44);c.lineTo(44,2);c.stroke();c.fillStyle='#000000';c.beginPath();c.arc(44,4,2.8,0,Math.PI*2);c.fill();},[]);
+  useFrame(()=>{const motion=selector?.current??fallback.current,node=rotating.current;if(!node)return;
+    if(motion.mode==='timed'){const before=motion.angle,elapsed=performance.now()-motion.started;motion.angle=tactileAngle(motion.from,motion.target,elapsed,motion.duration,motion.curve);if(selector)for(const _index of crossedDeskDetents(before,motion.angle))deskSound('detent');if(elapsed<motion.duration)invalidate();}
+    node.rotation.z=-motion.angle;
+  });
+  return <Interactive interaction={interaction} drag><group ref={rotating}>
+    <Toothed radius={59.4} depth={28.8} teeth={60} toothDepth={2} bevel={.6} name="Black anodized" roughness={.5} palette={p} at={[0,0,.6]}/>
+    <Disc radius={44} height={2} at={[0,0,31]} name="Silver aluminum" palette={p}/>
+    <Annulus inner={44.35} outer={45.65} height={1.3} at={[0,0,30.35]} name="Silver aluminum" palette={p}/>
+    <Surface width={88} height={88} at={[0,0,32.3]} palette={p} circle engraved name="Silver aluminum" metalnessMap={paintMetalness} bumpDepth={-.6} deps={[p.accent]} paint={c=>{
+      c.fillStyle='#c9c9c4';c.fillRect(0,0,88,88);c.lineWidth=.14;
+      for(let r=2;r<44;r+=.55){c.strokeStyle=r%1>.4?'#bfc0ba':'#d1d2cc';c.beginPath();c.arc(44,44,r,0,Math.PI*2);c.stroke();}
+      c.strokeStyle='#f4f4ec';c.lineWidth=3;c.beginPath();c.moveTo(44,44);c.lineTo(44,2);c.stroke();c.fillStyle=p.accent;c.beginPath();c.arc(44,4,2.8,0,Math.PI*2);c.fill();
+    }}/>
+  </group></Interactive>;
 }
 function Shutter({pressed,palette:p,interaction}:Props){
   const dish=useMemo(()=>[new Vector2(0,25),new Vector2(10,25.05),new Vector2(25,25.5),new Vector2(38,26.3),new Vector2(46,27),new Vector2(46,20),new Vector2(0,20)],[]);
-  return <group position={[0,16,0]}><Disc radius={67} height={4} at={[0,0,2]} name="Black anodized" palette={p}/>
+  return <group><Disc radius={67} height={4} at={[0,0,2]} name="Black anodized" palette={p}/>
     <Toothed radius={66} inner={48} depth={10} teeth={90} at={[0,0,4]} palette={p}/>
     <mesh rotation={[Math.PI/2,0,0]} position={[0,0,13]} receiveShadow><cylinderGeometry args={[48,48,18,128,1,true]}/><Material name="Black anodized" palette={p} side={DoubleSide}/></mesh>
     <Interactive interaction={interaction}><Spring position target={pressed?-8:0} stiffness={2200} damping={65}>
@@ -113,22 +110,23 @@ function Voice({active,pressed,amount,palette:p,interaction}:Props){
   </group>;
 }
 function Lever({active,palette:p,interaction}:Props){
-  return <Interactive interaction={interaction}><Solid size={[70,110,3]} at={[0,0,1.5]} palette={p} radius={2}/>
+  return <Interactive interaction={interaction}><Solid size={[64,110,3]} at={[0,0,1.5]} palette={p} radius={2}/>
     <Disc radius={20} height={8} at={[0,0,7]} segments={6} name="Polished chrome" palette={p}/>
     <Annulus inner={8} outer={12} height={2} at={[0,0,11]} palette={p}/>
-    <group position={[0,0,12]}><Spring axis="x" target={(active?-25:25)*Math.PI/180} stiffness={680} damping={31}>
-      <mesh rotation={[Math.PI/2,0,0]} position={[0,0,17]} castShadow><cylinderGeometry args={[3,2,34,32]}/><Material name="Polished chrome" palette={p}/></mesh>
-      <mesh position={[0,0,34]} castShadow><sphereGeometry args={[4,32,20]}/><Material name="Polished chrome" palette={p}/></mesh>
-    </Spring></group>
-    <EngravedText text="ON" width={32} height={14} at={[0,41,3.05]} palette={p} dark/><EngravedText text="OFF" width={32} height={14} at={[0,-41,3.05]} palette={p} dark/>
+    <group position={[0,0,12]}><TactileRotation angle={(active?-35:35)*Math.PI/180} duration={60}>
+      <mesh rotation={[Math.PI/2,0,0]} position={[0,0,22]} castShadow><cylinderGeometry args={[3,2,44,32]}/><meshPhysicalMaterial name="Satin steel" color="#b9bcb8" metalness={1} roughness={.45}/></mesh>
+      <mesh position={[0,0,44]} castShadow><sphereGeometry args={[8,40,28]}/><Material name="Paper" palette={p} color="#f4f4ec"/></mesh>
+    </TactileRotation></group>
+    {[['ON',41],['OFF',-41]].map(([label,y])=><Surface key={label} width={38} height={16} at={[0,Number(y),3.3]} palette={p} name="Black anodized" deps={[]} paint={c=>{c.fillStyle='#1c1c1c';c.fillRect(0,0,38,16);c.fillStyle='#f4f4ec';c.font='bold 11px "DM Mono",monospace';c.fillText(String(label),19,8);}}/>)}
+    <mesh position={[46,32,6]}><sphereGeometry args={[5,32,24]}/><meshPhysicalMaterial name="Pilot lamp glass" color={active?p.accent:'#3a3d39'} emissive={p.accent} emissiveIntensity={active?1.7:0} metalness={0} roughness={.15} clearcoat={1}/></mesh>
   </Interactive>;
 }
 function Rocker({active,palette:p,interaction}:Props){
-  return <Interactive interaction={interaction}><RectangularFrame width={64} height={40} holeWidth={54} holeHeight={30} depth={8} palette={p} chrome/>
-    <group position={[0,0,10]}><Spring axis="x" target={(active?-8:8)*Math.PI/180} stiffness={680} damping={30}><Solid size={[53,30,8]} palette={p} name="Rubber" radius={2}/>
-      <Surface width={48} height={26} at={[0,0,4.04]} palette={p} name="Rubber" deps={[p.paper,active]} paint={c=>{c.fillStyle='#222222';c.fillRect(0,0,48,26);c.fillStyle=p.paper;c.font='10px "DM Mono",monospace';c.fillText('I',24,6);c.fillText('O',24,20);}}/>
-      {active&&<mesh position={[0,14.6,4.1]}><boxGeometry args={[44,1,.4]}/><meshPhysicalMaterial color={p.accent} roughness={.5}/></mesh>}
-    </Spring></group>
+  return <Interactive interaction={interaction}><RectangularFrame width={80} height={48} holeWidth={70} holeHeight={38} depth={8} palette={p} chrome/>
+    <group position={[0,0,11]}><TactileRotation angle={(active?-8:8)*Math.PI/180} duration={60}><Solid size={[69,38,10]} palette={p} name="Rubber" radius={2}/>
+      <Surface width={64} height={34} at={[0,0,5.3]} palette={p} name="Rubber" deps={[]} paint={c=>{c.fillStyle='#222222';c.fillRect(0,0,64,34);c.fillStyle='#f4f4ec';c.font='14px "DM Mono",monospace';c.fillText('I',32,8.5);c.fillText('O',32,25.5);}}/>
+      {active&&<mesh position={[0,17.5,5.6]}><boxGeometry args={[60,3,.6]}/><meshPhysicalMaterial color={p.accent} roughness={.5}/></mesh>}
+    </TactileRotation></group>
   </Interactive>;
 }
 function RectangularFrame({width,height,holeWidth,holeHeight,depth,palette:p,chrome=false}:{width:number;height:number;holeWidth:number;holeHeight:number;depth:number;palette:InstrumentPalette;chrome?:boolean}){
@@ -176,9 +174,10 @@ function Drawer({width=560,height=360,count,value,amount,palette:p,labels,intera
 }
 function Swatch({value,active,palette:p,colors=[],labels=[],swatch,interaction,width=560}:Props){
   const order=swatch?.order??colors.map((_,i)=>i),reduced=swatch?.reduced??false,phase=swatch?.phase??(active?'open':'closed'),highlight=swatch?.highlight??-1,scale=width/560;
+  const center=swatchMotionCenter(reduced,Math.max(1,order.length));
   const settled=useRef(new Set<number>()),currentPhase=useRef(phase);currentPhase.current=phase;
   useEffect(()=>{settled.current.clear();},[phase]);
-  return <group scale={scale} position={[0,0,0]}><group position={reduced?[-210,148,0]:[-220,-150,0]}>
+  return <group scale={scale}><group position={[-center.x,-center.y,0]}>
     {[...order].reverse().map(i=>{const rank=order.indexOf(i),strip=colors[i]??[p.paper,p.ink,p.accent],selected=value===i,open=phase==='open'||phase==='select',selecting=phase==='select'&&swatch?.closingSelection===i;
       return <group key={i} position={[reduced?0:rank,reduced?-rank*67:-rank,(order.length-rank)*1.4+(selecting?12:0)]}>
         <Spring motionKey={phase} target={reduced?0:selecting?0:open?rank*11*Math.PI/180:0} delay={reduced?0:(open?rank:order.length-1-rank)*30} stiffness={!open?1800:selecting?900:430} damping={!open?76:selecting?52:29} settleWithinMs={phase==='closing'?SWATCH_CLOSE_MS:SWATCH_SELECTION_MS} onRest={()=>{if(currentPhase.current!=='closing')return;settled.current.add(i);if(settled.current.size===order.length)interaction?.onSettled?.();}}>
@@ -196,7 +195,7 @@ function Swatch({value,active,palette:p,colors=[],labels=[],swatch,interaction,w
     {!reduced&&<Disc radius={7} height={3} at={[0,0,order.length*1.4+3]} palette={p} name="Polished chrome"/>}
   </group></group>;
 }
-function HomepageLoupe({active,palette:p,interaction}:Props){
+function HomepageLoupe({active,palette:p,interaction,width=160,height=160}:Props){
   const rendered=useContext(RenderedMesh);
   const resources=useMemo(()=>{
     const geometries:BufferGeometry[]=[],materials=[
@@ -212,5 +211,5 @@ function HomepageLoupe({active,palette:p,interaction}:Props){
   },[p.paper,p.ink,p.accent]);
   useEffect(()=>{resources.loupe.traverse(object=>{if(object instanceof Mesh)object.onAfterRender=rendered;});},[resources,rendered]);
   useEffect(()=>()=>{resources.geometries.forEach(g=>g.dispose());resources.materials.forEach(m=>m.dispose());},[resources]);
-  return <group position={[0,23,15]} scale={.38}><Interactive interaction={interaction}><Spring position target={active?8:0}><primitive object={resources.loupe}/></Spring></Interactive>{!active&&<primitive object={resources.holder} position={[0,-28,-13]} scale={.85}/>}</group>;
+  return <group position={[0,0,15]} scale={.38*Math.min(width/160,height/160)}><Interactive interaction={interaction}><Spring position target={active?8:0}><primitive object={resources.loupe}/></Spring></Interactive>{!active&&<primitive object={resources.holder} position={[0,-28,-13]} scale={.85}/>}</group>;
 }

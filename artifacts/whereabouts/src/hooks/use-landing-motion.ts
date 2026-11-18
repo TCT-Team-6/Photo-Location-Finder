@@ -26,6 +26,8 @@ export function useLandingMotion(rootRef: RefObject<HTMLElement | null>) {
         const tick = (time: number) => lenis.raf(time * 1000);
         gsap.ticker.add(tick);
         lenis.on('scroll', ScrollTrigger.update);
+        const refreshInstruments=()=>window.dispatchEvent(new Event('whereabouts:lenis-scroll'));
+        lenis.on('scroll',refreshInstruments);
         let context: ReturnType<typeof gsap.context> | null = null;
         let originals: Array<{ element: HTMLElement; html: string }> = [];
         let generated: HTMLElement[] = [];
@@ -96,6 +98,7 @@ export function useLandingMotion(rootRef: RefObject<HTMLElement | null>) {
           root.querySelectorAll('.wa-scroll-section-counter').forEach((node) => node.remove());
           gsap.ticker.remove(tick);
           lenis.off('scroll', ScrollTrigger.update);
+          lenis.off('scroll',refreshInstruments);
           lenis.destroy();
           root.querySelectorAll('[data-scroll-progress]').forEach((node) => { node.textContent = '000%'; });
           root.querySelectorAll<HTMLElement>('[data-testid="stage-optical-loupe"]').forEach((stage) => { stage.dispatchEvent(new CustomEvent('whereabouts:photo-scale', { detail: 1 })); applyScrollLight(stage,0); });

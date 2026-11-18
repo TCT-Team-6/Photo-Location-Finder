@@ -2,10 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type CSSP
 import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { isFilingAcknowledged } from '@/lib/filing-signals';
-import {EmptyTrayLoupe} from './desk-controls';
 import {deskSound} from '@/lib/desk-sound';
 import {ODOMETER_CELL_EM,odometerTransform} from '@/lib/odometer-layout';
-import {useLocation} from 'wouter';
 
 const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function FieldDeskFilingNotice(){
@@ -19,8 +17,7 @@ export function FieldDeskFilingNotice(){
 }
 export function CropMarks(){return <>{[0,1,2,3].map(n=><i key={n} className={`fd-crop fd-crop-${n}`} aria-hidden="true"/>)}</>;}
 export function SpecimenTray({label='TRAY EMPTY / 00 ITEMS',title,text,action,testId='content-empty-state'}:{label?:string;title:string;text:string;action?:ReactNode;testId?:string}){
-  const[location]=useLocation();const playful=location==='/library'||location==='/cases'||location.startsWith('/desk/');
-  return <div className="fd-tray" data-testid={testId} data-drag-region={playful?'empty-tray':undefined}><CropMarks/><p>{label}</p><h3>{title}</h3><p>{text}</p>{action}{playful&&<EmptyTrayLoupe message={location==='/cases'?'a careful beginning.':location==='/library'?'nothing here yet. yet.':'room for another question.'}/>}</div>;
+  return <div className="fd-tray" data-testid={testId}><p>{label}</p><h3>{title}</h3><p>{text}</p>{action}</div>;
 }
 export function DeskRuler(){
   const marker=useRef<HTMLDivElement>(null),ruler=useRef<HTMLDivElement>(null);

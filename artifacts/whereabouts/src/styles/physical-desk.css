@@ -2,23 +2,37 @@
 html{scrollbar-gutter:stable}
 @supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
 .physical-footprint{position:relative;display:inline-block;flex:none;vertical-align:middle;isolation:auto;touch-action:manipulation;overflow:visible}
-.physical-view{position:absolute!important;inset:0;pointer-events:auto;z-index:1;overflow:visible!important}
-.physical-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:0}
+.physical-view{position:absolute!important;pointer-events:none;z-index:1;overflow:visible!important}
+.instrument-track::before{content:"";position:absolute;inset:var(--instrument-bleed,32px);pointer-events:auto}
+.physical-tray .instrument-track::before,.report-scan .instrument-track::before{pointer-events:none}
+.physical-fallback{position:absolute;object-fit:contain;pointer-events:none;z-index:0}
+[data-instrument-debug=true] .physical-footprint{outline:1px solid #c72b26!important;outline-offset:0}
+[data-instrument-debug=true] .instrument-track{outline:1px solid #205bce!important;outline-offset:-1px}
 .physical-footprint[data-rendered=true]>.physical-fallback{visibility:hidden}
 .physical-footprint:focus-visible,.physical-footprint:has(:focus-visible){outline:2px solid var(--fd-red,#a23e34);outline-offset:3px}
-.physical-accessible,.physical-footprint .physical-hit,.physical-dial-labels{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
-.physical-dial{width:280px;height:300px}
-.physical-dial output{position:absolute;bottom:0;left:0;width:280px;height:24px;white-space:nowrap;text-align:center;font:10px/24px var(--app-font-mono);pointer-events:none;z-index:2}
+.physical-accessible{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+.physical-dial{display:block;width:320px;height:280px}
+.desk-selector-radio{position:absolute!important;z-index:15;width:136px;height:24px;padding:0!important;margin:0!important;background:transparent!important;border:0!important;text-align:center;white-space:nowrap;font:500 12px/24px var(--app-font-sans);color:var(--quiet)!important;transform:none!important;translate:none!important}
+.desk-selector-radio:active,.desk-selector-radio:hover{transform:none!important;translate:none!important}
+.desk-selector-radio:nth-of-type(1){left:2px;top:118px}
+.desk-selector-radio:nth-of-type(2){left:92px;top:66px}
+.desk-selector-radio:nth-of-type(3){left:182px;top:118px}
+.desk-selector-radio i{position:absolute;left:67px;top:28px;width:1px;height:8px;background:var(--quiet);transform-origin:50% 50%;pointer-events:none}
+.desk-selector-radio:nth-of-type(1) i{transform:rotate(-60deg)}
+.desk-selector-radio:nth-of-type(3) i{transform:rotate(60deg)}
+.desk-selector-radio[aria-checked=true]{color:var(--ink)!important}
+.desk-selector-radio[aria-checked=true] i{background:var(--fd-red)}
+.physical-switch-state{position:relative;z-index:15;display:inline-block;flex:none;width:156px;white-space:nowrap;font:12px/24px var(--app-font-mono)}
 .physical-shutter{width:200px;height:220px}
 .physical-tally{width:240px;height:120px}
 .physical-keys{width:240px;height:96px}
 .physical-drawer{display:block;width:100%;height:360px}
 .physical-swatch{width:560px;height:420px;display:block}
-.physical-lever{width:96px;height:140px}
+.physical-lever{width:120px;height:140px}
 .physical-rocker{width:96px;height:72px}
 .physical-voice{width:260px;height:96px}
 .physical-voice-caption{height:24px;width:260px;white-space:nowrap;font:9px/24px var(--app-font-mono)}
-.physical-loupe,.fd-empty-tool.physical-loupe{width:160px;height:160px;display:block;pointer-events:auto}
+.physical-loupe{width:160px;height:160px;display:block;pointer-events:auto}
 .physical-dial .physical-view,.physical-loupe .physical-view,.physical-voice .physical-view,.tray-stack-print .physical-view{touch-action:none}
 .physical-tray{position:absolute;inset:0;pointer-events:none;z-index:0}
 .physical-tray>.physical-footprint{position:absolute;inset:0;width:100%;height:100%}
@@ -36,9 +50,12 @@ html{scrollbar-gutter:stable}
 .wa-workspace>main,.fd-sheet,.wa-intake,#investigate-form.fd-wizard,.fd-source-desk,.fd-desk-page{box-sizing:border-box;min-width:0}
 .wa-workspace .wa-intake{width:100%;max-width:1120px;justify-self:stretch}
 #investigate-form.fd-wizard{width:100%;max-width:none}
-.fd-source-desk{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start;justify-items:stretch;width:100%;max-width:100%}
+.fd-source-desk{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start;justify-items:stretch;width:100%;max-width:100%}
 .fd-source-desk>.physical-dial{grid-column:1;grid-row:1;justify-self:start;margin:0}
-.fd-desk-page{grid-column:2;grid-row:1;width:100%;max-width:100%;min-width:0;min-height:310px}
+.fd-desk-page{display:grid;grid-column:2;grid-row:1;width:100%;max-width:100%;min-width:0;min-height:310px}
+.fd-desk-page>[data-desk-panel]{grid-area:1/1;align-self:start;visibility:hidden;pointer-events:none}
+.fd-desk-page>[data-desk-panel][data-active=true]{visibility:visible;pointer-events:auto}
+.desk-batch-reserve[data-active=false]{visibility:hidden;pointer-events:none}
 .fd-desk-page>div,.fd-desk-page .photo-upload-card,.fd-desk-page .photo-upload-dropzone{box-sizing:border-box;width:100%;min-width:0;max-width:none}
 .fd-wizard-step{min-height:860px;width:100%;max-width:none}
 .fd-wizard-step>footer{height:64px}
@@ -62,13 +79,12 @@ html{scrollbar-gutter:stable}
 .photo-upload-dropzone[data-selected=true]>label>*{opacity:0}
 .photo-upload-dropzone[data-selected=true] .tray-browse-caption{opacity:1}
 .fd-wizard .photo-upload-dropzone{height:250px!important}
-.fd-empty-secret{clip-path:circle(39px at var(--secret-x,95%) var(--secret-y,90%))}
-.fd-tray:has(.fd-empty-tool){padding-right:190px;min-height:310px}
 .physical-render-error{position:absolute;left:8px;right:8px;bottom:8px;max-height:50%;z-index:3;background:var(--paper);color:var(--ink);font:10px/1.5 var(--app-font-mono);padding:12px;overflow:auto}
 .physical-render-error small{display:block;margin-top:6px}
 .physical-render-error button{min-height:36px;margin-top:8px;text-decoration:underline}
 .instrument-export-gallery{position:relative;z-index:auto;background:transparent;padding:24px;display:flex;gap:32px;flex-wrap:wrap}
 .instrument-export-gallery>section{overflow:visible}
+.instrument-specimen{position:relative}
 .instrument-error{color:var(--ink)!important;background:var(--paper)!important;border-color:var(--line)!important}
 .instrument-error-label{display:block;color:var(--fd-red);font:9px var(--app-font-mono);letter-spacing:.12em;margin-bottom:10px}
 .instrument-error :is(h2,h3,p,button){color:var(--ink)!important}
@@ -125,7 +141,6 @@ html:has(.physical-progress){--instrument-layer:210}
   .physical-swatch{width:300px;height:225px}
   .fd-flip-checklist{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
   .fd-flip-checklist>div{min-width:0}.fd-flip-card{height:150px}.fd-flip-card>span{height:122px}
-  .fd-tray:has(.fd-empty-tool){padding-right:22px;padding-bottom:190px;min-height:470px}
   .physical-progress-backdrop{--progress-sidebar:0px}
   .physical-progress{inset:8px 0 0;padding:24px 20px 112px}
   .report-grid{grid-template-columns:1fr;gap:24px;margin:28px 0}
@@ -134,6 +149,7 @@ html:has(.physical-progress){--instrument-layer:210}
   @keyframes instrument-look{0%,100%{transform:translate(0,0)}35%{transform:translate(60px,12px)}75%{transform:translate(20px,50px)}}
 }
 @media(max-width:359px){.physical-swatch{width:260px;height:195px}.fd-flip-checklist{grid-template-columns:1fr}}
+@media(max-width:359px){.fd-lever{gap:8px}.physical-switch-state{width:132px;font-size:10px}}
 @media(hover:none){.tray-print-remove{opacity:1}}
 @media(prefers-reduced-motion:reduce){.physical-progress{animation:report-pulse-in .15s ease-out}.report-scan,.report-stage-list li .report-stage-symbol,.report-stamp,.report-drawn-check,.report-print{animation:none!important}::view-transition-old(root),::view-transition-new(root){animation-duration:150ms}}
 @keyframes report-pulse-in{from{opacity:0}to{opacity:1}}

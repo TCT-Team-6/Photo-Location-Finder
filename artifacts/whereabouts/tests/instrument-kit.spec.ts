@@ -24,3 +24,17 @@ test('genuine scene meshes mount, PNG frames export, and the swatch remains fixe
   expect(proof.filter(line=>/\d+ meshes, \d+ triangles$/.test(line)).length).toBeGreaterThanOrEqual(12);
   expect(errors).toEqual([]);
 });
+test('selector radios stay fixed while native mesh dragging snaps to bounded detents',async({page})=>{
+  await page.setViewportSize({width:1500,height:1500});await page.goto('/?instrument-kit=export');
+  const dial=page.getByTestId('dial-desk');await expect(dial).toHaveAttribute('data-rendered','true',{timeout:45000});
+  const initial=await dial.boundingBox(),labels=await Promise.all([0,1,2].map(index=>page.getByTestId(`button-selector-desk-${index}`).boundingBox()));
+  for(const index of[2,0,1]){
+    await page.getByTestId(`button-selector-desk-${index}`).click();await expect(page.getByTestId(`button-selector-desk-${index}`)).toHaveAttribute('aria-checked','true');
+    expect(await dial.boundingBox()).toEqual(initial);
+    expect(await Promise.all([0,1,2].map(i=>page.getByTestId(`button-selector-desk-${i}`).boundingBox()))).toEqual(labels);
+  }
+  const view=await dial.locator('.instrument-track').boundingBox();if(!view)throw new Error('Missing tracked selector View');
+  const x=view.x+view.width/2,y=view.y+view.height/2;
+  await page.mouse.move(x,y-38);await page.mouse.down();await page.mouse.move(x+35,y-18,{steps:8});await page.mouse.up();
+  await expect(page.getByTestId('button-selector-desk-2')).toHaveAttribute('aria-checked','true');expect(await dial.boundingBox()).toEqual(initial);
+});

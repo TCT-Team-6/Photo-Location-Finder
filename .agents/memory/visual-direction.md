@@ -50,6 +50,18 @@ The latest control brief requires flat-to-screen, top-down narrow-perspective ge
 
 **How to apply:** Keep one shared canvas, move light subtly rather than tilting controls, and reserve room for the swatch fan. Avatar initials must replace both missing URLs and failed image loads; the user has repeated this correction.
 
+The desk selector and switches should feel like tactile 1970s lab instruments: satin finishes, fixed upright labels, direct knob dragging, hard stops, and short timed detents without springs or bounce. Remove decorative loupes and hidden messages from empty trays, not the homepage optical instrument.
+
+**Why:** The user rejected controls that drift while scrolling, clipped objects, rotating desk labels, and switches whose states were indistinguishable.
+
+**How to apply:** Prioritize exact scroll alignment and shadow/motion clearance before visual embellishment. Switch states must use position, a lamp or mark, and explicit ON/OFF text, remaining distinguishable in grayscale.
+
+Hidden instrument panels must not retain active Drei render portals or explicitly visible fallback images.
+
+**Why:** Drei's hidden/unmount lifecycle clears its scissored framebuffer area, which can erase overlapping active Views. A child's explicit `visibility:visible` also overrides an ancestor's hidden visibility and exposes ghost fallbacks.
+
+**How to apply:** Keep layout placeholders when needed, but gate scene portals and fallback visibility on the panel's actual visibility. On removal, request a complete redraw.
+
 Do not put an effectful renderer-failure detector in R3F Canvas's `fallback` prop.
 
 **Why:** Fiber mounts that fallback as children of the HTML canvas even when canvas is supported. A fallback component's effect can falsely declare WebGL unavailable and unmount the real renderer.

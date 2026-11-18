@@ -17,10 +17,10 @@ test.describe('authenticated physical field desk',()=>{
     await mocks(page);const shifts:string[]=[];page.on('console',message=>{if(message.type()==='warning'&&message.text().includes('[Control layout shift]'))shifts.push(message.text());});
     await page.goto('/investigate');await page.evaluate(()=>document.fonts.ready);
     const source=page.locator('.fd-source-desk'),initial=await source.boundingBox();
-    for(let round=0;round<3;round++)for(const label of ['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM']){
-      await page.getByRole('button',{name:label,exact:true}).focus();await page.keyboard.press('Enter');const next=await source.boundingBox();expect(next?.x).toBe(initial?.x);expect(next?.width).toBe(initial?.width);expect(next?.height).toBe(initial?.height);
+    for(let round=0;round<3;round++)for(const index of[0,1,2]){
+      await page.getByTestId(`button-selector-desk-${index}`).click();const next=await source.boundingBox();expect(next?.x).toBe(initial?.x);expect(next?.width).toBe(initial?.width);expect(next?.height).toBe(initial?.height);
     }
-    await page.getByRole('slider',{name:'Desk',exact:true}).focus();await page.keyboard.press('Home');await expect(page.getByRole('slider',{name:'Desk',exact:true})).toHaveAttribute('aria-valuenow','0');await page.keyboard.press('ArrowRight');await expect(page.getByRole('slider',{name:'Desk',exact:true})).toHaveAttribute('aria-valuenow','1');
+    await page.getByTestId('button-selector-desk-2').focus();await page.keyboard.press('Home');await expect(page.getByTestId('button-selector-desk-0')).toHaveAttribute('aria-checked','true');await page.keyboard.press('ArrowRight');await expect(page.getByTestId('button-selector-desk-1')).toHaveAttribute('aria-checked','true');
     expect(shifts).toEqual([]);
     await page.locator('[data-testid="nav-my-library"]:visible').click();
     await page.getByTestId('button-filter-desk-0').focus();await page.keyboard.press('Space');await expect(page.getByTestId('card-investigation-recreation-fixture')).toHaveCount(0);

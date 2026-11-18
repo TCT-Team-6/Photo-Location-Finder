@@ -37,7 +37,7 @@ test('intake width is viewport-constrained, with fixed grid tracks and stable ro
   const css=readFileSync(new URL('../styles/physical-desk.css',import.meta.url),'utf8');
   assert.match(css,/html\{scrollbar-gutter:stable\}/);
   assert.match(css,/\.wa-workspace \.wa-intake\{width:100%;max-width:1120px/);
-  assert.match(css,/grid-template-columns:300px minmax\(0,1fr\)/);
+  assert.match(css,/grid-template-columns:320px minmax\(0,1fr\)/);
   assert.match(css,/\.fd-source-desk>\.physical-dial\{grid-column:1;grid-row:1;justify-self:start;margin:0\}/);
   assert.match(css,/\.fd-source-desk>\.fd-desk-page\{grid-column:1;grid-row:2\}/);
 });

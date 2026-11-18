@@ -1,9 +1,10 @@
-import {createContext,useContext,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {createContext,useContext,useEffect,useLayoutEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {useFrame,useThree,type ThreeEvent} from '@react-three/fiber';
 import {RoundedBox} from '@react-three/drei';
-import {CanvasTexture,DoubleSide,ExtrudeGeometry,Group,Plane,Shape,Path,SRGBColorSpace,Vector2,Vector3,type MeshPhysicalMaterialParameters} from 'three';
+import {CanvasTexture,DoubleSide,ExtrudeGeometry,Group,Plane,Shape,Path,SRGBColorSpace,Vector2,Vector3,type MeshPhysicalMaterialParameters,type Texture} from 'three';
 import {instrumentMaterial,type MaterialName} from '@/lib/instrument-kit';
 import {feedbackSpring} from '@/lib/lens-feedback';
+import {tactileAngle} from '@/lib/desk-selector';
 import type {InstrumentPalette} from './physical-models';
 
 export const RenderedMesh=createContext<()=>void>(()=>{});
@@ -30,15 +31,21 @@ export function Annulus({inner,outer,height,at=[0,0,0],name='Polished chrome',pa
   const ready=useContext(RenderedMesh);useEffect(()=>()=>geometry.dispose(),[geometry]);
   return <mesh geometry={geometry} position={at} castShadow receiveShadow onAfterRender={ready}><Material name={name} palette={palette}/></mesh>;
 }
-export function ToothedRing({radius,inner=0,depth,teeth,toothDepth=1.5,palette,at=[0,0,0]}:{radius:number;inner?:number;depth:number;teeth:number;toothDepth?:number;palette:InstrumentPalette;at?:[number,number,number]}){
+export function ToothedRing({radius,inner=0,depth,teeth,toothDepth=1.5,palette,at=[0,0,0],name='Silver aluminum',roughness,bevel=.25}:{radius:number;inner?:number;depth:number;teeth:number;toothDepth?:number;palette:InstrumentPalette;at?:[number,number,number];name?:MaterialName;roughness?:number;bevel?:number}){
   const geometry=useMemo(()=>{
     const shape=new Shape();
     for(let i=0;i<teeth;i++)for(const[f,r]of[[0,radius-toothDepth],[.2,radius],[.68,radius],[.9,radius-toothDepth]]){const a=(i+f)/teeth*Math.PI*2,x=Math.sin(a)*r,y=Math.cos(a)*r;if(!i&&!f)shape.moveTo(x,y);else shape.lineTo(x,y);}
     shape.closePath();if(inner){const hole=new Path();hole.absarc(0,0,inner,0,Math.PI*2,true);shape.holes.push(hole);}
-    return new ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelThickness:.25,bevelSize:.25,bevelSegments:2,curveSegments:128});
-  },[radius,inner,depth,teeth,toothDepth]);
+    return new ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelThickness:bevel,bevelSize:bevel,bevelSegments:3,curveSegments:128});
+  },[radius,inner,depth,teeth,toothDepth,bevel]);
   const ready=useContext(RenderedMesh);useEffect(()=>()=>geometry.dispose(),[geometry]);
-  return <mesh geometry={geometry} position={at} castShadow receiveShadow onAfterRender={ready}><Material name="Silver aluminum" palette={palette}/></mesh>;
+  return <mesh geometry={geometry} position={at} castShadow receiveShadow onAfterRender={ready}><Material name={name} palette={palette} roughness={roughness??instrumentMaterial(name,palette.paper).roughness}/></mesh>;
+}
+export function TactileRotation({angle,axis='x',duration=60,children}:{angle:number;axis?:'x'|'y'|'z';duration?:number;children:ReactNode}){
+  const initial=useRef(angle),group=useRef<Group>(null),motion=useRef({from:angle,target:angle,start:0}),invalidate=useThree(s=>s.invalidate);
+  useLayoutEffect(()=>{motion.current={from:group.current?.rotation[axis]??angle,target:angle,start:performance.now()};invalidate();},[angle,axis,invalidate]);
+  useFrame(()=>{const node=group.current;if(!node)return;const elapsed=performance.now()-motion.current.start;node.rotation[axis]=tactileAngle(motion.current.from,motion.current.target,elapsed,matchMedia('(prefers-reduced-motion: reduce)').matches?0:duration,'out');if(elapsed<duration)invalidate();});
+  return <group ref={group} rotation={axis==='x'?[initial.current,0,0]:axis==='y'?[0,initial.current,0]:[0,0,initial.current]}>{children}</group>;
 }
 export function Spring({target=0,axis='z',position=false,delay=0,stiffness=340,damping=27,children,onRest,motionKey,settleWithinMs}:{target?:number;axis?:'x'|'y'|'z';position?:boolean;delay?:number;stiffness?:number;damping?:number;children:ReactNode;onRest?:()=>void;motionKey?:string;settleWithinMs?:number}){
   const group=useRef<Group>(null),velocity=useRef(0),start=useRef(0),deadline=useRef(Infinity),invalidate=useThree(s=>s.invalidate),wanted=useRef(target);
@@ -61,22 +68,18 @@ export function useEngraving(width:number,height:number,paint:(ctx:CanvasRenderi
   const texture=useMemo(()=>{const canvas=document.createElement('canvas');canvas.width=Math.ceil(width*4);canvas.height=Math.ceil(height*4);const c=canvas.getContext('2d')!;c.scale(4,4);c.font='11px "DM Mono",monospace';c.textAlign='center';c.textBaseline='middle';paint(c);const map=new CanvasTexture(canvas);map.colorSpace=SRGBColorSpace;map.anisotropy=8;return map;},[width,height,fontReady,...deps]);
   useEffect(()=>()=>texture.dispose(),[texture]);return texture;
 }
-export function Surface({width,height,palette,paint,deps,at=[0,0,.1],engraved=false,dark=false,circle=false,name='Paper'}:{width:number;height:number;palette:InstrumentPalette;paint:(ctx:CanvasRenderingContext2D)=>void;deps:unknown[];at?:[number,number,number];engraved?:boolean;dark?:boolean;circle?:boolean;name?:MaterialName}){
+export function Surface({width,height,palette,paint,deps,at=[0,0,.1],engraved=false,dark=false,circle=false,name='Paper',metalnessMap,bumpDepth}:{width:number;height:number;palette:InstrumentPalette;paint:(ctx:CanvasRenderingContext2D)=>void;deps:unknown[];at?:[number,number,number];engraved?:boolean;dark?:boolean;circle?:boolean;name?:MaterialName;metalnessMap?:Texture;bumpDepth?:number}){
   const map=useEngraving(width,height,paint,deps),ready=useContext(RenderedMesh);
   // Every surface painter fills its background; its shape is defined by actual
   // plane/circle geometry. It must be opaque: Three's transmission pass only
   // includes opaque objects, so transparent printed faces disappear under glass.
-  return <mesh position={at} receiveShadow onAfterRender={ready}>{circle?<circleGeometry args={[width/2,128]}/>:<planeGeometry args={[width,height]}/>}<Material name={name} palette={palette} color="#ffffff" map={map} bumpMap={engraved?map:undefined} bumpScale={engraved?(dark?-.6:.6):0} transparent={false} side={DoubleSide}/></mesh>;
+  return <mesh position={at} receiveShadow onAfterRender={ready}>{circle?<circleGeometry args={[width/2,128]}/>:<planeGeometry args={[width,height]}/>}<Material name={name} palette={palette} color="#ffffff" map={map} metalnessMap={metalnessMap} bumpMap={engraved?map:undefined} bumpScale={engraved?(bumpDepth??(dark?-.6:.6)):0} transparent={false} side={DoubleSide} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1}/></mesh>;
 }
 export function EngravedText({text,width,height,palette,at=[0,0,0],dark=false}:{text:string;width:number;height:number;palette:InstrumentPalette;at?:[number,number,number];dark?:boolean}){
   return <Surface width={width} height={height} palette={palette} at={at} engraved dark={dark} name={dark?'Black anodized':'Silver aluminum'} deps={[text,palette.paper,palette.ink,dark]} paint={ctx=>{ctx.fillStyle=dark?'#1c1c1c':'#c9c9c4';ctx.fillRect(0,0,width,height);ctx.fillStyle=dark?palette.paper:palette.ink;ctx.font=`${Math.min(11,height*.7)}px "DM Mono",monospace`;ctx.fillText(text,width/2,height/2,width-2);}}/>;
 }
 export function GlassCover({width,height,palette,at=[0,0,0]}:{width:number;height:number;palette:InstrumentPalette;at?:[number,number,number]}){
   return <Solid size={[width,height,2]} at={at} name="Glass" palette={palette} radius={.7}/>;
-}
-export function ArcText(ctx:CanvasRenderingContext2D,text:string,radius:number,center:number,angle:number){
-  ctx.font='10px "DM Mono",monospace';const spacing=ctx.measureText(text).width/text.length;let a=angle-spacing*text.length/(2*radius);
-  for(const letter of text){const theta=a+spacing/(2*radius);ctx.save();ctx.translate(center+Math.sin(theta)*radius,center-Math.cos(theta)*radius);ctx.rotate(theta);ctx.fillText(letter,0,0);ctx.restore();a+=spacing/radius;}
 }
 type CaptureTarget={setPointerCapture:(id:number)=>void;hasPointerCapture:(id:number)=>boolean;releasePointerCapture:(id:number)=>void};
 export function pressCapture(event:ThreeEvent<PointerEvent>){(event.target as unknown as CaptureTarget).setPointerCapture(event.pointerId);}
