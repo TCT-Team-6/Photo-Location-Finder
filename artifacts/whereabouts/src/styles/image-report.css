@@ -31,7 +31,8 @@
 .geo-map-key button>span:first-child{min-width:0;flex:1 1 240px;font:500 clamp(32px,3.2vw,48px)/1.1 var(--app-font-serif);letter-spacing:-.025em;overflow-wrap:anywhere}
 .geo-map-key button>span:first-child small{font:11px/1.5 var(--app-font-mono);letter-spacing:0;color:var(--quiet)}
 .geo-map-key button[aria-pressed=true]{font-weight:600}
-.geo-map-key button span:last-child{font:10px var(--app-font-mono);flex-shrink:0}
+.geo-map-key button>.geo-map-score{font:500 clamp(32px,3.2vw,48px)/1.1 var(--app-font-serif);letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.geo-map-key button>.geo-map-score small{display:block;margin-top:6px;font:10px/1.5 var(--app-font-mono);letter-spacing:0;color:var(--quiet)}
 .geo-map-method{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:10px;line-height:1.7;color:var(--quiet)}
 .geo-map-unmapped{margin-top:10px;font-size:11px;line-height:1.7;color:var(--quiet)}
 .geo-overview-button{font:10px var(--app-font-mono);text-decoration:underline;text-underline-offset:4px;margin-top:16px}
