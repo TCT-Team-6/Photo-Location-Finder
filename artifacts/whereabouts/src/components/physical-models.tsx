@@ -14,11 +14,11 @@ import {createSelectorMotion,crossedDeskDetents,tactileAngle,type SelectorMotion
 import {deskSound} from '@/lib/desk-sound';
 import {swatchMotionCenter} from '@/lib/instrument-alignment';
 
-export type InstrumentKind='dial'|'shutter'|'tally'|'splitflap'|'archiveprint'|'fontslider'|'keys'|'drawer'|'voice'|'swatch'|'lever'|'rocker'|'loupe'|'tray'|'print';
+export type InstrumentKind='dial'|'shutter'|'tally'|'splitflap'|'archiveprint'|'fontslider'|'leadpaper'|'keys'|'drawer'|'voice'|'swatch'|'lever'|'rocker'|'loupe'|'tray'|'print';
 export type InstrumentPalette={paper:string;ink:string;accent:string;metal:string};
 export type SwatchMotion={order:number[];highlight:number;closingSelection:number|null;reduced:boolean;phase:'closed'|'open'|'select'|'closing'};
 type Props={kind:InstrumentKind;value:number;active:boolean;pressed:boolean;amount:number;count:number;palette:InstrumentPalette;colors?:string[][];labels?:string[];media?:File;onRendered:()=>void;interaction?:InstrumentInteraction;width?:number;height?:number;swatch?:SwatchMotion;angle?:number;selector?:RefObject<SelectorMotion>};
-const names:Record<InstrumentKind,string>={dial:'Desk selector knob',shutter:'Shutter button',keys:'Library desk keys',voice:'Guide push-to-talk and VU meter',lever:'High contrast lever',rocker:'Sound rocker',tally:'Tally counter',splitflap:'Archive split-flap clock',archiveprint:'Saved original photograph',fontslider:'Text size analog slider',drawer:'Cases file drawer',swatch:'Theme swatch book',loupe:'Small homepage loupe',tray:'Intake tray',print:'Photo print'};
+const names:Record<InstrumentKind,string>={dial:'Desk selector knob',shutter:'Shutter button',keys:'Library desk keys',voice:'Guide push-to-talk and VU meter',lever:'High contrast lever',rocker:'Sound rocker',tally:'Tally counter',splitflap:'Archive split-flap clock',archiveprint:'Saved original photograph',fontslider:'Text size analog slider',leadpaper:'Raised highest-ranked lead paper',drawer:'Cases file drawer',swatch:'Theme swatch book',loupe:'Small homepage loupe',tray:'Intake tray',print:'Photo print'};
 export function PhysicalModel(props:Props){
   const root=useRef<Group>(null),ready=useRef(false),logged=useRef(false);
   const rendered=()=>{if(!ready.current){ready.current=true;props.onRendered();}};
@@ -38,6 +38,7 @@ export function PhysicalModel(props:Props){
     case'tally':model=<Tally {...props}/>;break;
     case'splitflap':model=<SplitFlapModel value={props.value} label={props.labels?.[0]??'Saved investigations'} palette={props.palette} width={props.width} height={props.height}/>;break;
     case'fontslider':model=<FontSliderModel value={props.value} palette={props.palette} width={props.width}/>;break;
+    case'leadpaper':model=<Solid size={[Math.max(12,(props.width??560)-12),Math.max(12,(props.height??150)-12),2]} at={[0,0,4]} palette={props.palette} name="Paper" radius={.4}/>;break;
     case'archiveprint':model=props.media?<group rotation={[-.055,.035,-.045]} scale={Math.min(((props.width??280)-34)/112,((props.height??174)-24)/84)} position={[0,0,8]}><PhysicalPhotoPrint file={props.media} palette={props.palette} onRendered={rendered}/></group>:null;break;
     case'drawer':model=<Drawer {...props}/>;break;
     case'swatch':model=<Swatch {...props}/>;break;

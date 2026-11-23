@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import type { Investigation } from '@workspace/api-client-react';
 import 'leaflet/dist/leaflet.css';
+import {coordinatesFromMapsUrl} from '@/lib/geographic-confidence';
+export {coordinatesFromMapsUrl} from '@/lib/geographic-confidence';
 
 type Lead = Investigation['candidates'][number];
 type LocatedLead = { lead: Lead; index: number; position: [number, number] };
@@ -9,21 +11,6 @@ type LocatedLead = { lead: Lead; index: number; position: [number, number] };
 function modelScore(confidence: number) {
   const normalized = confidence > 1 ? confidence / 100 : confidence;
   return Math.round(Math.max(0, Math.min(1, normalized)) * 100);
-}
-
-export function coordinatesFromMapsUrl(value: string): [number, number] | null {
-  try {
-    const url = new URL(value);
-    const query = url.searchParams.get('query') ?? url.searchParams.get('q') ?? '';
-    const match = query.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
-    if (!match) return null;
-    const latitude = Number(match[1]);
-    const longitude = Number(match[2]);
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
-    return [latitude, longitude];
-  } catch {
-    return null;
-  }
 }
 
 function MapViewController({ points, selectedIndex, mapKey }: {

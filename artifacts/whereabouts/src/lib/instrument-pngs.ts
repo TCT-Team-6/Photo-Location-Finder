@@ -10,6 +10,7 @@ export const instrumentPNGs:Partial<Record<InstrumentKind,string>>={
   "tally": "tally.png",
   "splitflap": "splitflap.png",
   "fontslider": "fontslider.png",
+  "leadpaper": "leadpaper.png",
   "drawer": "drawer.png",
   "loupe": "loupe.png",
   "tray": "tray.png",

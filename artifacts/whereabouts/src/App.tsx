@@ -63,6 +63,9 @@ import {OverviewClock,OverviewPhoto} from '@/components/overview-instruments';
 import {FontSizeSlider} from '@/components/font-size-slider';
 import {useTextSize} from '@/hooks/use-text-size';
 import {defaultPreferences,readPreferences,writePreferences,type AppPreferences} from '@/lib/app-preferences';
+import {ImageGeolocationReport} from '@/components/image-geolocation-report';
+import {isImageGeolocationReport} from '@/lib/image-report-scope';
+import {rankCandidates} from '@/lib/geographic-confidence';
 import {DeskSelector} from '@/components/desk-selector';
 import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
 import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
@@ -603,17 +606,6 @@ function InvestigationCard({
   </article>;
 }
 
-function rankCandidates<T extends { confidence: number }>(candidates: T[]) {
-  return candidates
-    .map((candidate, index) => ({
-      candidate,
-      index,
-      score: candidate.confidence > 1 ? candidate.confidence / 100 : candidate.confidence,
-    }))
-    .sort((left, right) => right.score - left.score || left.index - right.index)
-    .map(({ candidate }) => candidate);
-}
-
 function candidateScore(confidence: number) {
   const normalized = confidence > 1 ? confidence / 100 : confidence;
   return Math.round(Math.max(0, Math.min(1, normalized)) * 100);
@@ -1105,6 +1097,7 @@ function InvestigationPage() {
   if (query.isLoading) return <div className="grid gap-6 lg:grid-cols-[1fr_.8fr]"><SkeletonBlock className="h-[440px]" /><div className="space-y-4"><SkeletonBlock className="h-20" /><SkeletonBlock className="h-64" /><SkeletonBlock className="h-36" /></div></div>;
   if (query.isError || !item) return <QueryError retry={() => query.refetch()} text="This investigation could not be opened." />;
   const selectedLead = rankedLeads[selectedCandidateIndex] ?? rankedLeads[0];
+  const imageGeolocation=isImageGeolocationReport(item);
   const summaryMentionsLowerLead = rankedLeads.slice(1).some((lead) =>
     item.summary.toLocaleLowerCase().includes(lead.place.toLocaleLowerCase()),
   );
@@ -1115,9 +1108,9 @@ function InvestigationPage() {
     : humanizeClueText(item.summary);
   return <div className="wa-result fade-up">
     <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
-    <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><DeskHeadline className="mt-3 max-w-4xl text-5xl md:text-6xl" testId="text-detail-title">{displayTitle(item.title)}</DeskHeadline><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
-      <div className="flex gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
+    <div className={imageGeolocation?'mb-8 w-full':'mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end'}>
+      <div><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><DeskHeadline className={`mt-3 ${imageGeolocation?'w-full':'max-w-4xl'} text-5xl md:text-6xl`} testId="text-detail-title">{displayTitle(item.title)}</DeskHeadline><p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p></div>
+      <div className={imageGeolocation?'mt-5 flex flex-wrap gap-2':'flex gap-2'}><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
     </div>
     {message && <p role="status" data-testid="status-investigation-update" className="mb-5 rounded-xl border border-[#c8d4c4] bg-[#edf2e9] px-4 py-3 text-sm text-[#476450]">{message}</p>}
     {editing && <form onSubmit={saveDetails} className="mb-7 grid gap-4 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 md:grid-cols-[.8fr_1.2fr_auto] md:items-end">
@@ -1125,6 +1118,7 @@ function InvestigationPage() {
       <label className="block text-xs font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
       <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
+    {imageGeolocation?<ImageGeolocationReport item={item} leads={rankedLeads} sceneSummary={sceneSummary} photoURL={photoUrl} photoLoading={photo.isLoading} photoError={photo.isError} onRetryPhoto={()=>{void photo.refetch();}} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} onRefresh={()=>{void refreshLocations();}} refreshing={refreshCandidates.isPending} refreshMessage={refreshMessage} onRetryAnalysis={()=>{void retryVideo();}} retrying={retryAnalysis.isPending} retryError={retryError}/>:<>
     <HealthUrgencyCard investigation={item} />
     {isVideo && <><EmbeddedGpsNotice analysis={item.analysis} /><VideoAnalysisStatus item={item} retrying={retryAnalysis.isPending} retryError={retryError} onRetry={() => void retryVideo()} /></>}
     {item.desk !== 'fake-news' && !legacySourceReport && rankedLeads[0] && <div className="lg:hidden"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
@@ -1202,6 +1196,7 @@ function InvestigationPage() {
         </>}
       </div>
     </div>
+    </>}
   </div>;
 }
 

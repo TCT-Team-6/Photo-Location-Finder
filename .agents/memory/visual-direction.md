@@ -68,6 +68,12 @@ Overview counters should resemble black mechanical split-flap clocks with white 
 
 **How to apply:** Preserve real counts and private photo access; respect sound and reduced-motion preferences. Never substitute specimen counts or stock photographs for account data.
 
+Image investigation results prioritize a full-width title, photo/evidence beside the geographic confidence map, full-width ranked candidates with a raised top lead, and safety information last.
+
+**Why:** The user explicitly requested this information hierarchy and independently weighted geographic fields rather than one merged hotspot.
+
+**How to apply:** Preserve geographic separation and never imply model scores are calibrated probabilities or that illustrative field widths are measured search radii.
+
 Do not put an effectful renderer-failure detector in R3F Canvas's `fallback` prop.
 
 **Why:** Fiber mounts that fallback as children of the HTML canvas even when canvas is supported. A fallback component's effect can falsely declare WebGL unavailable and unmount the real renderer.
