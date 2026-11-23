@@ -32,7 +32,7 @@ export function BestGuessCard({ lead, summaryText }: { lead: Lead; summaryText: 
         <p className="inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.18em] text-[#e7ac8e]">
           <MapPin size={14} aria-hidden="true" /> Best guess
         </p>
-        <p className="font-data text-[10px] uppercase tracking-[.12em] text-white/80">Model score {score} / 100</p>
+        <p className="font-data text-[10px] uppercase tracking-[.12em] text-white/80">Confidence {score} / 100</p>
       </div>
       <h2 className="mt-3 font-editorial text-4xl leading-tight" data-testid="text-best-guess-place">{lead.place}</h2>
       {area && <p className="mt-1 text-sm text-white/80">{area}</p>}

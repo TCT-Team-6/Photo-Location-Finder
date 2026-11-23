@@ -1,3 +1,6 @@
+import { ConfidenceMeter } from '@/components/results/ranked-places-list';
+import { confidencePercent, confidenceTier } from '@/lib/result-insights';
+import '@/styles/ranked-results.css';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { isLegacyRecreationReport } from '@/lib/recreation-purpose';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -600,7 +603,7 @@ function InvestigationCard({
     <span className="fd-frame-number">{String(frame).padStart(2,'0')}A / {isVideoInvestigation(item)?'MOTION FILE':'SOURCE PRINT'}</span>
     <div className="p-5">
       <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{displayTitle(item.title)}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
-      <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · model score {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
+      <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · Confidence {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
       <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
   </article>;
@@ -1166,16 +1169,16 @@ function InvestigationPage() {
         {refreshMessage && <p role="status" className="mb-3 text-xs leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
         <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
         {rankedLeads.length ? <>
-          <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-xs leading-5 text-[#718078]">Model score ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
+          <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-xs leading-5 text-[#718078]">Confidence = how well the clues in the photo match this place. It ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
           <LeadLocationMap candidates={rankedLeads.slice(0, 3)} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} onOpenLead={(index) => setLocation(`/investigation/${encodeURIComponent(item.id)}/location/${index}`)} />
           <div className="mt-4 space-y-2" data-testid="list-ranked-location-leads">
             {rankedLeads.map((candidate, index) => <button key={`${candidate.place}-${index}`} type="button" aria-pressed={selectedCandidateIndex === index} onClick={() => setSelectedCandidateIndex(index)} data-testid={`button-select-lead-${index}`} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${selectedCandidateIndex === index ? 'border-[#9eaf9f] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec] hover:border-[#b8c4b5]'}`}>
-              <span className="flex min-w-0 items-center gap-3"><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${index === 0 ? 'bg-[#385e51] text-[#f4f0e6]' : 'bg-[#e2e4d9] text-[#607a68]'}`}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[11px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
-              <span className="shrink-0 text-right"><span className="block font-data text-[9px] uppercase tracking-[.12em] text-[#758477]">Model score</span><span className="font-data text-sm font-medium text-[#385e51]">{candidateScore(candidate.confidence)} / 100</span>{index === 0 && <span className="mt-1 block font-data text-[8px] uppercase tracking-[.1em] text-[#9c6d4e]">Strongest lead</span>}</span>
+              <span className="flex min-w-0 items-center gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-[#fbf9f3]" style={{ background: confidenceTier(confidencePercent(candidate.confidence)).color }}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[11px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
+              <span className="w-[150px] shrink-0"><ConfidenceMeter percent={confidencePercent(candidate.confidence)} size="sm" testId={`text-lead-confidence-${index}`} /></span>
             </button>)}
           </div>
           {selectedLead && <article className="mt-4 rounded-2xl border border-[#b8c4b5] bg-[#e9ede3] p-5" data-testid="panel-selected-location-lead">
-            <PageEyebrow>{selectedCandidateIndex === 0 ? 'Highest model score' : 'Selected location lead'}</PageEyebrow>
+            <PageEyebrow>{selectedCandidateIndex === 0 ? 'Highest Confidence' : 'Selected location lead'}</PageEyebrow>
             <h3 className="mt-2 font-editorial text-2xl text-[#263d36]">{selectedLead.place}</h3>
             <p className="mt-1 text-xs text-[#718078]">{[selectedLead.region, selectedLead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
             <div className="mt-4 border-t border-[#c9d0c2] pt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Why it was suggested</p><p className="mt-2 text-sm leading-6 text-[#596d61]">{selectedLead.rationale}</p></div>
@@ -1221,7 +1224,7 @@ function LeadLocationPage() {
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
       <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{legacySourceReport ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>
-      {!legacySourceReport && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Model score</p>
+      {!legacySourceReport && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Confidence</p>
       <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
       {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}</>}
     </section>

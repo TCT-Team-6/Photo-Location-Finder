@@ -25,7 +25,7 @@ function SampleCard({ sample, onOpen,number }: { sample: DemoSample; onOpen: (sa
         <p className="font-data text-[9px] uppercase tracking-wider text-[#9c6d4e]">SAMPLE {String(number).padStart(2,'0')} / {sample.scenario}</p><span className="fd-fictional mt-2">FICTIONAL DATA</span>
         <h2 className="mt-2 font-editorial text-2xl" data-testid={`text-demo-sample-title-${sample.investigation.id}`}>{sample.caseFile.nickname}</h2>
         <p className="mt-2 text-xs leading-5 text-[#718078]">{sample.caseFile.careNotes}</p>
-        {lead && <p className="mt-3 border-t border-[#e1dbce] pt-3 text-xs text-[#385e51]">{lead.place} · Match score {scoreLabel(lead.confidence)}</p>}
+        {lead && <p className="mt-3 border-t border-[#e1dbce] pt-3 text-xs text-[#385e51]">{lead.place} · Confidence {scoreLabel(lead.confidence)}</p>}
       </div>
     </button>
     <button type="button" onClick={() => onOpen(sample)} data-testid={`button-view-result-${sample.investigation.id}`} className="mb-4 ml-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-[#bdc8bb] px-4 text-xs font-semibold text-[#385e51]">Open case file <ArrowRight size={14} /></button>
@@ -66,14 +66,14 @@ export function DemoExperience() {
       <nav className="fd-index fd-demo-index mt-10" aria-label="Demo navigation">{navigation.map(({ id, label },i) => <button type="button" key={id} onClick={() => chooseView(id)} aria-current={view === id ? 'page' : undefined} data-testid={`button-demo-nav-${id}`}><span>{String(i+1).padStart(2,'0')}</span><span>{label}</span></button>)}</nav>
       <p className="mt-auto pt-6 text-xs leading-5 text-[#c1cdbf]">Demo mode · nothing is saved</p>
     </aside>
-    <main className="min-w-0 flex-1 px-4 py-4 md:px-7 md:py-5">
-      <div className="mb-3 flex items-center justify-between gap-3"><p className="font-data text-[9px] uppercase tracking-wider text-[#829087]">Whereabouts / Demo</p><Link href="/" data-testid="link-demo-home" className="text-xs text-[#62756c]">Back to home</Link></div>
-      <DeskRuler/><FieldSheet key={`${view}-${active?.investigation.id??'collection'}`} code="00 / SAMPLE FIELD DESK">
-      <SampleLabel className="mb-2" />
-      <p className="mb-4 text-xs leading-5 text-[#718078]" data-testid="notice-demo-boundary">Sample cases with fictional scenarios. Real searches run the full AI pipeline.</p>
-      <nav className="mb-4 flex gap-2 overflow-x-auto md:hidden" aria-label="Demo navigation">{navigation.map(({ id, label }) => <button type="button" key={id} onClick={() => chooseView(id)} data-testid={`button-demo-mobile-nav-${id}`} aria-current={view === id ? 'page' : undefined} className={`shrink-0 rounded-full px-3 py-2 text-xs ${view === id ? 'bg-[#385e51] text-white' : 'border border-[#d8d1c2]'}`}>{label}</button>)}</nav>
+    <main className={`min-w-0 flex-1 px-4 md:px-7 ${active ? 'py-2 md:py-3' : 'py-4 md:py-5'}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${active ? 'mb-1' : 'mb-3'}`}><p className="font-data text-[9px] uppercase tracking-wider text-[#829087]">Whereabouts / Demo</p><span className="flex items-center gap-4"><Link href="/sign-in" data-testid="link-demo-sign-in" className="hidden text-xs font-semibold text-[#385e51] md:inline">Sign in for your private workspace</Link><Link href="/" data-testid="link-demo-home" className="text-xs text-[#62756c]">Back to home</Link></span></div>
+      {!active && <DeskRuler/>}<FieldSheet key={`${view}-${active?.investigation.id??'collection'}`} code="00 / SAMPLE FIELD DESK">
+      {!active && <SampleLabel className="mb-2" />}
+      <p className={`text-xs leading-5 text-[#718078] ${active ? 'mb-1' : 'mb-4'}`} data-testid="notice-demo-boundary">Sample cases with fictional scenarios. Real searches run the full AI pipeline.</p>
+      <nav className={`mb-4 gap-2 overflow-x-auto md:hidden ${active ? 'hidden' : 'flex'}`} aria-label="Demo navigation">{navigation.map(({ id, label }) => <button type="button" key={id} onClick={() => chooseView(id)} data-testid={`button-demo-mobile-nav-${id}`} aria-current={view === id ? 'page' : undefined} className={`shrink-0 rounded-full px-3 py-2 text-xs ${view === id ? 'bg-[#385e51] text-white' : 'border border-[#d8d1c2]'}`}>{label}</button>)}</nav>
       {active ? <>
-        <button type="button" onClick={() => setActive(null)} data-testid="button-back-from-demo-result" className="mb-3 inline-flex min-h-9 items-center gap-2 text-xs font-semibold text-[#385e51]"><ArrowLeft size={14} />Back to demo</button>
+        <button type="button" onClick={() => setActive(null)} data-testid="button-back-from-demo-result" className="mb-2 inline-flex min-h-9 items-center gap-2 text-xs font-semibold text-[#385e51]"><ArrowLeft size={14} />Back to demo</button>
         <DemoResult key={`${active.investigation.id}-${active.urgencyAssessedAt}`} sample={active} />
       </> : view === 'investigate' ? <>
         <DeskHeadline className="mb-5 text-4xl">Start a search</DeskHeadline>
@@ -90,7 +90,6 @@ export function DemoExperience() {
       <Link href="/sign-in" data-testid="link-demo-sign-in-mobile" className="mt-6 inline-flex min-h-11 items-center text-xs font-semibold text-[#385e51] underline md:hidden">Sign in for your private workspace</Link>
       </FieldSheet>
     </main>
-    <Link href="/sign-in" data-testid="link-demo-sign-in" className="fixed bottom-4 right-4 z-30 hidden rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-xs font-semibold text-[#263d36] shadow-lg md:inline-flex">Sign in for your private workspace</Link>
     {pending && <DemoProgressOverlay sample={pending.sample} onDone={finish} />}
   </div>;
 }

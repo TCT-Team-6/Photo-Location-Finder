@@ -3,21 +3,20 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { demoSamples } from "./demo-samples";
-import { CaseHeader, DecisionTrail, NextStepsChecklist } from "../components/demo/demo-parts";
+import { CaseCareRisks, CaseHeader, DecisionTrail, NextStepsChecklist } from "../components/demo/demo-parts";
 import { DemoStartFlow } from "../components/demo/demo-start-flow";
 import { DemoPrintSummary } from "../components/demo/demo-print-summary";
 
-test("case headers render nicknames, last seen, missing counter and two leading risks", () => {
+test("case header and care panel render nicknames, last seen, missing counter and every risk", () => {
   for (const sample of demoSamples) {
-    const html = renderToStaticMarkup(createElement(CaseHeader, { sample, onShare() {} }));
+    const html = renderToStaticMarkup(createElement(CaseHeader, { sample, onShare() {} })) + renderToStaticMarkup(createElement(CaseCareRisks, { sample }));
     assert.ok(html.includes(sample.caseFile.nickname));
     assert.ok(html.includes("Last seen"));
     assert.ok(html.includes(sample.lastSeenTime));
     assert.ok(html.includes("Missing for"));
     assert.ok(html.includes(`${sample.urgency.level} urgency`));
-    assert.equal((html.match(/data-testid="item-demo-header-risk-/g) ?? []).length, 2);
-    assert.equal((html.match(/data-testid="box-demo-annotation-/g) ?? []).length, sample.annotations.length);
-    if (sample.urgency.level === "High") assert.ok(html.includes("bg-[#ea6a12] text-white"));
+    assert.equal((html.match(/data-testid="item-demo-header-risk-/g) ?? []).length, sample.urgency.risks.length);
+    if (sample.urgency.level === "High") assert.ok(html.includes("bg-[#b6382e] text-white"));
     if (sample.urgency.level === "Critical") assert.ok(html.includes("bg-[#c62828] text-white"));
     if (sample.caseFile.nickname === "Sam") assert.ok(html.includes("Phone unreachable"));
   }

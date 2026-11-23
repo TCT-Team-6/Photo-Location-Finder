@@ -36,13 +36,13 @@ test('call names a canonical risk; share names a place and score', () => {
   assert.equal(call?.title, 'Call 911: Cold exposure');
   assert.ok(call?.reason.includes('not a probability'));
   const share = groundAction({ kind: 'share', sourceId: 'place-1', sourceName: 'North Park', confidence: 0.7 }, results);
-  assert.ok(share?.reason.includes('North Park (match score 70%)'));
+  assert.ok(share?.reason.includes('North Park (Confidence 70%)'));
   assert.ok(share?.reason.includes('not a confirmed location'));
 });
 test('grounded text comes from canonical evidence, not prose', () => {
   const g = groundAction({ kind: 'map', sourceId: 'place-1', sourceName: 'North Park', confidence: 0.7, prose: 'They are definitely here' }, results);
   assert.ok(g);
-  assert.equal(g.reason, 'Top saved search suggestion (match score 70%). Canonical rationale.');
+  assert.equal(g.reason, 'Top saved search suggestion (Confidence 70%). Canonical rationale.');
   assert.equal(g.title, 'Open North Park on a map');
   assert.ok(!JSON.stringify(g).includes('definitely'));
   assert.equal(g.mapUrl, mapUrlFor(results.places[0]));

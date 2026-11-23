@@ -12,7 +12,7 @@ function ReferenceImage({url,caption}:{url:string;caption:string}){
 export function LocationLeadDetails({lead,index,item}:{lead:Investigation['candidates'][number];index:number;item:Investigation}){
   const references=lead.photoReferences??[],mapURL=publicHttpURL(lead.mapsUrl);
   return <article className="geo-lead-details" data-testid="panel-selected-location-lead">
-    <p className="geo-eyebrow">{index===0?'Highest model score':'Selected location lead'} / {String(index+1).padStart(2,'0')}</p>
+    <p className="geo-eyebrow">{index===0?'Highest Confidence':'Selected location lead'} / {String(index+1).padStart(2,'0')}</p>
     <h3>{lead.place}</h3><p>{[lead.region,lead.country].filter(Boolean).join(', ')||'Region not specified'}</p>
     <p><strong>Why it was suggested</strong><br/>{lead.rationale||'No rationale was supplied for this lead.'}</p>
     {lead.clues.length>0&&<div className="geo-lead-clues" aria-label="Related scene clues">{lead.clues.map((clue,i)=><span key={`${clue}-${i}`}>{readableClue(clue)}</span>)}</div>}

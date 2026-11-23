@@ -16,7 +16,7 @@ export type StoredUrgencyAssessment = {
 const badgeStyles: Record<UrgencyLevel, { backgroundColor: string; color: string; borderColor: string }> = {
   Low: { backgroundColor: "var(--paper)", color: "var(--ink)", borderColor: "var(--line)" },
   Moderate: { backgroundColor: "var(--recess)", color: "var(--ink)", borderColor: "var(--ink)" },
-  High: { backgroundColor: "var(--quiet)", color: "var(--paper)", borderColor: "var(--quiet)" },
+  High: { backgroundColor: "#b6382e", color: "#ffffff", borderColor: "#b6382e" },
   Critical: { backgroundColor: "var(--ink)", color: "var(--paper)", borderColor: "var(--ink)" },
 };
 
@@ -61,7 +61,7 @@ export function HealthUrgencyCard({ investigation, stored, person, demo = false 
       </div>
       {pending
         ? <p className="rounded-full border border-[#d8d1c2] px-4 py-2 text-xs font-semibold text-[#596d61]" data-testid="status-urgency-unavailable">Assessment unavailable</p>
-        : <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold" style={badgeStyles[result.level]} data-testid="status-urgency-level" role="status">{result.level} urgency</span>}
+        : <span className="urgency-pill inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold" data-level={result.level} style={badgeStyles[result.level]} data-testid="status-urgency-level" role="status">{result.level} urgency</span>}
     </div>
     {pending ? <p className="mt-5 text-sm leading-6 text-[#596d61]" data-testid="text-urgency-pending">A completed analysis is needed before scene risks can be assessed. Do not wait for this tool in an emergency.</p> : <>
       {stored && !demo && <p className="mt-4 font-data text-[9px] uppercase tracking-[.1em] text-[#9c6d4e]" data-testid="text-urgency-snapshot">Precomputed sample assessment · fixed demonstration, not a live risk update</p>}

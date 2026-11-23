@@ -30,7 +30,7 @@ export function DemoPrintSummary({ sample, onClose }: { sample: DemoSample; onCl
         </dl>
       </div>
       <section className="mt-5"><h2 className="font-editorial text-xl">Ranked places</h2>
-        <ol className="mt-2 space-y-1 text-xs">{inv.candidates.map((c, i) => <li key={c.place}><strong>{i + 1}. {c.place}</strong>, {[c.region, c.country].filter(Boolean).join(', ')} — match {scoreLabel(c.confidence)}/100</li>)}</ol>
+        <ol className="mt-2 space-y-1 text-xs">{inv.candidates.map((c, i) => <li key={c.place}><strong>{i + 1}. {c.place}</strong>, {[c.region, c.country].filter(Boolean).join(', ')} — Confidence {scoreLabel(c.confidence)}/100</li>)}</ol>
       </section>
       <section className="mt-4"><h2 className="font-editorial text-xl">Next steps</h2>
         <ul className="mt-2 space-y-1 text-xs">{sample.urgency.nextSteps.map((s) => <li key={s} className="flex gap-2"><span className="mt-0.5 inline-block h-3 w-3 shrink-0 border border-[#1f302a]" />{s}</li>)}</ul>

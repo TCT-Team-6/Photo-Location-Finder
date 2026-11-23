@@ -112,7 +112,7 @@ function DemoResults({ demo, facts, notes }: { demo: GuideDemo; facts: GuideFact
   const [showSummary, setShowSummary] = useState(false);
   const [showFlyer, setShowFlyer] = useState(false);
   const fallback = useMemo(() => { const s = getDemoSample(demo.sampleId); return s ? refreshDemoSample(s, GUIDE_DEMO_NOW) : null; }, [demo]);
-  const summary = buildResponderSummary({ name: demo.name, facts, notes, sample: true, extra: [`Urgency (scored estimate): ${urgency.level}`, ...results.places.map((p) => `Saved sample place: ${p.name}, match score ${pct(p.confidence)}${checked.has(p.sourceId) ? ' (checked)' : ''}`)] });
+  const summary = buildResponderSummary({ name: demo.name, facts, notes, sample: true, extra: [`Urgency (scored estimate): ${urgency.level}`, ...results.places.map((p) => `Saved sample place: ${p.name}, Confidence ${pct(p.confidence)}${checked.has(p.sourceId) ? ' (checked)' : ''}`)] });
 
   if (actions.length === 0) return fallback ? <section><SampleLabel className="mb-3" /><p className="mb-3 text-sm text-[#718078]">No grounded guide actions. Showing the regular sample results.</p><DemoResult sample={fallback} /></section> : null;
 
@@ -127,13 +127,13 @@ function DemoResults({ demo, facts, notes }: { demo: GuideDemo; facts: GuideFact
           const place = groundAction({ kind: 'map', sourceId: top.sourceId, sourceName: top.name, confidence: top.confidence }, results);
           if (!place) return null;
           const opened = mapOpened === top.sourceId;
-          return <ActionCard key="map" a={{ ...place, kind: opened ? 'checked' : 'map' }} badge={`Match score ${pct(top.confidence)}`}>
+          return <ActionCard key="map" a={{ ...place, kind: opened ? 'checked' : 'map' }} badge={`Confidence ${pct(top.confidence)}`}>
             {opened ? <button type="button" onClick={() => { setChecked((p) => new Set(p).add(top.sourceId)); setMapOpened(null); }} className={guidePrimary} data-testid="button-demo-mark-checked"><Check size={15} />Mark {top.name} checked</button>
               : <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" onClick={() => setMapOpened(top.sourceId)} className={guidePrimary} data-testid="link-demo-open-map"><MapPin size={15} />Open map</a>}
           </ActionCard>;
         }
         if (a.kind === 'call') return <ActionCard key="call" a={a} badge={`Risk from rules · urgency ${urgency.level}`}><SimulatedCallButton /></ActionCard>;
-        return <ActionCard key={a.kind} a={a} badge={a.confidence !== null ? `${a.sourceName} · match score ${pct(a.confidence)}` : undefined}><button type="button" onClick={() => setShowSummary(true)} className={guidePrimary} data-testid="button-demo-share"><Share2 size={15} />Preview and share</button></ActionCard>;
+        return <ActionCard key={a.kind} a={a} badge={a.confidence !== null ? `${a.sourceName} · Confidence ${pct(a.confidence)}` : undefined}><button type="button" onClick={() => setShowSummary(true)} className={guidePrimary} data-testid="button-demo-share"><Share2 size={15} />Preview and share</button></ActionCard>;
       })}
     </ul>
     <div className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">Saved sample places</p>

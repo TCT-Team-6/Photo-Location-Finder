@@ -12,29 +12,30 @@ test('new layout is limited to image geolocation, preserving video, fake-news an
   assert.equal(isImageGeolocationReport({desk:'recreation',contentType:'image/jpeg'}),false);
   assert.equal(isImageGeolocationReport({desk:'recreation',analysis:null}),false);
 });
-test('image report orders photo and notes beside map, then leads, visual evidence and safety',()=>{
+test('image report puts pipeline, then map beside ranked list on the first screen, then evidence and safety',()=>{
   const source=readFileSync(new URL('../components/image-geolocation-report.tsx',import.meta.url),'utf8');
-  const primary=source.indexOf('className="geo-report-primary"'),photo=source.indexOf('<SavedOriginal'),notes=source.indexOf('Scene notes'),evidence=source.indexOf('Visual evidence'),map=source.indexOf('<GeographicConfidenceMap'),list=source.indexOf('className="geo-candidates"'),health=source.indexOf('<HealthUrgencyCard');
-  assert.ok(primary<photo&&photo<notes&&notes<map&&map<list&&list<evidence&&evidence<health);
-  assert.match(source,/<ol className="geo-candidate-list"/);
-  assert.match(source,/index===0&&<InstrumentView kind="leadpaper"/);
-  assert.match(source,/onClick=\{\(\)=>onSelect\(index\)\}/);
+  const pipeline=source.indexOf('<PipelineBar'),top=source.indexOf('className="rp-top"'),map=source.indexOf('<RankedPlacesMap'),list=source.indexOf('<RankedPlacesList'),photo=source.indexOf('<SavedOriginal key'),notes=source.indexOf('Scene notes'),evidence=source.indexOf('Visual evidence'),health=source.indexOf('<HealthUrgencyCard'),trail=source.indexOf('id="ai-decision-trail"');
+  assert.ok(pipeline<top&&top<map&&map<list&&list<photo&&photo<notes&&notes<evidence&&evidence<health&&health<trail);
+  assert.match(source,/targetId="ai-decision-trail"/);
   for(const action of ['button-refresh-location-leads','button-copy-summary','button-retry-report-photo','button-retry-image-analysis','link-best-guess-map'])assert.ok(source.includes(action));
   assert.doesNotMatch(source,/<Canvas|\bfetch\(/);
+  const css=readFileSync(new URL('../styles/ranked-results.css',import.meta.url),'utf8');
+  assert.match(css,/grid-template-areas:"map" "list" "photo"/);
+  assert.match(css,/@media \(min-width:768px\)\{\s*\.rp-top\{grid-template-columns:[^}]*grid-template-areas:"map list" "photo list"/);
 });
-test('geographic surface is the existing Leaflet/tile stack with a geodesic raster, not decorative markers or image uploads',()=>{
-  const source=readFileSync(new URL('../components/geographic-confidence-map.tsx',import.meta.url),'utf8');
+test('shared map uses Leaflet numbered pins, a score-weighted heat raster and a legend',()=>{
+  const source=readFileSync(new URL('../components/results/ranked-places-map.tsx',import.meta.url),'utf8');
   assert.match(source,/from 'react-leaflet'/);assert.match(source,/<MapContainer/);
-  assert.match(source,/map\.containerPointToLatLng/);assert.match(source,/geographicFieldValue/);
-  assert.match(source,/ctx\.putImageData/);assert.match(source,/\.46\*255/);
-  assert.doesNotMatch(source,/CircleMarker|<Circle|<Marker|createRadialGradient|normalize\(|\bfetch\(/);
+  assert.match(source,/map\.containerPointToLatLng/);assert.match(source,/p\.unit \* localFieldKernel/);
+  assert.match(source,/ctx\.putImageData/);assert.match(source,/heatColor\(v\)/);
+  assert.match(source,/pinIcon\(e\.index \+ 1/);
+  for(const text of ['More likely','Less likely','Pin number = rank in list','Walking-distance circle'])assert.ok(source.includes(text));
+  assert.doesNotMatch(source,/normalize\(|\bfetch\(/);
+  assert.match(source,/referrerPolicy="strict-origin"/);
   const report=readFileSync(new URL('../components/image-geolocation-report.tsx',import.meta.url),'utf8');
   assert.match(report,/not a measured search radius/);
   assert.match(report,/never normalized to total 100%/);
-  assert.ok(report.indexOf('Higher model scores produce stronger')>report.indexOf('<HealthUrgencyCard'));
   assert.ok(report.indexOf('Map tiles are requested')>report.indexOf('<HealthUrgencyCard'));
-  assert.doesNotMatch(source,/Higher model scores produce stronger|Map tiles are requested/);
-  assert.match(source,/referrerPolicy="strict-origin"/);
 });
 test('paper is actual shared Three.js geometry; HTML remains above it and text sizes are not frozen',()=>{
   const models=readFileSync(new URL('../components/physical-models.tsx',import.meta.url),'utf8'),css=readFileSync(new URL('../styles/image-report.css',import.meta.url),'utf8');

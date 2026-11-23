@@ -31,7 +31,7 @@ export function buildLeadSummary(
   if (rankedLeads.length === 0) {
     lines.push("", "No likely places were found.");
   } else {
-    lines.push("", "Possible places (highest model score first):");
+    lines.push("", "Possible places (highest Confidence first):");
     rankedLeads.forEach((lead, index) => {
       const area = [lead.region, lead.country].filter(Boolean).join(", ");
       lines.push(

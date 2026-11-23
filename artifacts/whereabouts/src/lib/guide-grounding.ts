@@ -76,7 +76,7 @@ export function groundAction(action: ProposedAction, results: SavedResults): Gro
   if (!place || place.name !== action.sourceName || place.confidence !== action.confidence) return null;
   const url = mapUrlFor(place);
   if (!url) return null;
-  const score = `match score ${pct(place.confidence)}`;
+  const score = `Confidence ${pct(place.confidence)}`;
   const evidence = [`Why ${place.name}: ${place.rationale}`, ...place.clues.map((c) => `Clue: ${c}`)];
   const base = { sourceId: place.sourceId, sourceName: place.name, confidence: place.confidence, evidence, mapUrl: url };
   switch (action.kind) {

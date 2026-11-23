@@ -37,7 +37,7 @@ function MapViewController({ points, selectedIndex, mapKey }: {
   return null;
 }
 
-export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLead, popupActionLabel = "Click marker to open location report", scoreLabel = "Model score" }: {
+export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLead, popupActionLabel = "Click marker to open location report", scoreLabel = "Confidence" }: {
   candidates: Lead[];
   selectedIndex: number;
   onSelect: (index: number) => void;

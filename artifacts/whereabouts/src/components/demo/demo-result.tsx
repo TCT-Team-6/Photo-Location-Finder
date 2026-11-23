@@ -1,46 +1,57 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ArrowUpRight } from 'lucide-react';
 import type { DemoSample } from '@/lib/demo-samples';
 import { searchArea } from '@/lib/demo-search';
-import { coordinatesFromMapsUrl } from '@/components/lead-location-map';
-import { CaseHeader, DecisionTrail, NextStepsChecklist, scoreLabel, useNow } from './demo-parts';
-import { DemoSearchMap } from './demo-search-map';
+import { coordinatesFromMapsUrl } from '@/lib/geographic-confidence';
+import { confidencePercent, demoPipeline, supportingClues } from '@/lib/result-insights';
+import { RankedPlacesMap } from '@/components/results/ranked-places-map';
+import { RankedPlacesList } from '@/components/results/ranked-places-list';
+import { PipelineBar } from '@/components/results/pipeline-bar';
+import { AnnotatedPhoto, CaseCareRisks, CaseHeader, DecisionTrail, NextStepsChecklist, useNow } from './demo-parts';
 import { DemoPrintSummary } from './demo-print-summary';
+import '@/styles/ranked-results.css';
 
 export function DemoResult({ sample }: { sample: DemoSample }) {
   const [selected, setSelected] = useState(0);
+  const [focusToken, setFocusToken] = useState(0);
+  const [scrollToken, setScrollToken] = useState(0);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [share, setShare] = useState(false);
   const now = useNow(60_000);
   const inv = sample.investigation;
   const area = searchArea(sample, now);
-  const points = useMemo(() => inv.candidates.flatMap((c, index) => {
-    const position = coordinatesFromMapsUrl(c.mapsUrl);
-    return position ? [{ position, index, label: c.place }] : [];
-  }), [inv.candidates]);
-  const center = useMemo(() => coordinatesFromMapsUrl(inv.candidates[0]?.mapsUrl ?? ''), [inv.candidates]);
-  return <div className="space-y-5">
+  const tags = useMemo(() => sample.annotations.map((a) => a.label), [sample.annotations]);
+  const entries = useMemo(() => inv.candidates.map((c, index) => ({ index, place: c.place, position: coordinatesFromMapsUrl(c.mapsUrl), percent: confidencePercent(c.confidence) })), [inv.candidates]);
+  const items = useMemo(() => inv.candidates.map((c, index) => ({
+    index, place: c.place, region: [c.region, c.country].filter(Boolean).join(', ') || 'Region not specified',
+    percent: confidencePercent(c.confidence), clues: supportingClues(c, tags), mapped: Boolean(entries[index].position),
+  })), [inv.candidates, tags, entries]);
+  const circleCenter = entries[0]?.position ?? null;
+  const circle = useMemo(() => circleCenter ? { center: circleCenter, radiusKm: area.radiusKm, label: area.label } : null, [circleCenter, area.radiusKm, area.label]);
+  const pipeline = useMemo(() => demoPipeline(sample.decisionTrail ?? []), [sample.decisionTrail]);
+
+  return <div className="space-y-4">
     <CaseHeader sample={sample} onShare={() => setShare(true)} />
-    <section data-testid="section-demo-search-plan">
-      <h2 className="mb-3 font-editorial text-2xl">Search plan</h2>
-      <div className="grid items-start gap-4 lg:grid-cols-[1.15fr_1fr]">
-        <DemoSearchMap center={center} radiusKm={area.radiusKm} label={area.label} points={points} selectedIndex={selected} onSelect={setSelected} />
-        <div className="space-y-2" data-testid="section-demo-candidates">
-          <h3 className="font-editorial text-2xl">Likely places</h3>
-          {inv.candidates.map((candidate, index) => {
-            const coords = coordinatesFromMapsUrl(candidate.mapsUrl);
-            return <article key={candidate.place} className={`rounded-xl border p-3 ${selected === index ? 'border-[#718c79] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec]'}`} data-testid={`card-demo-candidate-${index}`}>
-              <button type="button" onClick={() => setSelected(index)} aria-pressed={selected === index} data-testid={`button-select-demo-candidate-${index}`} className="flex w-full items-start justify-between gap-3 text-left">
-                <span><span className="font-editorial text-xl" data-testid={`text-demo-candidate-place-${index}`}>{index + 1}. {candidate.place}</span><span className="mt-1 block text-[11px] text-[#718078]">{candidate.region}, {candidate.country}</span></span>
-                <span className="shrink-0 font-data text-[10px] text-[#9c6d4e]" data-testid={`text-demo-candidate-score-${index}`}>Match score {scoreLabel(candidate.confidence)} / 100</span>
-              </button>
-              <p className="mt-2 text-xs leading-5 text-[#66796e]">{candidate.rationale}</p>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#718078]"><span data-testid={`text-demo-candidate-coordinates-${index}`}>Coordinates {coords?.map((v) => v.toFixed(4)).join(', ') ?? 'unavailable'}</span><a href={candidate.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-demo-candidate-map-${index}`} className="font-semibold text-[#385e51] underline">Open map</a></div>
-            </article>;
-          })}
-        </div>
+    <PipelineBar summary={pipeline} targetId="ai-decision-trail" />
+    <section className="rp-top" data-testid="section-demo-search-plan">
+      <div className="rp-area-map">
+        <RankedPlacesMap entries={entries} selectedIndex={selected} onSelect={(i) => { setSelected(i); setScrollToken((t) => t + 1); }} focusToken={focusToken}
+          circle={circle} supportKm={Math.max(area.radiusKm * 1.4, 14)} focusZoom={11} title="Where the clues point" subtitle={`Dashed circle: walking distance ${area.label}. Not a tracked location.`} />
+      </div>
+      <div className="rp-area-list" data-testid="section-demo-candidates">
+        <RankedPlacesList items={items} selectedIndex={selected} onSelect={(i) => { setSelected(i); setFocusToken((t) => t + 1); }} scrollToken={scrollToken} activeTag={activeTag} onClueFocus={setActiveTag} testId="list-demo-candidates"
+          renderDetails={(i) => { const c = inv.candidates[i]; const pos = entries[i].position; return <div className="rp-item-details" data-testid={`panel-demo-candidate-details-${i}`}>
+            <p>{c.rationale}</p>
+            <p className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]"><span data-testid={`text-demo-candidate-coordinates-${i}`}>Coordinates {pos?.map((v) => v.toFixed(4)).join(', ') ?? 'unavailable'}</span><a href={c.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-demo-candidate-map-${i}`}>Open map <ArrowUpRight size={11} className="inline" /></a></p>
+          </div>; }} />
+      </div>
+      <div className="rp-area-photo rp-photo" data-testid="panel-demo-photo">
+        <AnnotatedPhoto sample={sample} compact activeTag={activeTag} />
       </div>
     </section>
-    <div className="grid items-start gap-4 lg:grid-cols-2">
+    <CaseCareRisks sample={sample} />
+    <div className="rp-below rp-below-2">
       <NextStepsChecklist steps={sample.urgency.nextSteps} />
       <DecisionTrail sample={sample} />
     </div>
