@@ -28,6 +28,35 @@ test("keeps the backend's chosen location first even when an alternative scores 
   assert.match(result.summary, /Front Range/);
 });
 
+test("scores the chosen location by its chance of being within 25 km", () => {
+  const result = normalizeImageLocationResponse({
+    location_name: "Kingman, Arizona",
+    country: "United States",
+    region: "Arizona",
+    latitude: 35.19,
+    longitude: -114.05,
+    confidence: 0.055,
+    confidence_by_distance: { "1km": 0.01, "25km": 0.208, "750km": 0.881 },
+    alternatives: [{ name: "Mojave National Preserve", country: "United States", latitude: 35.14, longitude: -115.51, confidence: 0.173 }],
+  });
+
+  assert.equal(result.candidates[0]?.place, "Kingman, Arizona");
+  assert.equal(result.candidates[0]?.confidence, 0.208);
+});
+
+test("falls back to the headline confidence when the backend sends no distances", () => {
+  const result = normalizeImageLocationResponse({
+    location_name: "Front Range",
+    country: "USA",
+    latitude: 40.015,
+    longitude: -105.2705,
+    confidence: 0.573,
+    alternatives: [],
+  });
+
+  assert.equal(result.candidates[0]?.confidence, 0.573);
+});
+
 test("ranks alternatives by confidence behind the primary location", () => {
   const result = normalizeImageLocationResponse({
     location_name: "Lake Chelan",
