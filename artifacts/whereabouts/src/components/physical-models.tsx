@@ -174,7 +174,7 @@ function Drawer({width=560,height=360,count,value,amount,palette:p,labels,intera
       <Solid size={[w-38,24,1]} palette={p} name="Paper" at={[0,106,.5]} radius={.4}/>
       <Surface width={w-42} height={20} at={[0,106,1.04]} palette={p} deps={[labels?.[i],p.paper,p.ink,w]} paint={c=>{c.fillStyle=p.paper;c.fillRect(0,0,w-42,20);c.fillStyle=p.ink;c.textAlign='left';c.font='10px "DM Mono",monospace';c.fillText(labels?.[i]??'',10,10,w-62);}}/>
     </Spring></Interactive></group>)}
-    {!count&&<><Solid size={[w-28,h-30,1]} at={[0,0,5]} name="Paper" palette={p}/><Surface width={w-50} height={30} at={[0,0,5.6]} palette={p} deps={[p.paper,p.ink,w]} paint={c=>{c.fillStyle=p.paper;c.fillRect(0,0,w-50,30);c.fillStyle=p.ink;c.fillText('NO CASES YET',(w-50)/2,15);}}/></>}
+    {!count&&<><Solid size={[w-28,h-30,1]} at={[0,0,5]} name="Paper" palette={p}/><Surface width={w-50} height={30} at={[0,0,5.6]} palette={p} deps={[p.paper,p.ink,w]} paint={c=>{c.fillStyle=p.paper;c.fillRect(0,0,w-50,30);c.fillStyle=p.ink;c.fillText('No cases yet',(w-50)/2,15);}}/></>}
     {(amount===1||amount===3)&&<Spring position target={amount===1?30:100}><Solid size={[w-30,200,1]} at={[0,0,5]} name="Paper" palette={p}/></Spring>}
   </group>;
 }

@@ -21,7 +21,7 @@ export const guidePrimary = `${tapBtn} bg-[#385e51] text-[#f4f0e6] hover:bg-[#2e
 export const guideGhost = `${tapBtn} border border-[#d8d1c2] bg-[#fbf9f3] text-[#385e51] hover:bg-[#e8e4d8]`;
 
 export function SampleLabel({ className = '' }: { className?: string }) {
-  return <p className={`inline-flex items-center gap-2 rounded-full border border-[#dfbfa9] bg-[#f5e8dc] px-3 py-1.5 font-data text-[10px] uppercase tracking-[.14em] text-[#874d34] ${className}`} data-testid="label-sample-case"><span className="h-1.5 w-1.5 rounded-full bg-[#c8794d]" aria-hidden="true" />{SAMPLE_LABEL}</p>;
+  return <p className={`inline-flex items-center gap-2 rounded-full border border-[#dfbfa9] bg-[#f5e8dc] px-3 py-1.5 font-data text-[13px] uppercase tracking-[.14em] text-[#874d34] ${className}`} data-testid="label-sample-case"><span className="h-1.5 w-1.5 rounded-full bg-[#c8794d]" aria-hidden="true" />{SAMPLE_LABEL}</p>;
 }
 
 export function EmergencyBar({ urgent = false, sample = false }: { urgent?: boolean; sample?: boolean }) {
@@ -33,7 +33,7 @@ export function EmergencyBar({ urgent = false, sample = false }: { urgent?: bool
 }
 
 export function Disclaimer() {
-  return <p className="text-xs leading-5 text-[#718078]" data-testid="text-disclaimer">{DISCLAIMER} Facts here are user-reported and unverified. Whereabouts never confirms where a person is.</p>;
+  return <p className="text-[13px] leading-5 text-[#718078]" data-testid="text-disclaimer">{DISCLAIMER} Facts here are user-reported and unverified. Whereabouts never confirms where a person is.</p>;
 }
 
 /** Fictional demos never dial. Tapping shows an explicit sample confirmation. */
@@ -41,6 +41,6 @@ export function SimulatedCallButton({ className = '' }: { className?: string }) 
   const [done, setDone] = useState(false);
   return <div className={`flex shrink-0 flex-col items-start gap-1 ${className}`}>
     <button type="button" onClick={() => setDone(true)} className={`${tapBtn} bg-[#a64e43] text-[#fbf9f3] hover:bg-[#8f4037]`} data-testid="button-simulate-call-911"><Phone size={16} />Call 911 (simulated)</button>
-    {done && <p role="status" className="text-xs font-semibold text-[#8f4037]" data-testid="status-simulated-call">Simulated only. {SAMPLE_LABEL}. No call was placed. In a real emergency, dial 911 yourself.</p>}
+    {done && <p role="status" className="text-[13px] font-semibold text-[#8f4037]" data-testid="status-simulated-call">Simulated only. {SAMPLE_LABEL}. No call was placed. In a real emergency, dial 911 yourself.</p>}
   </div>;
 }

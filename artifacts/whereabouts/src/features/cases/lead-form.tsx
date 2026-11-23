@@ -65,9 +65,9 @@ export function LeadForm({ caseId, onDirtyChange }: { caseId: string; onDirtyCha
   return <form onSubmit={submit} noValidate aria-busy={busy} className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5" data-testid="form-lead">
     <fieldset disabled={busy} className="min-w-0 space-y-5">
     {error && <ErrorBanner message={error} />}
-    {saved && <p role="status" data-testid="status-lead-saved" className="rounded-xl bg-[#e9ede3] px-4 py-3 text-xs font-semibold text-[#385e51]">Lead saved as needs verification.</p>}
-    <fieldset><legend className="mb-2 text-xs font-semibold text-[#344b42]">Type of lead</legend>
-      <div className="flex gap-2">{kinds.map((k) => <label key={k.v} className={`cursor-pointer rounded-full border px-4 py-2 text-xs font-semibold ${v.kind === k.v ? 'border-[#385e51] bg-[#385e51] text-[#f4f0e6]' : 'border-[#d8d1c2] bg-[#fbf9f3] text-[#385e51]'}`}>
+    {saved && <p role="status" data-testid="status-lead-saved" className="rounded-xl bg-[#e9ede3] px-4 py-3 text-[13px] font-semibold text-[#385e51]">Lead saved as needs verification.</p>}
+    <fieldset><legend className="mb-2 text-[13px] font-semibold text-[#344b42]">Type of lead</legend>
+      <div className="flex gap-2">{kinds.map((k) => <label key={k.v} className={`cursor-pointer rounded-full border px-4 py-2 text-[13px] font-semibold ${v.kind === k.v ? 'border-[#385e51] bg-[#385e51] text-[#f4f0e6]' : 'border-[#d8d1c2] bg-[#fbf9f3] text-[#385e51]'}`}>
         <input type="radio" name="kind" className="sr-only" checked={v.kind === k.v} onChange={() => set('kind', k.v)} data-testid={`radio-kind-${k.v}`} />{k.l}</label>)}</div>
     </fieldset>
     <div className="grid gap-4 sm:grid-cols-2">
@@ -86,7 +86,7 @@ export function LeadForm({ caseId, onDirtyChange }: { caseId: string; onDirtyCha
         <input type="checkbox" checked={perm} onChange={(e) => setPerm(e.target.checked)} data-testid="checkbox-permission" className="mt-1.5 h-4 w-4 accent-[#385e51]" />
         <span>I have permission to save this material, and I understand it will not be verified, searched, or matched to anyone.</span>
       </label>
-      {errs.perm && <p role="alert" className="mt-1.5 text-xs font-medium text-[#a64e43]">{errs.perm}</p>}
+      {errs.perm && <p role="alert" className="mt-1.5 text-[13px] font-medium text-[#a64e43]">{errs.perm}</p>}
     </div>
     <button type="submit" disabled={busy} className={primaryBtn} data-testid="button-save-lead">{busy && <Loader2 size={15} className="animate-spin" />}{uploading ? 'Uploading photo' : create.isPending ? 'Saving' : 'Save lead'}</button>
     </fieldset>

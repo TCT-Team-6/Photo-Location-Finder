@@ -63,7 +63,7 @@ export function AnalysisProgress({
           {formatElapsed(elapsed)}
         </span>
       </div>
-      <p className="mt-1 text-xs text-[#718078]" data-testid={video ? "text-video-progress" : undefined}>
+      <p className="mt-1 text-[13px] text-[#718078]" data-testid={video ? "text-video-progress" : undefined}>
         {video ? VIDEO_PROGRESS_MESSAGE : "This usually takes 1–3 minutes. Please keep this page open."}
       </p>
       <div className="ap-panel">
@@ -102,7 +102,7 @@ export function AnalysisProgress({
         <p className="ap-tool-disclosure">{pipelineToolNote(desk)}</p>
       </div>
       {elapsed > 150 && (
-        <p className="mt-4 text-xs text-[#718078]">
+        <p className="mt-4 text-[13px] text-[#718078]">
           Still working — busy times can take longer. If it fails, your photo stays selected so you can try again.
         </p>
       )}
@@ -123,7 +123,7 @@ export function AnalysisFailed({ message, onRetry }: { message: string; onRetry:
         <div>
           <p className="font-editorial text-2xl text-[#704f3d]">That didn’t work this time</p>
           <p className="mt-1 text-sm leading-6 text-[#875545]">{message}</p>
-          <p className="mt-1 text-xs text-[#875545]">Your photo is still selected, so you don’t need to choose it again.</p>
+          <p className="mt-1 text-[13px] text-[#875545]">Your photo is still selected, so you don’t need to choose it again.</p>
         </div>
       </div>
       <button

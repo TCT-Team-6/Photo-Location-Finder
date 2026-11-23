@@ -21,10 +21,10 @@ export function EmbeddedGpsNotice({ analysis }: { analysis: Investigation["analy
         <MapPin size={20} className="mt-0.5 shrink-0 text-[#385e51]" aria-hidden="true" />
         <div>
           <p className="font-editorial text-2xl text-[#263d36]">GPS found in the video file</p>
-          <p className="mt-1 font-data text-xs text-[#53685d]" data-testid="text-video-gps">{gps.label}</p>
+          <p className="mt-1 font-data text-[13px] text-[#53685d]" data-testid="text-video-gps">{gps.label}</p>
         </div>
       </div>
-      <a href={gps.mapsUrl} target="_blank" rel="noreferrer" data-testid="link-video-gps-map" className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#9aaf9d] px-5 text-xs font-semibold text-[#385e51] hover:bg-[#e2e9db]">Open in Google Maps</a>
+      <a href={gps.mapsUrl} target="_blank" rel="noreferrer" data-testid="link-video-gps-map" className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#9aaf9d] px-5 text-[13px] font-semibold text-[#385e51] hover:bg-[#e2e9db]">Open in Google Maps</a>
     </section>
   );
 }
@@ -34,12 +34,12 @@ export function KeyMoments({ analysis, onSeek }: { analysis: Investigation["anal
   if (!moments.length) return null;
   return (
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6" data-testid="panel-key-moments">
-      <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Key moments</p>
+      <p className="font-data text-[13px] uppercase tracking-[.2em] text-[#9c6d4e]">Key moments</p>
       <ul className="mt-4 divide-y divide-[#e1dbce]">
         {moments.map((moment, position) => (
           <li key={`${moment.index}-${position}`} className="flex items-start gap-3 py-3">
-            <button type="button" onClick={() => onSeek(moment.timestamp)} aria-label={`Jump to ${moment.label}`} data-testid={`button-key-moment-${position}`} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-[#b9c4b5] px-3 font-data text-xs text-[#385e51] hover:bg-[#e8e4d8]"><Play size={11} />{moment.label}</button>
-            <p className="pt-2 text-xs leading-5 text-[#53685d]">{moment.places.length ? moment.places.join(" · ") : moment.cluesFound === true ? "Clues noted in this frame" : moment.cluesFound === false ? "No clear clues in this frame" : "Frame selected for analysis"}</p>
+            <button type="button" onClick={() => onSeek(moment.timestamp)} aria-label={`Jump to ${moment.label}`} data-testid={`button-key-moment-${position}`} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-[#b9c4b5] px-3 font-data text-[13px] text-[#385e51] hover:bg-[#e8e4d8]"><Play size={11} />{moment.label}</button>
+            <p className="pt-2 text-[13px] leading-5 text-[#53685d]">{moment.places.length ? moment.places.join(" · ") : moment.cluesFound === true ? "Clues noted in this frame" : moment.cluesFound === false ? "No clear clues in this frame" : "Frame selected for analysis"}</p>
           </li>
         ))}
       </ul>
@@ -60,8 +60,8 @@ export function VideoAnalysisStatus({ item, retrying, retryError, onRetry }: { i
         <div>
           <p className="font-editorial text-2xl text-[#704f3d]">The video could not be analyzed</p>
           <p className="mt-1 text-sm leading-6 text-[#875545]" data-testid="text-video-analysis-error">{item.analysisError || "The location service could not finish. This is usually temporary."}</p>
-          <p className="mt-1 text-xs text-[#875545]">Your video is saved, so you don’t need to upload it again.</p>
-          {retryError && <p className="mt-2 text-xs font-semibold text-[#875545]">{retryError}</p>}
+          <p className="mt-1 text-[13px] text-[#875545]">Your video is saved, so you don’t need to upload it again.</p>
+          {retryError && <p className="mt-2 text-[13px] font-semibold text-[#875545]">{retryError}</p>}
         </div>
       </div>
       <button type="button" onClick={onRetry} disabled={retrying} data-testid="button-retry-video-analysis" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-sm font-semibold text-[#f4f0e6] disabled:opacity-60"><RotateCcw size={16} />{retrying ? "Starting again…" : "Try again"}</button>

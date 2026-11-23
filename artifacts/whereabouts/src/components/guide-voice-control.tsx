@@ -14,5 +14,5 @@ export function GuideVoiceControl({ onText }: { onText: (text: string) => void }
       onClick={e => { if (e.detail === 0) mic.toggle(); }}
       onKeyDown={e => { if (e.key === ' ') { e.preventDefault(); if (!e.repeat) press(); } else if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) mic.toggle(); } }}
       onKeyUp={e => { if (e.key === ' ') { e.preventDefault(); release(); } }} />
-  </div><p className="physical-voice-caption">{mic.error||(!mic.supported?'Voice unavailable. Please type instead.':'HOLD TO TALK / TAP TO TOGGLE')}</p><span id="guide-voice-status" role="status" className="sr-only">{mic.error||(mic.pending?'Waiting for microphone permission.':mic.listening?'Recording.':'Not recording.')}</span></div>;
+  </div><p className="physical-voice-caption">{mic.error||(!mic.supported?'Voice unavailable. Please type instead.':'Hold or tap to talk')}</p><span id="guide-voice-status" role="status" className="sr-only">{mic.error||(mic.pending?'Waiting for microphone permission.':mic.listening?'Recording.':'Not recording.')}</span></div>;
 }

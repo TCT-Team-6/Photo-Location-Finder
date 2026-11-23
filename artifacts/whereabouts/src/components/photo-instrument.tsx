@@ -111,7 +111,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
             readingRef.current=reading;
             if(phaseRef.current==='json'&&renderPhase==='json'){settledRef.current=reading;setSnapshot(JSON.stringify(reading.record));}
             const[x,y]=reading.stats.pixel_xy;
-            if(coordinatesRef.current)coordinatesRef.current.textContent=`ORIGINAL IMAGE X ${x} / Y ${y} px`;
+            if(coordinatesRef.current)coordinatesRef.current.textContent=`Photo point ${x}, ${y}`;
             if(panelReadoutRef.current)panelReadoutRef.current.textContent=`X ${x} / Y ${y}`;
           },
           onFrame:(point,cycleProgress,state)=>{
@@ -124,7 +124,7 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
             }
             else if(inspectingRef.current){inspectingRef.current=false;}
             const progress=state.inspecting?cycleProgress:0;
-            if(progressRef.current)progressRef.current.textContent=`LOCAL REVEAL ${String(progress).padStart(3,'0')}%`;
+            if(progressRef.current)progressRef.current.textContent=`Close look ${progress}%`;
             if(!state.inspecting&&panelReadoutRef.current)panelReadoutRef.current.textContent='X — / Y —';
             stage.dataset.returnCount=String(state.returnCount);
           },
@@ -179,8 +179,8 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
     const link=document.createElement('a');link.href=urlRef.current;link.download=`${frame.id}-region.json`;document.body.appendChild(link);link.click();link.remove();
   };
   return <div className="wa-optical-bench">
-    <div className="wa-bench-heading wa-instrument-heading"><span>EXAMPLE / {String(index+1).padStart(2,'0')} — NO LIVE AI</span><span>SCROLL <span data-scroll-progress="photo">000%</span></span></div>
-    <div className="wa-bench-ruler wa-optical-ruler" aria-hidden="true">ORIGINAL IMAGE / RGB PIXEL FIELD / INSTRUMENT 01</div>
+    <div className="wa-bench-heading wa-instrument-heading"><span>Example {index+1}, no live AI</span><span>Scroll <span data-scroll-progress="photo">000%</span></span></div>
+    <div className="wa-bench-ruler wa-optical-ruler" aria-hidden="true">Sample photo</div>
     <div ref={stageRef} role="group" tabIndex={status==='ready'?0:-1} aria-label={`Inspect ${frame.title}`} aria-describedby="loupe-instructions" data-testid="stage-optical-loupe" data-engine-state={status} data-tool-mode={mode} className="wa-optical-stage wa-instrument-scene"
       onPointerMove={pointerMove} onPointerDown={pointerDown}
       onPointerUp={event=>{if(modeRef.current==='held')release();if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);}}
@@ -189,24 +189,24 @@ function InspectionBench({frame,index,count,onPrevious,onNext}:{frame:Frame;inde
       <div className="wa-instrument-photo" data-testid="inspection-photo"><img src={frame.imageUrl} alt="" draggable={false}/></div>
       <ToolPanel photo={photoRef.current??frame.photo??null} used={used} index={index} available={status==='ready'} readoutRef={panelReadoutRef}/>
       <canvas key="stage-base-2d" ref={canvasRef} className={status==='ready'?'':'wa-optical-canvas-hidden'} data-testid="canvas-optical-loupe" aria-hidden="true"/>
-      <div className="wa-zoom-control" onPointerDown={event=>event.stopPropagation()} onKeyDown={event=>event.stopPropagation()}><RotaryDial label="Zoom" labels={['3×','6×','10×']} value={zoomIndex} onChange={value=>{setZoomIndex(value);rendererRef.current?.setMagnification([3,6,10][value]);}} disabled={status!=='ready'}/></div>
       {status==='loading'&&<div className="wa-optical-loading skeleton" aria-hidden="true"/>}
       {createPortal(<button ref={targetRef} type="button" disabled={status!=='ready'||!stageVisible} style={{visibility:status==='ready'&&stageVisible?'visible':'hidden'}} aria-label={mode==='held'?'Return loupe to cradle':'Hold to lift loupe; Enter or Space toggles pickup'} aria-describedby="loupe-instructions" aria-pressed={mode==='held'} data-testid="button-loupe-pickup" className="wa-loupe-hit-target"
         onBlur={()=>{if(modeRef.current==='held')release();}}
         onFocus={event=>{if(event.currentTarget.matches(':focus-visible'))stageRef.current?.scrollIntoView({block:'center',behavior:'instant'});}}
         onClick={event=>{if(event.detail===0){if(modeRef.current==='held')release();else rendererRef.current?.pickup(pointRef.current);}}}/>,document.body)}
     </div>
-    <div className="wa-instrument-instructions"><p id="loupe-instructions">Hold the loupe to lift. Drag across the photo; release to return.<br/>Keyboard: Enter / Space to lift or return. Home centers on photo. Arrows move, Shift steps farther. Escape returns. Tab stays free.</p><span><span ref={coordinatesRef} data-testid="text-loupe-image-coordinates">ORIGINAL IMAGE COORDINATES / px</span><br/><span ref={progressRef} data-testid="text-loupe-reveal-counter">LOCAL REVEAL 000%</span></span></div>
+    <div className="wa-zoom-control wa-zoom-inflow" data-testid="control-loupe-zoom"><RotaryDial label="Zoom" labels={['3×','6×','10×']} value={zoomIndex} onChange={value=>{setZoomIndex(value);rendererRef.current?.setMagnification([3,6,10][value]);}} disabled={status!=='ready'}/></div>
+    <div className="wa-instrument-instructions"><p id="loupe-instructions">Hold the loupe to lift. Drag across the photo; release to return.<br/>Keyboard: Enter / Space to lift or return. Home centers on photo. Arrows move, Shift steps farther. Escape returns. Tab stays free.</p><span><span ref={coordinatesRef} data-testid="text-loupe-image-coordinates">Photo point not set</span><br/><span ref={progressRef} data-testid="text-loupe-reveal-counter">Close look 0%</span></span></div>
     {(basic||status==='image-error')&&<div className="wa-optical-notice" role="status"><p>The 3D engine or photo is unavailable. No optical effect is simulated. A loaded image’s center reading remains downloadable.</p><button type="button" onClick={()=>setAttempt(value=>value+1)} data-testid="button-retry-optics"><RotateCcw size={13}/>Retry</button></div>}
     {captureStatus==='failed'&&<p className="wa-optical-notice" role="status">Page capture unavailable. Live photo/panel optics still work; header capture is not available.<button type="button" onClick={()=>rendererRef.current?.refreshCapture()}>Retry page capture</button></p>}
-    <p className="sr-only" aria-live="polite" data-testid="status-loupe-phase">{mode==='docked'?'Loupe is in its holder.':mode==='returning'?'Returning to the cradle.':phase==='json'?'The lens shows minified region JSON. Supplied coordinates are approximate, not verified.':phase==='decoding'?'Morphing binary wall to JSON wall.':'Loupe held. Reading the aligned RGB binary wall.'}</p>
+    <p className="sr-only" aria-live="polite" data-testid="status-loupe-phase">{mode==='docked'?'Loupe is in its holder.':mode==='returning'?'Returning to the cradle.':phase==='json'?'The lens shows clue notes for this spot. Coordinates are approximate, not verified.':phase==='decoding'?'Turning the close-up into clue notes.':'Loupe held. Reading the photo up close.'}</p>
     {phase==='json'&&<pre className="sr-only" data-testid="text-loupe-json">{snapshot}</pre>}
     <div className="wa-optical-controls">
-      <div><span className="wa-eyebrow">Frame {String(index+1).padStart(2,'0')} / {String(count).padStart(2,'0')}</span><strong>{frame.title}</strong></div>
+      <div><span className="wa-eyebrow">Photo {index+1} of {count}</span><strong>{frame.title}</strong></div>
       <Link href={frame.sample?`/demo?case=${encodeURIComponent(frame.id)}`:'/demo'} className="wa-optical-sample-link" data-testid="link-landing-selected-sample">Open sample files <ArrowUpRight size={14}/></Link>
-      <button type="button" onClick={download} disabled={!hasDownload&&!basic||!readingRef.current||status==='loading'||status==='image-error'} className="wa-json-download" data-testid="button-download-sample-json"><Download size={14}/>Region JSON</button>
+      <button type="button" onClick={download} disabled={!hasDownload&&!basic||!readingRef.current||status==='loading'||status==='image-error'} className="wa-json-download" data-testid="button-download-sample-json"><Download size={14}/>Save clue notes</button>
       <div className="wa-optical-arrows"><button type="button" onClick={onPrevious} aria-label="Previous sample photo" data-testid="button-previous-landing-sample"><ArrowLeft size={18}/></button><button type="button" onClick={onNext} aria-label="Next sample photo" data-testid="button-next-landing-sample"><ArrowRight size={18}/></button></div>
     </div>
-    <p className="wa-optical-disclaimer">{index===0?'GPS 37.5039, −119.6043: approximate user-supplied visual match to Bachelor and Three Graces, Mariposa Grove. Not verified geolocation. No EXIF was present in the original. Capture, confidence and species clues are supplied estimates.':'Prepared fictional sample, not verified geolocation. Coordinates and observations are from its existing sample record.'} Binary and metrics derive from optimized image RGB pixels; transient bit flips are display animation, not changed source pixels. Hold still for one second, then a 0.5-second JSON morph. No face identification or live analysis.</p>
+    <p className="wa-optical-disclaimer">Illustrative sample, not a verified location. No live analysis or face identification.</p>
   </div>;
 }

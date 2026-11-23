@@ -46,7 +46,7 @@ function ItemPreview({ item }: { item: IntakeItem }) {
     return <video src={url} controls preload="metadata" className="h-full w-full rounded-lg bg-[#1f3029] object-contain" data-testid={`video-selected-${item.id}`} />;
   }
   if (broken) {
-    return <div className="photo-upload-fallback flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg px-2 text-center text-[10px] leading-4" data-testid={`status-preview-unavailable-${item.id}`}><FileImage size={22} />Preview not available — the file will still be analyzed</div>;
+    return <div className="photo-upload-fallback flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg px-2 text-center text-[13px] leading-4" data-testid={`status-preview-unavailable-${item.id}`}><FileImage size={22} />Preview not available — the file will still be analyzed</div>;
   }
   return <><button type="button" className="h-full w-full" aria-label={`Inspect ${item.file.name}`} onClick={()=>setInspect(true)}><img src={url} alt={`Selected photo: ${item.file.name}`} draggable={false} onError={() => setBroken(true)} className="h-full w-full rounded-lg object-contain" data-testid={`img-selected-photo-${item.id}`} /></button>{inspect&&<PrintInspector src={url} alt={item.file.name} onClose={()=>setInspect(false)}/>}</>;
 }
@@ -181,7 +181,7 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       <div className="mb-3 flex min-h-12 items-start justify-between gap-3 px-1">
         <div>
           <h2 className="photo-upload-title font-editorial text-xl leading-tight">Investigations</h2>
-          <p className="mt-1 text-[11px] leading-4 text-[#78847b]">The image you want to investigate. Add up to {MAX_ORIGINAL_PHOTOS} photos{videoEnabled ? ", or one video" : ""}.</p>
+          <p className="mt-1 text-[13px] leading-4 text-[#78847b]">The image you want to investigate. Add up to {MAX_ORIGINAL_PHOTOS} photos{videoEnabled ? ", or one video" : ""}.</p>
         </div>
       </div>
       <div
@@ -192,23 +192,23 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
         data-testid="dropzone-photo-upload"
         data-selected={items.some(item=>item.kind==='image')}
       >
-        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{dragging?'RELEASE TO FILE':items.length?`${String(items.length).padStart(2,'0')} ITEMS / LOCAL SELECTION`:'TRAY EMPTY / 00 ITEMS'}</span>
+        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{dragging?'Release to file':items.length?`${String(items.length).padStart(2,'0')} ITEMS / LOCAL SELECTION`:'TRAY EMPTY / 00 ITEMS'}</span>
         <TrayMediaStack items={items} onRemove={id=>remove(id)}/><span className="tray-browse-caption" aria-hidden="true">BROWSE / ADD MEDIA</span>
         <input id="photo-upload-original" type="file" multiple={!activeVideo} accept={accept} disabled={running} className="sr-only" data-testid="input-photo-file"
           onChange={(event) => { addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
         <label htmlFor="photo-upload-original" className="flex cursor-pointer flex-col items-center justify-center px-4 h-[250px] py-5">
           <span className="photo-upload-icon grid h-12 w-12 place-items-center rounded-full"><Upload size={21} strokeWidth={1.6} /></span>
           <p className="mt-3 font-editorial text-lg">{items.length ? "Add more" : "Drop a photo"}</p>
-          <p className="mt-1 text-xs text-[#77847a]">or browse</p>
-          <p className="mt-2 text-[10px] text-[#77847a]">Up to 6 images, 25 MB each.{videoEnabled?' Or one video, up to 60 MB.':''}</p>
+          <p className="mt-1 text-[13px] text-[#77847a]">or browse</p>
+          <p className="mt-2 text-[13px] text-[#77847a]">Up to 6 images, 25 MB each.{videoEnabled?' Or one video, up to 60 MB.':''}</p>
           <span className="mt-3 flex flex-wrap justify-center gap-2">
-            <span className="photo-upload-optional rounded-full border px-3 py-1.5 font-data text-[8px] uppercase tracking-[.1em]">Image · up to 25 MB</span>
-            {videoEnabled && <span className="photo-upload-optional rounded-full border px-3 py-1.5 font-data text-[8px] uppercase tracking-[.1em]" data-testid="label-video-limit">Video · up to 60 MB</span>}
+            <span className="photo-upload-optional rounded-full border px-3 py-1.5 font-data text-[13px] uppercase tracking-[.1em]">Image · up to 25 MB</span>
+            {videoEnabled && <span className="photo-upload-optional rounded-full border px-3 py-1.5 font-data text-[13px] uppercase tracking-[.1em]" data-testid="label-video-limit">Video · up to 60 MB</span>}
           </span>
         </label>
       </div>
       {messages.length > 0 && (
-        <div role="alert" className="mt-2 space-y-1 rounded-lg border border-[#dfc6b6] bg-[#f9eee6] px-3 py-2 text-[11px] leading-4 text-[#875545]" data-testid="status-photo-upload-error-original">
+        <div role="alert" className="mt-2 space-y-1 rounded-lg border border-[#dfc6b6] bg-[#f9eee6] px-3 py-2 text-[13px] leading-4 text-[#875545]" data-testid="status-photo-upload-error-original">
           {messages.map((message, index) => <p key={index}>{message}</p>)}
         </div>
       )}
@@ -222,9 +222,9 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
               <div className="flex gap-3">
                 <div className={`shrink-0 overflow-hidden rounded-lg bg-[#e8e9df] ${item.kind === "video" ? "h-28 w-44" : "h-20 w-20"}`}><ItemPreview item={item} /></div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-[#344b42]">{item.file.name}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-[#78847b]">{item.kind === "video" && <Film size={11} />}{(item.file.size / 1024 / 1024).toFixed(1)} MB</p>
-                  <p className={`mt-2 flex items-center gap-1.5 text-[11px] ${item.status === "error" ? "text-[#875545]" : "text-[#53685d]"}`} role="status" data-testid={`status-item-${index}`}>
+                  <p className="truncate text-[13px] font-semibold text-[#344b42]">{item.file.name}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-[#78847b]">{item.kind === "video" && <Film size={11} />}{(item.file.size / 1024 / 1024).toFixed(1)} MB</p>
+                  <p className={`mt-2 flex items-center gap-1.5 text-[13px] ${item.status === "error" ? "text-[#875545]" : "text-[#53685d]"}`} role="status" data-testid={`status-item-${index}`}>
                     {(item.status === "uploading" || item.status === "analyzing") && <LoaderCircle size={12} className="animate-spin" />}
                     {item.status === "saved" && <Check size={12} />}
                     {item.status === "ready" && "Ready"}
@@ -234,13 +234,13 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
                     {item.status === "error" && (item.error || "Could not be analyzed.")}
                   </p>
                   <div className="mt-2 flex gap-3">
-                    <button type="button" disabled={running||index===0} onClick={()=>setItems(current=>movePrint(current,item.id,index-1))} className="text-[10px]" aria-label={`Move ${item.file.name} earlier`}>←</button>
-                    <button type="button" disabled={running||index===items.length-1} onClick={()=>setItems(current=>movePrint(current,item.id,index+1))} className="text-[10px]" aria-label={`Move ${item.file.name} later`}>→</button>
+                    <button type="button" disabled={running||index===0} onClick={()=>setItems(current=>movePrint(current,item.id,index-1))} className="text-[13px]" aria-label={`Move ${item.file.name} earlier`}>←</button>
+                    <button type="button" disabled={running||index===items.length-1} onClick={()=>setItems(current=>movePrint(current,item.id,index+1))} className="text-[13px]" aria-label={`Move ${item.file.name} later`}>→</button>
                     {item.status === "error" && (
-                      <button type="button" disabled={running} onClick={() => void retryRun([item.id])} data-testid={`button-retry-item-${index}`} className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-[#385e51] disabled:opacity-50"><RotateCcw size={12} />Try again</button>
+                      <button type="button" disabled={running} onClick={() => void retryRun([item.id])} data-testid={`button-retry-item-${index}`} className="inline-flex min-h-8 items-center gap-1.5 text-[13px] font-semibold text-[#385e51] disabled:opacity-50"><RotateCcw size={12} />Try again</button>
                     )}
                     {item.status !== "saved" && (
-                      <button type="button" disabled={running} onClick={() => remove(item.id)} data-testid={index === 0 ? "button-remove-photo" : `button-remove-photo-${index}`} className="photo-upload-remove inline-flex min-h-8 items-center gap-1 text-[11px] disabled:opacity-50"><X size={12} />Remove</button>
+                      <button type="button" disabled={running} onClick={() => remove(item.id)} data-testid={index === 0 ? "button-remove-photo" : `button-remove-photo-${index}`} className="photo-upload-remove inline-flex min-h-8 items-center gap-1 text-[13px] disabled:opacity-50"><X size={12} />Remove</button>
                     )}
                   </div>
                 </div>

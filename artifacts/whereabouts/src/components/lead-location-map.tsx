@@ -57,8 +57,8 @@ export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLea
 
   return <section className="overflow-hidden rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec]" data-testid="map-top-location-leads">
     <div className="flex items-center justify-between gap-4 border-b border-[#e1dbce] px-4 py-3">
-      <div><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Location overview</p><p className="mt-1 text-xs text-[#66796e]">The three highest-scored leads</p></div>
-      <span className="font-data text-[9px] text-[#839086]">© OpenStreetMap</span>
+      <div><p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">Location overview</p><p className="mt-1 text-[13px] text-[#66796e]">The three highest-scored leads</p></div>
+      <span className="font-data text-[13px] text-[#839086]">© OpenStreetMap</span>
     </div>
     {points.length ? <MapContainer key={mapKey || 'no-coordinate-map'} center={center} zoom={2} scrollWheelZoom={false} className="h-[310px] w-full" data-testid="map-lead-locations">
       <TileLayer
@@ -82,6 +82,6 @@ export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLea
         </CircleMarker>;
       })}
     </MapContainer> : <div className="grid h-[210px] place-items-center px-6 text-center text-sm leading-6 text-[#718078]" data-testid="map-no-coordinates">The analyzer did not return map coordinates for these leads. Open a lead’s map link to explore its location.</div>}
-    {points.length < candidates.length && points.length > 0 && <p className="border-t border-[#e1dbce] px-4 py-2 text-[11px] text-[#718078]">Some leads do not include coordinates and cannot be pinned.</p>}
+    {points.length < candidates.length && points.length > 0 && <p className="border-t border-[#e1dbce] px-4 py-2 text-[13px] text-[#718078]">Some leads do not include coordinates and cannot be pinned.</p>}
   </section>;
 }

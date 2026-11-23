@@ -3,7 +3,7 @@ import {InstrumentView} from './InstrumentKit';
 import {deskSound} from '@/lib/desk-sound';
 import {clampSelectorAngle,caughtDeskAngle,createSelectorMotion,crossedDeskDetents,nearestDeskDetent,selectorStop,startSelectorMotion,unwrappedPointer} from '@/lib/desk-selector';
 
-const options=['A  Investigations','B  Recreation','C  Journalism'];
+const options=[{label:'Investigations',description:'Original images you are looking into.'},{label:'Recreation',description:'Personal, travel, or leisure photos.'},{label:'Journalism',description:'Reporting images and visual leads.'}];
 export function DeskSelector({value,onChange,disabled=false}:{value:number;onChange:(index:number)=>void;disabled?:boolean}){
   const motion=useRef(createSelectorMotion(value)),current=useRef({value,onChange,disabled}),radios=useRef<(HTMLButtonElement|null)[]>([]);
   const drag=useRef({held:false,pointer:0,unwrapped:0,stop:0});
@@ -30,6 +30,7 @@ export function DeskSelector({value,onChange,disabled=false}:{value:number;onCha
   };
   return <div className="physical-footprint physical-dial" data-control="Desk selector" data-testid="dial-desk" role="radiogroup" aria-label="Choose photo field desk">
     <InstrumentView kind="dial" value={value} selector={motion} interaction={{disabled,onTurn:turn,onCancel:()=>{drag.current.held=false;choose(current.current.value,70,'out');}}}/>
-    {options.map((option,index)=><button key={option} ref={node=>{radios.current[index]=node;}} type="button" role="radio" aria-checked={value===index} disabled={disabled} tabIndex={value===index?0:-1} className="desk-selector-radio" data-testid={`button-selector-desk-${index}`} onKeyDown={event=>key(event,index)} onClick={()=>choose(index)}>{option}<i aria-hidden="true"/></button>)}
+    {options.map((option,index)=><button key={option.label} ref={node=>{radios.current[index]=node;}} type="button" role="radio" aria-checked={value===index} disabled={disabled} tabIndex={value===index?0:-1} className="desk-selector-radio" data-testid={`button-selector-desk-${index}`} onKeyDown={event=>key(event,index)} onClick={()=>choose(index)}>{option.label}<i aria-hidden="true"/></button>)}
+    <ul className="desk-selector-legend" data-testid="list-desk-descriptions">{options.map((option,index)=><li key={option.label} data-active={value===index}><strong>{option.label}</strong><span data-testid={`text-desk-description-${index}`}>{option.description}</span></li>)}</ul>
   </div>;
 }

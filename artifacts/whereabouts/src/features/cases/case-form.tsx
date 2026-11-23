@@ -61,13 +61,13 @@ export function CaseForm({ initial, initialHeadshot, submitLabel, pending, error
     <fieldset disabled={busy} className="min-w-0 space-y-6">
     {(error || uploadErr) && <ErrorBanner message={uploadErr || error || ''} />}
     <fieldset className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
-      <legend className="px-2 font-data text-[10px] uppercase tracking-[.16em] text-[#9c6d4e]">Your role (self-declared)</legend>
+      <legend className="px-2 font-data text-[13px] uppercase tracking-[.16em] text-[#9c6d4e]">Your role (self-declared)</legend>
       <div className="grid gap-2 sm:grid-cols-3">
         {roles.map((r) => <label key={r.v} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-3 text-sm ${v.responderRole === r.v ? 'border-[#385e51] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#fbf9f3]'}`}>
           <input type="radio" name="role" checked={v.responderRole === r.v} onChange={() => set('responderRole', r.v)} data-testid={`radio-role-${r.v}`} className="accent-[#385e51]" />{r.l}
         </label>)}
       </div>
-      <p className="mt-2 text-xs text-[#718078]">Roles are not verified.</p>
+      <p className="mt-2 text-[13px] text-[#718078]">Roles are not verified.</p>
     </fieldset>
     <div className="grid gap-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 sm:grid-cols-2">
       <Field id="firstName" label="First name (required)" error={errs.firstName}><input id="firstName" data-testid="input-first-name" aria-required="true" aria-invalid={!!errs.firstName} maxLength={80} value={v.firstName} onChange={(e) => set('firstName', e.target.value)} className={inputCls} autoComplete="off" /></Field>
@@ -90,7 +90,7 @@ export function CaseForm({ initial, initialHeadshot, submitLabel, pending, error
         <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} data-testid="checkbox-privacy" aria-describedby="ack-error" className="mt-1.5 h-4 w-4 accent-[#385e51]" />
         <span>I have permission to save these details and any headshot. I understand this is a private workspace, not an emergency service, and nothing here confirms any person's identity or location.</span>
       </label>
-      {errs.ack && <p id="ack-error" role="alert" className="mt-1.5 text-xs font-medium text-[#a64e43]">{errs.ack}</p>}
+      {errs.ack && <p id="ack-error" role="alert" className="mt-1.5 text-[13px] font-medium text-[#a64e43]">{errs.ack}</p>}
     </div>
     <div className="flex flex-wrap justify-end gap-3">
       <button type="button" onClick={onCancel} disabled={busy} className={ghostBtn} data-testid="button-cancel-case">Cancel</button>

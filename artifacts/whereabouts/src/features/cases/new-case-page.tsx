@@ -28,8 +28,8 @@ export default function NewCasePage() {
   });
   const leave = () => { if (confirmLeave()) { setDirty(false); nav('/cases'); } };
   return <div className="wa-case-workspace fade-up mx-auto max-w-4xl">
-    <button type="button" onClick={leave} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]" data-testid="link-back-cases"><ArrowLeft size={14} />Back to cases</button>
-    <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / intake</p>
+    <button type="button" onClick={leave} className="mb-7 inline-flex items-center gap-2 text-[13px] font-semibold text-[#718078] hover:text-[#385e51]" data-testid="link-back-cases"><ArrowLeft size={14} />Back to cases</button>
+    <p className="font-data text-[13px] uppercase tracking-[.2em] text-[#9c6d4e]">Private case / intake</p>
     <DeskHeadline className="mt-3 text-5xl">Open a case.</DeskHeadline>
     <p className="mt-3 max-w-xl text-sm leading-6 text-[#718078]">Only a first name is required. Add what you know and are comfortable keeping here.</p>
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_280px]">

@@ -48,7 +48,7 @@ function DefaultFallback({ error, resetError }: ErrorFallbackProps) {
           This part of the app hit an error. The rest of the app is still
           running.
         </p>
-        <details className="mt-4 text-left text-xs"><summary>Safe error detail</summary><p className="mt-3 font-data">{error.name.replace(/[^a-zA-Z0-9 _-]/g,'').slice(0,60)} / {safeRuntimeIssue(error)}</p></details>
+        <details className="mt-4 text-left text-[13px]"><summary>Safe error detail</summary><p className="mt-3 font-data">{error.name.replace(/[^a-zA-Z0-9 _-]/g,'').slice(0,60)} / {safeRuntimeIssue(error)}</p></details>
         <button
           type="button"
           onClick={resetError}

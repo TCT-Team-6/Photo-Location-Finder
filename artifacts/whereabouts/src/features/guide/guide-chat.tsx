@@ -11,10 +11,10 @@ export function GuideChat({ messages, pending = false }: { messages: ChatMessage
   const older = messages.filter((m) => m !== lastAi);
   const renderMsg = (m: ChatMessage, live: boolean) => {
     const ai = m.role === 'assistant' || m.role === 'gate';
-    if (m.role === 'note') return <li key={m.id} className="mx-auto max-w-[90%] rounded-xl border border-dashed border-[#c9c2b3] px-4 py-2 text-xs text-[#62756c]" data-testid={`chat-note-${m.id}`}><span className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">Saved note · </span>{m.text}</li>;
+    if (m.role === 'note') return <li key={m.id} className="mx-auto max-w-[90%] rounded-xl border border-dashed border-[#c9c2b3] px-4 py-2 text-[13px] text-[#62756c]" data-testid={`chat-note-${m.id}`}><span className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">Saved note · </span>{m.text}</li>;
     return <li key={m.id} className={`flex ${ai ? 'justify-start' : 'justify-end'}`} data-testid={`chat-${m.role}-${m.id}`}>
       <div role={ai ? 'article' : undefined} aria-label={ai ? 'AI Guide' : undefined} className={`max-w-[88%] rounded-2xl px-4 py-3 text-[15px] leading-6 ${ai ? `rounded-tl-sm border ${m.role === 'gate' ? 'border-[#dfbfa9] bg-[#f5e8dc]' : 'border-[#d8d1c2] bg-[#fbf9f3]'} text-[#263d36]` : 'rounded-tr-sm bg-[#385e51] text-[#f4f0e6]'}`}>
-        <p className={`mb-1 flex items-center gap-1.5 font-data text-[9px] uppercase tracking-[.16em] ${ai ? 'text-[#9c6d4e]' : 'text-[#c9d6cb]'}`}>{ai && <ScanSearch size={11} aria-hidden="true" />}{roleName[m.role]}{live && <span className="sr-only">, newest message</span>}</p>
+        <p className={`mb-1 flex items-center gap-1.5 font-data text-[13px] uppercase tracking-[.16em] ${ai ? 'text-[#9c6d4e]' : 'text-[#c9d6cb]'}`}>{ai && <ScanSearch size={11} aria-hidden="true" />}{roleName[m.role]}{live && <span className="sr-only">, newest message</span>}</p>
         <p className="whitespace-pre-wrap">{m.text}</p>
       </div>
     </li>;

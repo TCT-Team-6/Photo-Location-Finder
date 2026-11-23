@@ -19,7 +19,7 @@
   .demo-print-backdrop { background: transparent !important; position: static !important; }
   .demo-print-sheet.demo-overlay-card { animation: none !important; transform: none !important; }
   .demo-print-photo-row { grid-template-columns: 160px 1fr !important; }
-  .demo-print-sheet { width: 186mm !important; font-size: 11px !important; }
+  .demo-print-sheet { width: 186mm !important; font-size: 13px !important; }
   .demo-print-sheet img { max-height: 200px !important; }
   .demo-print-sheet section { break-inside: avoid; }
 }

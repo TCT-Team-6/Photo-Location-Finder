@@ -32,7 +32,7 @@ test('70ms release and 120ms label motion stop exactly, monotonically, without s
 });
 test('new selector has fixed visible HTML radios and no legacy rotating labels or readout',()=>{
   const ui=readFileSync(new URL('../components/desk-selector.tsx',import.meta.url),'utf8'),model=readFileSync(new URL('../components/physical-models.tsx',import.meta.url),'utf8');
-  assert.match(ui,/role="radiogroup"/);assert.match(ui,/role="radio"/);assert.match(ui,/A  Investigations/);assert.match(ui,/B  Recreation/);assert.match(ui,/C  Journalism/);assert.doesNotMatch(ui,/<output|role="slider"/);
+  assert.match(ui,/role="radiogroup"/);assert.match(ui,/role="radio"/);assert.match(ui,/label:'Investigations'/);assert.match(ui,/label:'Recreation'/);assert.match(ui,/label:'Journalism'/);assert.doesNotMatch(ui,/<output|role="slider"/);
   const dial=model.slice(model.indexOf('function Dial('),model.indexOf('function Shutter('));
   assert.doesNotMatch(dial,/<Spring|ArcText|fillText/);
   assert.match(dial,/teeth=\{60\}/);assert.match(dial,/toothDepth=\{2\}/);assert.match(dial,/roughness=\{\.5\}/);assert.match(dial,/c\.lineWidth=3/);

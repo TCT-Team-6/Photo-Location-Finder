@@ -10,14 +10,14 @@ html[data-wa-text-size]:not([data-wa-text-measuring]) [data-wa-text-control]{
 .fd-text-size{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
 .fd-text-size-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
 .fd-text-size-heading h3{font-size:14px;font-weight:600}
-.fd-text-size-heading output{font-family:var(--app-font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.fd-text-size-heading output{font-family:var(--app-font-mono);font-size:13px;font-variant-numeric:tabular-nums}
 .physical-font-slider{display:block;width:min(320px,100%);height:48px;touch-action:none;cursor:grab;position:relative}
 .physical-font-slider[data-dragging=true]{cursor:grabbing}
 .physical-font-slider .physical-view,.physical-font-slider .physical-fallback{pointer-events:none}
 .physical-font-slider .instrument-track::before{pointer-events:none}
 .fd-text-size-footer{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
-.fd-text-size-footer p{font-size:11px;color:var(--quiet);line-height:1.6;max-width:38em}
-.fd-text-size-reset{font-family:var(--app-font-mono);font-size:10px;text-decoration:underline;text-underline-offset:4px;white-space:normal}
+.fd-text-size-footer p{font-size:13px;color:var(--quiet);line-height:1.6;max-width:38em}
+.fd-text-size-reset{font-family:var(--app-font-mono);font-size:13px;text-decoration:underline;text-underline-offset:4px;white-space:normal}
 .fd-text-size-reset:disabled{opacity:.45;cursor:default;text-decoration:none}
 /* Grow text-bearing controls rather than enlarging the scene or cropping labels. */
 html[data-wa-text-size] :is(.wa-sidebar,.wa-topbar,.wa-dashboard-actions,.fd-type-options){min-width:0}

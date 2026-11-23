@@ -17,7 +17,7 @@ function SavedOriginal({url,name,loading,error,retry,tags,activeTag}:{url:string
   return <figure className="rp-photo" data-testid="panel-original-photo">
     <div className="rp-photo-frame">{loading?<div className="geo-photo-state skeleton w-full text-[#f4f0e6]" role="status" data-testid="status-original-loading">Opening your saved photograph…</div>:error||decodeError||!url?<div className="geo-photo-state w-full text-[#f4f0e6]" role="alert" data-testid="status-photo-error">The saved photograph is temporarily unavailable.<button type="button" data-testid="button-retry-report-photo" onClick={()=>{setDecodeError(false);retry();}}>Retry original photograph</button></div>:<img src={url} alt={`Original photograph: ${name}`} onError={()=>setDecodeError(true)} data-testid="img-original-investigation-photo"/>}</div>
     {tags.length>0&&<ul className="rp-photo-tags" aria-label="Clue tags read from this photo">{tags.map((tag,i)=><li key={`${tag}-${i}`} className={`rp-photo-tag${tag===activeTag?' is-active':''}`} data-testid={`tag-photo-clue-${i}`}>{tag}</li>)}</ul>}
-    <figcaption className="mt-2 font-data text-[9px] uppercase tracking-[.12em] text-[#718078]">Original photograph / private evidence</figcaption>
+    <figcaption className="mt-2 font-data text-[13px] uppercase tracking-[.12em] text-[#718078]">Original photograph / private evidence</figcaption>
   </figure>;
 }
 
@@ -61,10 +61,10 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
     <HealthUrgencyCard investigation={item}/>
     <details open id="ai-decision-trail" className="rp-trail" data-testid="panel-ai-decision-trail">
       <summary><p className="geo-eyebrow">AI decision trail</p><h2 className="geo-section-title">What this response contains.</h2></summary>
-      <ol>{pipeline.stages.map((stage,i)=><li key={stage.name} data-testid={`row-live-trail-${i}`}><span className="font-data text-[11px] text-[#385e51]">{stage.complete?<Check size={13}/>:'—'}</span><span><strong className="text-[#344b42]">{stage.name}</strong><br/><span className="text-[#718078]">{stage.evidence}</span></span></li>)}
-        {trace.map((step,i)=><li key={`trace-${i}`} data-testid={`row-live-trace-${i}`}><span className="font-data text-[11px] text-[#9c6d4e]">{i+1}</span><span><strong className="text-[#344b42]">{step.stage||step.step||'Provider step'}</strong><br/><span className="text-[#718078]">{[step.detail,...(step.details??[])].filter(Boolean).join(' · ')||'No detail supplied.'}</span></span></li>)}
+      <ol>{pipeline.stages.map((stage,i)=><li key={stage.name} data-testid={`row-live-trail-${i}`}><span className="font-data text-[13px] text-[#385e51]">{stage.complete?<Check size={13}/>:'—'}</span><span><strong className="text-[#344b42]">{stage.name}</strong><br/><span className="text-[#718078]">{stage.evidence}</span></span></li>)}
+        {trace.map((step,i)=><li key={`trace-${i}`} data-testid={`row-live-trace-${i}`}><span className="font-data text-[13px] text-[#9c6d4e]">{i+1}</span><span><strong className="text-[#344b42]">{step.stage||step.step||'Provider step'}</strong><br/><span className="text-[#718078]">{[step.detail,...(step.details??[])].filter(Boolean).join(' · ')||'No detail supplied.'}</span></span></li>)}
       </ol>
-      <p className="px-[18px] pb-4 text-[11px] leading-5 text-[#718078]">Checks reflect only what the saved response includes. {pipeline.sourceLabel?`Analysis source: ${pipeline.sourceLabel}. `:''}No model name or analysis time is returned by this service.</p>
+      <p className="px-[18px] pb-4 text-[13px] leading-5 text-[#718078]">Checks reflect only what the saved response includes. {pipeline.sourceLabel?`Analysis source: ${pipeline.sourceLabel}. `:''}No model name or analysis time is returned by this service.</p>
     </details>
     <footer aria-label="Map methodology and privacy">
       <p className="geo-map-method">Pins are numbered by rank. Heat is strongest around higher-Confidence places; its spread is a display heuristic, not a measured search radius, location uncertainty, or calibrated probability. Overlapping heat uses the stronger field, not a sum. Confidence values are never normalized to total 100%.</p>

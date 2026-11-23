@@ -35,10 +35,10 @@ export function validatePhoto(f: File): string | null {
 
 export function Field({ label, hint, error, children, id }: { label: string; hint?: string; error?: string; children: ReactNode; id: string }) {
   return <div className="wa-field">
-    <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-[#344b42]">{label}</label>
+    <label htmlFor={id} className="mb-1.5 block text-[13px] font-semibold text-[#344b42]">{label}</label>
     {children}
-    {hint && !error && <p className="mt-1.5 text-xs text-[#718078]">{hint}</p>}
-    {error && <p id={`${id}-error`} role="alert" className="mt-1.5 text-xs font-medium text-[#a64e43]">{error}</p>}
+    {hint && !error && <p className="mt-1.5 text-[13px] text-[#718078]">{hint}</p>}
+    {error && <p id={`${id}-error`} role="alert" className="mt-1.5 text-[13px] font-medium text-[#a64e43]">{error}</p>}
   </div>;
 }
 
@@ -51,7 +51,7 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 
 export function PrivacyNotice({ compact = false }: { compact?: boolean }) {
   return <aside className="wa-case-privacy border border-[#d8d1c2] bg-[#e9ede3] p-5" data-testid="notice-privacy">
-    <p className="fd-privacy-line text-xs"><ShieldCheck size={14} aria-hidden="true"/><span>Private / not emergency help</span><HelpNote>
+    <p className="fd-privacy-line text-[13px]"><ShieldCheck size={14} aria-hidden="true"/><span>Private / not emergency help</span><HelpNote>
       This is not an emergency service. If someone is in danger or missing, contact your local emergency number or police first.<br/>
       Only you can see your cases, leads and photos. Nothing is shared or published.
       {!compact&&<><br/>Names and roles are self-declared and are not verified.<br/>Whereabouts does not search social media, crawl links, match faces, analyze images automatically, or claim any person's identity or location.<br/>A headshot is a reference for you only. Review labels record your assessment; they do not independently verify a lead.</>}
@@ -113,16 +113,16 @@ export function PhotoPicker({ id, label, hint, file, existing, onChange, onClear
   const[dragging,setDragging]=useState(false);
   const src = preview ?? (existing ? photoUrl(existing) : null);
   return <div>
-    <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-[#344b42]">{label}</label>
+    <label htmlFor={id} className="mb-1.5 block text-[13px] font-semibold text-[#344b42]">{label}</label>
     <div className={`photo-upload-dropzone relative flex items-center gap-4 p-6 ${dragging?'is-dragging':''}`} onDragOver={event=>{event.preventDefault();setDragging(true);}} onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setDragging(false);}} onDrop={event=>{event.preventDefault();setDragging(false);const file=event.dataTransfer.files[0];if(file)onChange(file);}}>
       <CropMarks/>{dragging&&<span className="fd-drag-label">RELEASE TO FILE</span>}
-      {src ? <img src={src} alt="Selected reference" className="h-20 w-20 rounded-lg object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#fbf9f3] font-data text-[9px] uppercase text-[#718078]">None</div>}
+      {src ? <img src={src} alt="Selected reference" className="h-20 w-20 rounded-lg object-cover" /> : <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#fbf9f3] font-data text-[13px] uppercase text-[#718078]">None</div>}
       <div className="min-w-0 flex-1">
-        <input id={id} data-testid={`input-${id}`} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ''; }} className="block w-full text-xs text-[#44556d] file:mr-3 file:rounded-full file:border-0 file:bg-[#385e51] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-[#f4f0e6]" />
-        <p className="mt-1.5 text-xs text-[#718078]">{file ? file.name : hint}</p>
-        {src && <button type="button" onClick={onClear} className="mt-1 text-xs font-semibold text-[#a64e43] underline">Remove</button>}
+        <input id={id} data-testid={`input-${id}`} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ''; }} className="block w-full text-[13px] text-[#44556d] file:mr-3 file:rounded-full file:border-0 file:bg-[#385e51] file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-[#f4f0e6]" />
+        <p className="mt-1.5 text-[13px] text-[#718078]">{file ? file.name : hint}</p>
+        {src && <button type="button" onClick={onClear} className="mt-1 text-[13px] font-semibold text-[#a64e43] underline">Remove</button>}
       </div>
     </div>
-    {error && <p role="alert" className="mt-1.5 text-xs font-medium text-[#a64e43]">{error}</p>}
+    {error && <p role="alert" className="mt-1.5 text-[13px] font-medium text-[#a64e43]">{error}</p>}
   </div>;
 }

@@ -29,10 +29,10 @@ export function BestGuessCard({ lead, summaryText }: { lead: Lead; summaryText: 
   return (
     <section className="best-guess-card mb-5 overflow-hidden rounded-2xl p-5 text-white shadow-lg" data-testid="panel-best-guess">
       <div className="flex items-center justify-between gap-3">
-        <p className="inline-flex items-center gap-2 font-data text-[10px] uppercase tracking-[.18em] text-[#e7ac8e]">
+        <p className="inline-flex items-center gap-2 font-data text-[13px] uppercase tracking-[.18em] text-[#e7ac8e]">
           <MapPin size={14} aria-hidden="true" /> Best guess
         </p>
-        <p className="font-data text-[10px] uppercase tracking-[.12em] text-white/80">Confidence {score} / 100</p>
+        <p className="font-data text-[13px] uppercase tracking-[.12em] text-white/80">Confidence {score} / 100</p>
       </div>
       <h2 className="mt-3 font-editorial text-4xl leading-tight" data-testid="text-best-guess-place">{lead.place}</h2>
       {area && <p className="mt-1 text-sm text-white/80">{area}</p>}
@@ -59,8 +59,8 @@ export function BestGuessCard({ lead, summaryText }: { lead: Lead; summaryText: 
         </button>
       </div>
       <p role="status" className="sr-only">{copyState === "copied" ? "Summary copied to the clipboard." : copyState === "failed" ? "Copy failed." : ""}</p>
-      {copyState === "failed" && <p className="mt-2 text-xs text-[#ffb070]">Your browser blocked copying. Select the text in the report instead.</p>}
-      <p className="mt-4 text-xs leading-5 text-white/75">A lead to check, not a confirmed location.</p>
+      {copyState === "failed" && <p className="mt-2 text-[13px] text-[#ffb070]">Your browser blocked copying. Select the text in the report instead.</p>}
+      <p className="mt-4 text-[13px] leading-5 text-white/75">A lead to check, not a confirmed location.</p>
     </section>
   );
 }

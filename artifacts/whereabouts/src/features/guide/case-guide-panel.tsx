@@ -36,14 +36,14 @@ export function CaseGuidePanel({ c }: { c: MissingPersonCase }) {
       <h2 id="case-guide-h" className="flex items-center gap-2 font-editorial text-2xl"><ScanSearch size={17} className="text-[#c8794d]" />AI Guide facts</h2>
       <Link href={`/guide/${c.id}`} className={guideGhost} data-testid="link-resume-guide">Resume AI Guide <ArrowRight size={15} /></Link>
     </div>
-    <p className="mt-1 text-xs text-[#718078]">User-reported and unverified. Area and date also appear above in the regular fields. Status: {g.gate === 'blocked' ? 'stopped by safety check' : g.question ? `waiting for an answer: ${g.question}` : 'ready for a responder summary'}.</p>
-    <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{rows.map((r) => <div key={r.key} data-testid={`case-fact-${r.key}`}><dt className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{r.label}</dt><dd className={r.known ? '' : 'italic text-[#89948a]'}>{r.value}</dd></div>)}</dl>
-    {g.gate !== 'blocked' && <div className="mt-4"><label htmlFor="guide-correction" className="mb-1 block text-xs font-semibold text-[#344b42]">Correct or add a guide fact</label>
+    <p className="mt-1 text-[13px] text-[#718078]">User-reported and unverified. Area and date also appear above in the regular fields. Status: {g.gate === 'blocked' ? 'stopped by safety check' : g.question ? `waiting for an answer: ${g.question}` : 'ready for a responder summary'}.</p>
+    <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{rows.map((r) => <div key={r.key} data-testid={`case-fact-${r.key}`}><dt className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">{r.label}</dt><dd className={r.known ? '' : 'italic text-[#89948a]'}>{r.value}</dd></div>)}</dl>
+    {g.gate !== 'blocked' && <div className="mt-4"><label htmlFor="guide-correction" className="mb-1 block text-[13px] font-semibold text-[#344b42]">Correct or add a guide fact</label>
       <div className="flex gap-2"><input id="guide-correction" maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} placeholder="For example: he was wearing a blue coat" className={`${inputCls} min-h-11`} data-testid="input-guide-correction" />
         <button type="button" onClick={correct} disabled={note.isPending || !text.trim()} className={guideGhost} data-testid="button-guide-correction">{note.isPending && <Loader2 size={14} className="animate-spin" />}Save</button></div>
       {err && <div className="mt-2"><ErrorBanner message={err} /></div>}</div>}
     <details className="mt-4"><summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-[#385e51]">Guide log ({g.log.length})</summary>
-      <ol className="mt-2 space-y-2" data-testid="list-case-guide-log">{g.log.map((l, i) => <li key={i} className="border-l-2 border-[#d8d1c2] pl-3 text-xs leading-5"><span className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{l.role === 'user' ? 'You' : l.role === 'note' ? 'Note' : 'AI Guide'} · {new Date(l.at).toLocaleString()}</span><p className="whitespace-pre-wrap text-[#344b42]">{l.text}</p></li>)}</ol>
+      <ol className="mt-2 space-y-2" data-testid="list-case-guide-log">{g.log.map((l, i) => <li key={i} className="border-l-2 border-[#d8d1c2] pl-3 text-[13px] leading-5"><span className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">{l.role === 'user' ? 'You' : l.role === 'note' ? 'Note' : 'AI Guide'} · {new Date(l.at).toLocaleString()}</span><p className="whitespace-pre-wrap text-[#344b42]">{l.text}</p></li>)}</ol>
     </details>
   </section>;
 }

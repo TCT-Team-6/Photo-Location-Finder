@@ -3,6 +3,11 @@ name: Whereabouts visual direction
 description: User-requested references and usability constraints for the app's visual redesign.
 ---
 
+Readability takes priority: body text at least 16px, main paragraphs 18px, labels and captions at least 13px. Use monospace only for tags of three words or fewer; longer labels and sentences use sans-serif sentence case. Gray text must meet 4.5:1 contrast.
+
+**Why:** The user requested app-wide readability improvements after the visual redesign.
+**How to apply:** Preserve these minimums in future UI work. Keep Home to the hero, three-step how-it-works, audience section, and one safety section; put detailed methods and technology explanations on About.
+
 Base Whereabouts aesthetics and feel on the (Not Boring) Camera iOS app and https://a24.raviklaassens.com/. It should be a little avant-garde, but design must not impede function. Consult CSS Design Awards winners or finalists when uncertain how to redesign a feature.
 
 **Why:** The user explicitly requested a complete app-wide aesthetic redesign using these references.

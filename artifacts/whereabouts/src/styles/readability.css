@@ -1,0 +1,171 @@
+/*
+ * Readability layer. Unlayered and loaded last so it wins over the legacy
+ * [data-app-theme] :where(...) colour bridge and Tailwind utility layers.
+ * Floors: body 16px, main paragraphs 18px, labels and captions 13px.
+ * Monospace is opt-in only through .wa-mono (short tags, three words max).
+ */
+:root,:root[data-app-theme],[data-app-theme] {
+  --app-font-mono: var(--app-font-sans);
+  --quiet: #4a4d47;
+  --muted-foreground: 105 4% 29%;
+}
+[data-app-theme="mono"] { --quiet: #474744; }
+[data-high-contrast="true"] { --quiet: #33352f; }
+.wa-mono { font-family: 'DM Mono', ui-monospace, monospace !important; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+[data-app-font="dyslexic"] .wa-mono { font-family: 'Atkinson Hyperlegible', sans-serif !important; }
+
+/* Sentence case everywhere; tracking only where it helps. */
+[data-app-theme] *, [data-app-theme] *::before, [data-app-theme] *::after { text-transform: none !important; }
+[data-app-theme] :is(.uppercase, [class*="tracking-[."], .tracking-wide, .tracking-wider, .tracking-widest, .wa-eyebrow, .font-data) { letter-spacing: .01em !important; }
+
+/* Size floors. Tailwind text-xs/sm and any leftover tiny arbitrary sizes. */
+html body { font-size: 16px; }
+[data-app-theme] :is(.text-xs, [class~="text-[13px]"], small, .wa-eyebrow) { font-size: max(13px, 0.8125rem) !important; }
+[data-app-theme] .text-sm { font-size: max(16px, 1rem) !important; line-height: 1.55 !important; }
+[data-app-theme] .wa-eyebrow { line-height: 1.5; color: var(--quiet); }
+[data-app-theme] main p:is(.text-base, .leading-7, .leading-8) { font-size: max(18px, 1.125rem) !important; line-height: 1.65 !important; }
+[data-app-theme] ::placeholder { color: #5d6059 !important; opacity: 1; }
+[data-app-theme] svg text { font-size: max(13px, 1em); }
+
+/* Large scores and place names. */
+[data-app-theme] :is([data-testid^="text-confidence"], [data-testid^="text-score"], [data-testid^="text-place"], [data-testid^="text-candidate-name"], [data-testid^="text-best-guess"]) { font-size: max(20px, 1.25rem) !important; line-height: 1.3; }
+[data-app-theme] .wa-result :is(h2, h3) { overflow-wrap: anywhere; }
+
+/* Inverse surfaces keep readable foregrounds. */
+[data-app-theme] :is(.fd-auth-dark, .wa-index-strip, .wa-site-footer, .wa-home-safety) { color: var(--paper); }
+[data-app-theme] :is(.fd-auth-dark, .wa-site-footer, .wa-home-safety) :is(p, span, li, strong, h2, h3, a) { color: var(--paper) !important; }
+
+/* Guide prompts and controls lose their tiny mono styling. */
+.fd-example-card { font-size: 16px !important; line-height: 1.5 !important; padding: 16px !important; }
+.fd-example-card::before { font-size: 13px !important; font-weight: 600; }
+.fd-sheet label[for]:not(#guide-entry-h), .fd-clerk-root label, .wa-field label { font-size: 15px !important; letter-spacing: 0 !important; }
+[data-testid="button-guide-voice"], [data-testid="button-guide-attach"], .fd-speech { font-size: 15px !important; letter-spacing: 0 !important; }
+
+/* Desk selector: description line under each desk name. */
+.physical-dial { height: auto !important; padding-top: 280px; position: relative; }
+.desk-selector-radio { font-size: 15px !important; }
+.desk-selector-legend { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; max-width: 320px; }
+.desk-selector-legend li { display: grid; gap: 2px; padding-left: 12px; border-left: 2px solid var(--line); }
+.desk-selector-legend li[data-active="true"] { border-left-color: var(--fd-red, #b6382e); }
+.desk-selector-legend strong { font-size: 16px; font-weight: 600; color: var(--ink); }
+.desk-selector-legend span { font-size: 15px; line-height: 1.45; color: var(--quiet); }
+
+/* Loupe zoom sits in normal flow below the specimen, never over it. */
+.wa-zoom-control.wa-zoom-inflow { position: static !important; display: flex; justify-content: flex-end; margin: 14px 48px 0; padding: 0 !important; background: transparent; }
+@media (max-width: 767px) { .wa-zoom-control.wa-zoom-inflow { margin: 12px 22px 0; justify-content: flex-start; } }
+.wa-optical-disclaimer { font-size: 15px !important; line-height: 1.6 !important; }
+.wa-bench-heading, .wa-optical-ruler, .wa-instrument-instructions, .wa-instrument-header, .wa-instrument-info p { font-size: 14px !important; }
+.wa-instrument-instructions > span { white-space: normal; }
+
+/* ---------- Public site chrome ---------- */
+.wa-site { background: var(--paper); color: var(--ink); }
+.wa-site-header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 1440px; margin: 0 auto; padding: 14px 48px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.wa-site-nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.wa-site-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; font-size: 17px !important; font-weight: 500; color: var(--ink) !important; text-decoration: none !important; }
+.wa-site-nav a::after { display: none; }
+.wa-site-nav a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--fd-red, #b6382e); }
+[data-app-theme] .wa-site-nav a.wa-site-signin { background: var(--ink) !important; color: var(--paper) !important; margin-left: 8px; font-weight: 600; }
+.wa-site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 28px 48px; background: var(--ink) !important; }
+.wa-site-footer p { font-size: 16px; margin: 0; }
+.wa-site-footer .wa-brand, .wa-site-footer .wa-brand span { color: var(--paper) !important; }
+.wa-site-footer .wa-brand-icon { background: var(--paper) !important; color: var(--ink) !important; }
+.wa-site-footer-links { display: flex; gap: 18px; }
+.wa-site-footer-links a { min-height: 44px; display: inline-flex; align-items: center; font-size: 16px !important; }
+
+.wa-home-tag { display: inline-block; font-size: 14px !important; color: var(--fd-red, #b6382e) !important; border: 1px solid currentColor; padding: 4px 10px; }
+.wa-home-hero { max-width: 1440px; margin: 0 auto; padding: 56px 48px 64px; display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.1fr); gap: 40px 48px; align-items: center; }
+.wa-home-hero h1 { margin-top: 22px; font-family: var(--app-font-serif); font-weight: 600; font-size: clamp(52px, 7vw, 104px); line-height: .96; letter-spacing: -.065em; }
+.wa-home-hero h1 span { color: var(--fd-red, #b6382e); }
+.wa-home-hero-copy > p { margin-top: 26px; max-width: 520px; font-size: 20px !important; line-height: 1.6; color: var(--quiet); }
+.wa-home-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+[data-app-theme] a.wa-home-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 96px; padding: 20px 28px; font-family: var(--app-font-serif); font-size: clamp(20px, 2.2vw, 28px) !important; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; text-decoration: none !important; background: var(--ink) !important; color: var(--paper) !important; border: 2px solid var(--ink); transition: transform .2s; }
+[data-app-theme] a.wa-home-action.wa-home-action-alt { background: var(--fd-red, #b6382e) !important; border-color: var(--fd-red, #b6382e); }
+[data-app-theme] a.wa-home-action::after { display: none; }
+[data-app-theme] a.wa-home-action:hover { transform: translateY(-3px); }
+[data-app-theme] a.wa-home-action span, [data-app-theme] a.wa-home-action svg { color: var(--paper) !important; }
+.wa-home-emergency { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 0; font-size: 18px !important; font-weight: 600; color: var(--ink); }
+.wa-home-section { max-width: 1248px; margin: 0 auto; padding: 80px 48px; border-top: 1px solid var(--line); }
+.wa-home-section h2, .wa-home-safety h2, .wa-about-intro h1 { font-family: var(--app-font-serif); font-weight: 600; font-size: clamp(38px, 5vw, 64px); line-height: 1.02; letter-spacing: -.055em; }
+.wa-home-steps { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; counter-reset: none; }
+.wa-home-steps li { position: relative; padding: 28px 28px 28px 0; border-top: 2px solid var(--ink); }
+.wa-home-steps li + li { padding-left: 28px; border-left: 1px solid var(--line); }
+.wa-home-step-number { display: block; font-family: var(--app-font-serif); font-size: 56px; font-weight: 600; line-height: 1; color: var(--fd-red, #b6382e); margin-bottom: 14px; }
+.wa-home-steps svg { color: var(--ink); }
+.wa-home-steps h3, .wa-home-audiences h3, .wa-about-workspaces h2 { margin-top: 14px; font-family: var(--app-font-serif); font-size: 28px; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; }
+.wa-home-steps p, .wa-home-audiences p, .wa-about-workspaces p { margin-top: 10px; font-size: 18px !important; line-height: 1.6; color: var(--quiet); }
+.wa-home-audiences { margin-top: 36px; display: grid; }
+.wa-home-audiences article { display: grid; grid-template-columns: minmax(200px, .8fr) 1.4fr; gap: 12px 40px; padding: 26px 0; border-top: 1px solid var(--line); }
+.wa-home-audiences article h3 { margin: 0; }
+.wa-home-audiences article p { margin: 0; }
+.wa-home-safety { display: grid; grid-template-columns: .8fr 1.2fr; gap: 28px 56px; padding: 80px 48px; background: var(--ink) !important; }
+.wa-home-safety > div p { margin-top: 18px; font-size: 18px !important; line-height: 1.6; }
+.wa-home-safety ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.wa-home-safety li { padding: 18px 0; border-top: 1px solid rgb(244 244 242 / .3); font-size: 18px !important; line-height: 1.6; }
+.wa-home-safety li strong { display: block; font-size: 20px; margin-bottom: 4px; }
+[data-app-theme] a.wa-home-safety-link { grid-column: 2; justify-self: start; min-height: 44px; display: inline-flex; align-items: center; font-size: 18px !important; color: var(--paper) !important; text-decoration-color: var(--paper) !important; }
+
+.wa-about-intro { max-width: 1248px; margin: 0 auto; padding: 64px 48px 72px; }
+.wa-about-intro h1 { margin-top: 20px; }
+.wa-about-intro > p { margin-top: 22px; max-width: 760px; font-size: 20px !important; line-height: 1.6; color: var(--quiet); }
+.wa-about-workspaces { margin-top: 40px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+.wa-about-workspaces article { border-top: 2px solid var(--ink); padding-top: 22px; }
+.wa-about .wa-section-heading > p, .wa-about :is(.wa-methods, .wa-pipeline, .wa-stack) p { font-size: max(18px, 1.125rem) !important; line-height: 1.65; }
+
+@media (max-width: 900px) {
+  .wa-home-hero { grid-template-columns: 1fr; }
+  .wa-home-steps { grid-template-columns: 1fr; }
+  .wa-home-steps li, .wa-home-steps li + li { padding: 24px 0; border-left: 0; }
+  .wa-home-safety { grid-template-columns: 1fr; }
+  [data-app-theme] a.wa-home-safety-link { grid-column: 1; }
+}
+@media (max-width: 767px) {
+  .wa-site-header { padding: 10px 18px; }
+  .wa-site-nav a { padding: 0 10px; font-size: 16px !important; }
+  .wa-site-footer { padding: 24px 18px; }
+  .wa-home-hero { padding: 32px 18px 48px; gap: 32px; }
+  .wa-home-actions { grid-template-columns: 1fr; }
+  [data-app-theme] a.wa-home-action { min-height: 84px; padding: 18px 22px; font-size: 22px !important; }
+  .wa-home-section, .wa-home-safety, .wa-about-intro { padding: 56px 18px; }
+  .wa-home-audiences article { grid-template-columns: 1fr; }
+  .wa-about-workspaces { grid-template-columns: 1fr; }
+}
+
+/* ---------- Browser-pass fixes ---------- */
+/* Home: copy and both CTAs first, viewer below at full width. */
+.wa-home-hero { grid-template-columns: minmax(0, 1fr) !important; align-items: start !important; padding-top: 40px; }
+.wa-home-hero-copy { order: 1; max-width: 980px; }
+.wa-home-actions { order: 2; max-width: 1100px; }
+.wa-home-hero-bench { order: 3; }
+.wa-home-hero-copy > p { max-width: 760px; }
+.wa-home-hero h1 { font-size: clamp(48px, 6vw, 92px); }
+
+/* Sentences readable; short captions may stay at 13px. */
+.wa-optical-disclaimer { font-size: 18px !important; line-height: 1.6 !important; }
+.wa-instrument-instructions, .wa-instrument-instructions p, .wa-instrument-instructions span { font-size: 16px !important; line-height: 1.6 !important; }
+
+/* Specimen tag wraps inside the card instead of clipping. */
+.wa-specimen-tag { max-width: calc(100% - 24px); }
+.wa-specimen-tag :is(span, small) { white-space: normal !important; overflow-wrap: anywhere; text-transform: none !important; }
+.wa-specimen-tag small { font-size: 13px !important; line-height: 1.35; }
+.wa-tool-label, .wa-tool-hint { text-transform: none !important; white-space: normal; }
+.physical-voice-caption { white-space: normal !important; height: auto !important; width: auto !important; max-width: 260px; font-size: 14px !important; line-height: 1.4 !important; }
+
+/* Guide examples beat the text-[13px] utility. */
+[data-app-theme] .fd-example-grid > button.fd-example-card { font-size: 16px !important; line-height: 1.5 !important; }
+@media (max-width: 767px) { [data-app-theme] .fd-example-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+
+/* Public start header: brand and sample link wrap with a gap. */
+.fd-start header { flex-wrap: wrap; gap: 12px 20px; }
+
+/* Map attribution and pins never under 13px. */
+[data-app-theme] .leaflet-container, [data-app-theme] .leaflet-control-attribution, [data-app-theme] .leaflet-control-attribution a { font-size: 13px !important; }
+.rp-pin-static > span { font-size: 13px !important; }
+
+/* New investigation: every search type explained in plain words. */
+.fd-desk-descriptions { list-style: none; margin: 20px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.fd-desk-descriptions li { display: grid; gap: 4px; padding: 12px 0 0; border-top: 2px solid var(--line); }
+.fd-desk-descriptions li[data-active="true"] { border-top-color: var(--fd-red, #b6382e); }
+.fd-desk-descriptions strong { font-size: 17px; color: var(--ink); }
+.fd-desk-descriptions span { font-size: 16px; line-height: 1.45; color: var(--quiet); }
+@media (max-width: 767px) { .fd-desk-descriptions { grid-template-columns: 1fr; } }
+@media (max-width: 767px) { .wa-specimen-tag { width: 150px !important; max-width: 46% !important; padding: 10px 8px 8px !important; line-height: 1.35 !important; } }

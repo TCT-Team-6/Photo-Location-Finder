@@ -6,8 +6,8 @@ export type ConfidenceTier = { key: ConfidenceTierKey; label: string; color: str
 
 export const CONFIDENCE_TIERS: Record<ConfidenceTierKey, ConfidenceTier> = {
   strong: { key: "strong", label: "Strong lead", color: "#2f7550", rgb: [47, 117, 80] },
-  possible: { key: "possible", label: "Possible lead", color: "#b9621f", rgb: [185, 98, 31] },
-  weak: { key: "weak", label: "Weak lead", color: "#7b817a", rgb: [123, 129, 122] },
+  possible: { key: "possible", label: "Possible lead", color: "#9a4f14", rgb: [154, 79, 20] },
+  weak: { key: "weak", label: "Weak lead", color: "#5f645e", rgb: [95, 100, 94] },
   unavailable: { key: "unavailable", label: "Confidence not supplied", color: "#a8aca5", rgb: [168, 172, 165] },
 };
 

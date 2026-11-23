@@ -49,7 +49,7 @@ export function ReportOperationProvider({ children }: { children: ReactNode }) {
 export function ReportChip() {
   const op = useReportOperation(), { phase } = op.state;
   if (phase === 'idle') return null;
-  const label = phase === 'completed' ? 'FILED · OPEN REPORT' : phase === 'error' ? 'REPORT NEEDS ATTENTION' : phase === 'stopped' ? 'QUEUE STOPPED' : `ANALYZING · ${phase === 'uploading' ? '01' : '02'}/05`;
+  const label = phase === 'completed' ? 'FILED · OPEN REPORT' : phase === 'error' ? 'Report needs attention' : phase === 'stopped' ? 'Queue stopped' : `ANALYZING · ${phase === 'uploading' ? '01' : '02'}/05`;
   return <button type="button" className="report-chip" data-testid="button-report-progress" onClick={op.show}>{label}</button>;
 }
 function ReportSheet({ onRetry }: { onRetry: () => void }) {
@@ -92,19 +92,19 @@ function ReportSheet({ onRetry }: { onRetry: () => void }) {
   const themeRoot = document.querySelector('[data-app-theme]');
   return createPortal(<div className="physical-progress-backdrop" data-app-theme={themeRoot?.getAttribute('data-app-theme') ?? 'rescue'} data-high-contrast={themeRoot?.getAttribute('data-high-contrast') ?? 'false'}>
     <div ref={root} role="dialog" aria-modal="true" aria-labelledby="report-title" className="physical-progress" data-testid="panel-report-sheet">
-      <header><div><p className="font-data text-[10px] tracking-[.14em]">FIELD REPORT / {state.phase === 'completed' ? 'FILED' : state.phase === 'error' ? 'NEEDS ATTENTION' : state.phase === 'stopped' ? 'QUEUE STOPPED' : 'IN PROGRESS'}</p><h2 id="report-title">{state.title}</h2></div><time aria-label={`${elapsed} seconds elapsed`}>{String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}</time></header>
+      <header><div><p className="font-data text-[13px] tracking-[.14em]">FIELD REPORT / {state.phase === 'completed' ? 'FILED' : state.phase === 'error' ? 'Needs attention' : state.phase === 'stopped' ? 'Queue stopped' : 'In progress'}</p><h2 id="report-title">{state.title}</h2></div><time aria-label={`${elapsed} seconds elapsed`}>{String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}</time></header>
       <div className="report-grid">
-        <div><div className="report-print" key={src}>{src ? state.file?.type.startsWith('video/') ? <video src={src} controls preload="metadata" aria-label="Selected video" /> : <img src={src} alt="Current selected photograph" /> : <p className="font-data text-xs">Selected media is retained in your intake.</p>}
+        <div><div className="report-print" key={src}>{src ? state.file?.type.startsWith('video/') ? <video src={src} controls preload="metadata" aria-label="Selected video" /> : <img src={src} alt="Current selected photograph" /> : <p className="font-data text-[13px]">Selected media is retained in your intake.</p>}
           {running && src && !state.file?.type.startsWith('video/') && <DecorativeScan src={src} />}
           {state.phase === 'completed' && <div className="report-stamp">FILED</div>}
         </div><p className="report-disclosure">INSTRUMENT SCAN IS DECORATION ONLY. It does not show live analysis.</p></div>
-        <div><p className="font-data text-[10px]">PHOTO {state.index} OF {state.total}</p>
+        <div><p className="font-data text-[13px]">PHOTO {state.index} OF {state.total}</p>
           <ol ref={list} tabIndex={-1} className="report-stage-list" aria-label="Real pipeline progress">
-            {['UPLOAD', 'READ SCENE', 'COMPARE CLUES', 'RANK FINDINGS', 'SAVE REPORT'].map((label, i) => <li key={label} data-state={state.phase === 'error' && i === errorIndex ? 'error' : stages[i]} aria-current={stages[i] === 'running' ? 'step' : undefined}><span className="report-stage-symbol">{state.phase === 'error' && i === errorIndex ? '×' : stages[i] === 'done' ? <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path className="report-drawn-check" d="m3 10 4 4L17 4" fill="none" stroke="currentColor" strokeWidth="1.8" pathLength="1"/></svg> : stages[i] === 'running' ? '●' : String(i + 1).padStart(2, '0')}</span>{label}</li>)}
+            {['UPLOAD', 'READ SCENE', 'Compare clues', 'Rank findings', 'Save report'].map((label, i) => <li key={label} data-state={state.phase === 'error' && i === errorIndex ? 'error' : stages[i]} aria-current={stages[i] === 'running' ? 'step' : undefined}><span className="report-stage-symbol">{state.phase === 'error' && i === errorIndex ? '×' : stages[i] === 'done' ? <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path className="report-drawn-check" d="m3 10 4 4L17 4" fill="none" stroke="currentColor" strokeWidth="1.8" pathLength="1"/></svg> : stages[i] === 'running' ? '●' : String(i + 1).padStart(2, '0')}</span>{label}</li>)}
           </ol>
           <p className="report-disclosure">ESTIMATED — NOT LIVE PROGRESS<br />Only upload, analysis, and completion events are available. Internal compare, rank, and save stages are not reported.</p>
           <p aria-live="polite" className="report-disclosure" data-testid="status-report-event">{state.events.at(-1)?.message}</p>
-          {(state.phase === 'error' || state.phase === 'stopped') && <p role="alert" className="mt-4 text-xs leading-6">{state.error || 'Browser transfer and unstarted queue work stopped.'} Your files and form details remain selected. Already accepted server analysis cannot be stopped; saved records remain in your library.</p>}
+          {(state.phase === 'error' || state.phase === 'stopped') && <p role="alert" className="mt-4 text-[13px] leading-6">{state.error || 'Browser transfer and unstarted queue work stopped.'} Your files and form details remain selected. Already accepted server analysis cannot be stopped; saved records remain in your library.</p>}
         </div>
       </div>
       <div className="report-actions">

@@ -4,7 +4,7 @@ import type { PersonFactors } from './urgency';
 export const SAMPLE_LABEL = 'Sample case, fictional data';
 export const CALL_911_NOW = 'Please call 911 now.';
 export const MAX_REQUIRED_QUESTIONS = 3;
-export const REGULAR_FORM_LINK = 'Use the regular form instead.';
+export const REGULAR_FORM_LINK = 'Sign in to use the form';
 
 export const optionalQuestions = [
   { id: 'clothing', prompt: 'What were they wearing when last seen?', prefix: 'Clothing' },

@@ -44,11 +44,10 @@ import { readPhotoTakenDate } from '@/lib/photo-date';
 import { OriginalMediaIntake } from '@/components/original-media-intake';
 import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from '@/components/video-investigation';
 import { DemoExperience } from '@/components/demo-experience';
-import { PhotoInstrument } from '@/components/photo-instrument';
+import { LandingPage } from '@/components/landing-page';
+import AboutPage from '@/pages/about-page';
 import { SiteCursor } from '@/components/site-cursor';
 import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray } from '@/components/field-desk';
-import { useLandingMotion } from '@/hooks/use-landing-motion';
-import { FiveStagePipeline, GeolocationMethods, TechnologyNotes } from '@/components/field-notes';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
 import CasesPage from '@/features/cases/cases-page';
 import NewCasePage from '@/features/cases/new-case-page';
@@ -81,6 +80,7 @@ import {ReportChip,ReportOperationProvider,useReportOperation} from '@/component
 import {deskMatchesFilter} from '@/lib/desk-filters';
 import {constrainLibrarySearch,LIBRARY_SEARCH_MAX_LENGTH} from '@/lib/library-search';
 import './styles/physical-desk.css';
+import './styles/readability.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
@@ -219,115 +219,6 @@ function HomeRedirect() {
   return <><Show when="signed-in"><Redirect to="/user-portal" /></Show><Show when="signed-out"><LandingPage /></Show></>;
 }
 
-function LandingPage() {
-  const landingRef = useRef<HTMLElement>(null);
-  useLandingMotion(landingRef);
-  return (
-    <main ref={landingRef} className="wa-landing min-h-[100dvh] overflow-hidden">
-      <header className="wa-landing-header relative z-10 mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 md:px-12">
-        <Mark />
-        <nav className="flex items-center gap-3" aria-label="Main navigation">
-          <a href="#methods" className="wa-home-section-link px-3 text-xs font-semibold" data-testid="link-home-methods">The method</a>
-          <a href="#pipeline" className="wa-home-section-link px-3 text-xs font-semibold" data-testid="link-home-pipeline">The pipeline</a>
-          <Link href="/sign-in" data-testid="link-sign-in" className="hidden rounded-full px-5 py-3 text-sm font-semibold text-[#385e51] transition hover:bg-[#e8e4d8] sm:inline-flex">Sign in</Link>
-          <ActionLink href="/start" testId="link-get-started">Open workspace <ArrowRight size={16} /></ActionLink>
-        </nav>
-      </header>
-      <section className="wa-hero">
-        <div className="wa-hero-title fade-up relative z-10">
-          <p className="wa-eyebrow mb-7">Visual geolocation / Private evidence organization</p>
-          <h1>Look closer.<br /><span>Find context.</span></h1>
-        </div>
-        <div className="wa-hero-intro fade-up">
-          <p className="wa-hero-description">Read the sign. Trace the ridgeline. Question the first guess. A private instrument for turning image clues into reviewable location leads—and keeping authorized missing-person evidence organized in a separate workspace.</p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <ActionLink href="/start" testId="link-start-search">Open your workspace <ArrowRight size={16} /></ActionLink>
-            <ActionLink href="/demo" secondary testId="link-see-sample-case">Explore the samples</ActionLink>
-          </div>
-          <div className="wa-hero-footer">
-            <ShieldCheck size={18} className="mt-0.5 shrink-0" />
-            <p>Private by default. Estimates, never proof.<br />If someone is in danger, contact emergency services first.</p>
-          </div>
-        </div>
-        <div className="wa-hero-bench fade-up-delay min-w-0"><PhotoInstrument /></div>
-      </section>
-      <div className="wa-index-strip"><span>Observe → Compare → Review</span><span>Scene investigation, not person tracking</span><span>Estimates ≠ evidence of certainty</span></div>
-      <GeolocationMethods />
-      <FiveStagePipeline />
-      <section className="wa-workflows">
-        <div><p className="wa-eyebrow">Two workspaces. Clear boundaries.</p><h2>The right tool<br />for the next step.</h2></div>
-        <div>
-          <div className="wa-workflow"><span className="wa-eyebrow">01</span><div><h3>Explore a photograph.</h3><p>For image investigations, personal travel photos, and journalism. Inspect visual clues and possible locations. A suggested place is a lead to review, not a confirmed location.</p></div><Crosshair size={22} /></div>
-          <div className="wa-workflow"><span className="wa-eyebrow">02</span><div><h3>Organize a private case.</h3><p>Keep authorized missing-person evidence, links, and tips together. The AI Guide helps organize reported facts for responders. Private case evidence is not automatically sent for location analysis.</p></div><ShieldCheck size={22} /></div>
-        </div>
-      </section>
-      <section className="wa-guide-section" id="tell-us">
-        <div className="mx-auto max-w-[860px]"><GuideEntry signedIn={false} /></div>
-      </section>
-      <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
-        <div className="mx-auto max-w-[1180px]">
-          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Who it helps</p>
-          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Built for the people who search first.</h2>
-          <div className="wa-audiences mt-10">
-            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
-              <h3 className="font-editorial text-2xl">Caregivers &amp; families</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">Keep the timeline, authorized evidence, care needs, and reported facts together for responders. A recent photo belongs in the private case record; it is not used to face-match or automatically locate a person.</p>
-            </article>
-            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
-              <h3 className="font-editorial text-2xl">Search &amp; rescue volunteers</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">Keep authorized photos, links and tips in one private case. Review each lead yourself and prepare the facts for the people coordinating the response.</p>
-            </article>
-            <article className="rounded-2xl border border-[#d6cfbf] bg-[#f7f3e9]/85 p-6">
-              <h3 className="font-editorial text-2xl">Hikers &amp; outdoor groups</h3>
-              <p className="mt-4 text-sm leading-6 text-[#65766c]">Compare terrain, signs and landmarks in a photograph with possible places. Treat every suggestion as a starting point to check, never a verified trailhead.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-      <TechnologyNotes />
-      <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
-        <div className="mx-auto max-w-[1180px]">
-          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#9d6c4d]">Keep the person in mind</p>
-          <h2 className="mt-5 max-w-2xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Context matters.<br />Especially in a hurry.</h2>
-          <p className="mt-6 max-w-[760px] text-base leading-7 text-[#65766c]">For a person with dementia, a young child, or an injured hiker, time outside can bring serious risks: exposure, dehydration, darkness, and missed medication. Keep those concerns visible for responders. Whereabouts is not medical advice or a substitute for professional assessment.</p>
-          <div className="wa-context-list mt-9">
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Exposure risk</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Cold, heat, water and darkness are concerns to raise with responders.</p></article>
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Urgency level</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Any displayed risk level is an estimate, not a professional assessment.</p></article>
-            <article className="border-t border-[#c9c2b3] pt-5"><h3 className="font-editorial text-2xl">Next steps</h3><p className="mt-3 text-sm leading-6 text-[#65766c]">Contact emergency services first. Review your facts before sharing a summary.</p></article>
-          </div>
-        </div>
-      </section>
-      <section className="bg-[#263d36] px-6 py-20 text-[#f4f0e6] md:px-12 md:py-24">
-        <div className="mx-auto max-w-[1180px]">
-          <p className="font-data text-[10px] uppercase tracking-[.2em] text-[#d78b5a]">Safety first</p>
-          <h2 className="mt-5 max-w-3xl font-editorial text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">Investigate the scene.<br />Respect the person.</h2>
-          <p className="mt-6 max-w-2xl leading-7 text-[#c1cbbd]">Image analysis can suggest possible places, not locate a person from their face. Private cases support responders by organizing authorized evidence and reported facts.</p>
-          <div className="mt-9 grid gap-6 md:grid-cols-2">
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Emergency first.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">If someone is in danger, contact local emergency services before anything else. Whereabouts supports the people organizing a response; it does not replace them.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Authorization matters.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Use only images and evidence you are authorized to provide. The AI Guide organizes reported facts; private cases are never automatically analyzed, face matched, crawled, or located.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Private, with clear boundaries.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Photos and reports are private account records, not public posts. Choosing image analysis sends the selected media to the relevant external provider. Your name, notes, and date remain record context, not locator input.</p></article>
-            <article className="border-t border-[#597064] pt-5"><h3 className="font-editorial text-2xl">Estimates, not certainty.</h3><p className="mt-3 text-sm leading-6 text-[#bdc9bd]">Possible locations need independent review. Any displayed urgency estimate is not medical advice or a professional assessment. Missing information stays unknown.</p></article>
-          </div>
-        </div>
-      </section>
-      <section className="paper-grid px-6 py-20 md:px-12 md:py-24">
-        <div className="mx-auto flex max-w-[1180px] flex-col items-start justify-between gap-9 rounded-[28px] border border-[#d6cfbf] bg-[#f7f3e9]/85 p-8 md:flex-row md:items-center md:p-12">
-          <div className="max-w-[650px]">
-            <h2 className="font-editorial text-4xl leading-tight tracking-[-.04em] md:text-5xl">Start with an observation.<br />Leave with a next step.</h2>
-            <p className="mt-4 max-w-[560px] leading-7 text-[#65766c]">Explore a scene, compare the possibilities, or bring a private case into order. Keep the unknowns visible. Let the evidence—not the first guess—lead.</p>
-          </div>
-          <ActionLink href="/start" testId="link-closing-start-search">Choose your workspace <ArrowRight size={16} /></ActionLink>
-        </div>
-      </section>
-      <footer className="flex flex-col items-center justify-between gap-4 bg-[#263d36] px-6 py-6 text-[#c1cbbd] md:flex-row md:px-12">
-        <Mark inverse />
-        <p className="font-data text-[9px] uppercase tracking-[.16em]">Whereabouts · observe carefully / review independently · private by default</p>
-        <Link href="/sign-in" data-testid="link-footer-sign-in" className="text-xs text-[#e4e8dc] hover:text-[#d78b5a]">Sign in</Link>
-      </footer>
-    </main>
-  );
-}
-
 function SignInPage() {
   return <div className="fd-auth clerk-frame min-h-[100dvh] px-4 py-7">
     <div className="mx-auto flex max-w-6xl items-center justify-between"><Mark /><Link href="/" className="text-sm text-[#62756c] hover:text-[#385e51]" data-testid="link-auth-back">Back to Whereabouts</Link></div>
@@ -335,12 +226,12 @@ function SignInPage() {
     <div className="fd-auth-layout mx-auto mt-10 max-w-6xl overflow-hidden md:grid md:grid-cols-[.92fr_1.08fr]">
       <div className="fd-auth-dark relative hidden min-h-[690px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
         <pre className="fd-auth-binary" aria-hidden="true">{'01001001 00101110 01000110 01001001 01000101 01001100 01000100\n'.repeat(100)}</pre>
-        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em]">The private field notebook</p><DeskHeadline className="mt-7 text-6xl">Pick up the trail.</DeskHeadline><p className="mt-6 max-w-sm">Your saved photographs, observations, and likely places are waiting where you left them.</p></div>
-        <div className="relative border-t border-[#5c7465] pt-5 font-data text-[9px] uppercase tracking-[.17em] text-[#a8b8a9]">INDEX 001 — personal archive</div>
+        <div className="relative"><p className="font-data text-[13px] uppercase tracking-[.2em]">The private field notebook</p><DeskHeadline className="mt-7 text-6xl">Pick up the trail.</DeskHeadline><p className="mt-6 max-w-sm">Your saved photographs, observations, and likely places are waiting where you left them.</p></div>
+        <div className="relative border-t border-[#5c7465] pt-5 font-data text-[13px] uppercase tracking-[.17em] text-[#a8b8a9]">INDEX 001 — personal archive</div>
       </div>
       <div className="flex min-h-[690px] items-center justify-center px-4 py-12 sm:px-10"><SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} /></div>
     </div>
-    <p className="mt-6 text-center font-data text-[9px] uppercase tracking-[.14em] text-[#849087]">Private by default · your photographs stay yours</p>
+    <p className="mt-6 text-center font-data text-[13px] uppercase tracking-[.14em] text-[#849087]">Private by default · your photographs stay yours</p>
   </div>;
 }
 
@@ -351,14 +242,14 @@ function SignUpPage() {
     <div className="fd-auth-layout mx-auto mt-10 max-w-6xl overflow-hidden md:grid md:grid-cols-[.92fr_1.08fr]">
       <div className="fd-auth-dark relative hidden min-h-[730px] overflow-hidden bg-[#263d36] p-12 text-[#f4f0e6] md:flex md:flex-col md:justify-between">
         <pre className="fd-auth-binary" aria-hidden="true">{'01001001 00101110 01000110 01001001 01000101 01001100 01000100\n'.repeat(100)}</pre>
-        <div className="relative"><p className="font-data text-[10px] uppercase tracking-[.2em]">Open a new notebook</p><DeskHeadline className="mt-7 text-6xl">Start with a somewhere.</DeskHeadline><p className="mt-6 max-w-sm">One image can hold a whole journey. Make a private place for the clues you find along the way.</p></div>
+        <div className="relative"><p className="font-data text-[13px] uppercase tracking-[.2em]">Open a new notebook</p><DeskHeadline className="mt-7 text-6xl">Start with a somewhere.</DeskHeadline><p className="mt-6 max-w-sm">One image can hold a whole journey. Make a private place for the clues you find along the way.</p></div>
         <div className="relative grid grid-cols-3 gap-3">
-          {['Image', 'Clues', 'Places'].map((item, i) => <div key={item} className="border-t border-[#5c7465] pt-3"><span className="font-data text-[9px] text-[#d78b5a]">0{i + 1}</span><p className="mt-2 font-editorial text-lg">{item}</p></div>)}
+          {['Image', 'Clues', 'Places'].map((item, i) => <div key={item} className="border-t border-[#5c7465] pt-3"><span className="font-data text-[13px] text-[#d78b5a]">0{i + 1}</span><p className="mt-2 font-editorial text-lg">{item}</p></div>)}
         </div>
       </div>
       <div className="flex min-h-[730px] items-center justify-center px-4 py-12 sm:px-10"><SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} /></div>
     </div>
-    <p className="mt-6 text-center font-data text-[9px] uppercase tracking-[.14em] text-[#849087]">A private archive for the places that stay with you</p>
+    <p className="mt-6 text-center font-data text-[13px] uppercase tracking-[.14em] text-[#849087]">A private archive for the places that stay with you</p>
   </div>;
 }
 
@@ -403,6 +294,7 @@ function ClerkProviderWithRoutes() {
     <PersistentInvestigation />
     <Switch>
       <Route path="/" component={HomeRedirect} />
+      <Route path="/about" component={AboutPage} />
       <Route path="/demo" component={DemoRoute} />
       <Route path="/start" component={StartSearchRoute} />
       <Route path="/guide" component={GuideStartRoute} />
@@ -482,21 +374,21 @@ function AppShell({ children }: { children: ReactNode }) {
       <Mark inverse />
       <p className="wa-eyebrow mb-3 mt-10 px-3">Your workspace</p>
       <FieldIndex items={navLinks.map(item=>({...item,testId:`nav-${item.label.toLowerCase().replaceAll(' ','-')}`}))} location={location} label="Main navigation"/>
-      <p className="mb-2 mt-7 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
+      <p className="mb-2 mt-7 px-3 font-data text-[13px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
       <FieldIndex items={deskLinks.map(item=>({...item,testId:`nav-desk-${item.id}`}))} location={location} start={6} label="Image investigation desks"/>
       <div className="mt-5"><FieldIndex items={[{href:'/settings',label:'Settings',testId:'nav-settings'}]} location={location} start={9}/></div>
       <div className="mt-auto">
         <details className="fd-id-tag relative mb-4">
           <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-white/5" data-testid="button-account-profile">
             <OperatorAvatar accountId={user?.id} imageUrl={user?.hasImage?user.imageUrl:undefined} name={firstName||initials}/>
-            <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[9px] uppercase tracking-[.1em]">OPERATOR 001</span></span>
+            <span className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{firstName}</span><span className="font-data text-[13px] uppercase tracking-[.1em]">OPERATOR 001</span></span>
           </summary>
           <form className="absolute bottom-14 left-0 z-30 w-[220px] rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 text-[#263d36] shadow-xl" onSubmit={async (event) => { event.preventDefault(); try { await user?.update({ unsafeMetadata: { ...user.unsafeMetadata, whereaboutsDisplayName: profileName.trim() } }); setProfileStatus('Profile saved.'); } catch { setProfileStatus('Could not save your profile.'); } }}>
-            <label className="block text-[11px] font-semibold" htmlFor="in-app-username">In-app username</label>
+            <label className="block text-[13px] font-semibold" htmlFor="in-app-username">In-app username</label>
             <input id="in-app-username" value={profileName} onChange={(event) => setProfileName(event.target.value)} maxLength={40} className="mt-1 h-9 w-full rounded-lg border border-[#d8d1c2] bg-white px-2 text-sm" />
-            <label className="mt-3 block cursor-pointer rounded-lg border border-[#d8d1c2] px-3 py-2 text-center text-xs hover:bg-[#f0ece2]">Change profile picture<input type="file" accept="image/*" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; try { await user?.setProfileImage({ file }); setProfileStatus('Profile picture updated.'); } catch { setProfileStatus('Could not update the profile picture.'); } }} /></label>
-            <button type="submit" className="mt-2 w-full rounded-lg bg-[#385e51] py-2 text-xs font-semibold text-white">Save username</button>
-            {profileStatus && <p role="status" className="mt-2 text-[10px]">{profileStatus}</p>}
+            <label className="mt-3 block cursor-pointer rounded-lg border border-[#d8d1c2] px-3 py-2 text-center text-[13px] hover:bg-[#f0ece2]">Change profile picture<input type="file" accept="image/*" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; try { await user?.setProfileImage({ file }); setProfileStatus('Profile picture updated.'); } catch { setProfileStatus('Could not update the profile picture.'); } }} /></label>
+            <button type="submit" className="mt-2 w-full rounded-lg bg-[#385e51] py-2 text-[13px] font-semibold text-white">Save username</button>
+            {profileStatus && <p role="status" className="mt-2 text-[13px]">{profileStatus}</p>}
           </form>
         </details>
         <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-sign-out" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#c1cdbf] transition hover:bg-white/5 hover:text-white"><LogOut size={16} />Sign out</button>
@@ -505,15 +397,15 @@ function AppShell({ children }: { children: ReactNode }) {
     <div className="wa-workspace min-w-0 flex-1">
       <header className="wa-topbar sticky top-0 z-20 flex items-center justify-between border-b border-[#d8d1c2] px-5 md:px-8">
         <div className="flex items-center gap-3 md:hidden"><button type="button" onClick={() => setMobileNav(!mobileNav)} aria-label="Toggle navigation" aria-expanded={mobileNav} data-testid="button-toggle-navigation" className="grid h-11 w-11 place-items-center rounded-full border border-[#d8d1c2]"><Menu size={18} /></button><Mark /></div>
-        <div className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {location==='/settings'?'SETTINGS':navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
-        <ReportChip/><span className="wa-topbar-label hidden items-center gap-2 font-data text-[10px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
+        <div className="wa-topbar-label hidden items-center gap-2 font-data text-[13px] uppercase md:flex"><Crosshair size={14} />WHEREABOUTS <span aria-hidden="true">/</span> {location==='/settings'?'SETTINGS':navLinks.find((item) => location === item.href)?.label ?? deskLinks.find((item) => location === item.href)?.label ?? 'Case workspace'}</div>
+        <ReportChip/><span className="wa-topbar-label hidden items-center gap-2 font-data text-[13px] uppercase sm:inline-flex"><ShieldCheck size={13} />Private workspace</span>
       </header>
       <DeskRuler/>
       {mobileNav && <div className="fixed inset-0 z-30 bg-[#182b25]/35 md:hidden" onClick={() => setMobileNav(false)} onKeyDown={(event) => { if (event.key === 'Escape') setMobileNav(false); }}>
         <nav aria-label="Mobile navigation" className="fd-index-mobile max-h-[100dvh] w-[min(84vw,320px)] overflow-y-auto p-5" onClick={(event) => event.stopPropagation()}>
           <div className="mb-9 flex items-center justify-between"><Mark inverse /><button type="button" aria-label="Close navigation" onClick={() => setMobileNav(false)} data-testid="button-close-navigation" className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X size={17} /></button></div>
           <FieldIndex items={navLinks.map(item=>({...item,testId:`mobile-nav-${item.label.toLowerCase().replaceAll(' ','-')}`}))} location={location} onNavigate={()=>setMobileNav(false)}/>
-          <p className="mb-2 mt-6 px-3 font-data text-[9px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
+          <p className="mb-2 mt-6 px-3 font-data text-[13px] uppercase tracking-[.2em] text-[#9aaf9d]">Field desks</p>
           <FieldIndex items={deskLinks.map(item=>({...item,testId:`mobile-nav-desk-${item.id}`}))} location={location} start={6} onNavigate={()=>setMobileNav(false)}/>
           <FieldIndex items={[{href:'/settings',label:'Settings',testId:'mobile-nav-settings'}]} location={location} start={9} onNavigate={()=>setMobileNav(false)}/>
           <button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="mobile-sign-out" className="mt-7 flex items-center gap-3 border-t border-[#52695d] px-3 pt-5 text-sm text-[#d0d9ce]"><LogOut size={16} />Sign out</button>
@@ -524,7 +416,7 @@ function AppShell({ children }: { children: ReactNode }) {
   </div>;
 }
 
-function PageEyebrow({ children }: { children: ReactNode }) { return <p className="font-data text-[9px] uppercase tracking-[.2em] text-[#9c6d4e]">{children}</p>; }
+function PageEyebrow({ children }: { children: ReactNode }) { return <p className="font-data text-[13px] uppercase tracking-[.2em] text-[#9c6d4e]">{children}</p>; }
 
 function SkeletonBlock({ className = '' }: { className?: string }) { return <div className={`skeleton rounded-xl ${className}`} aria-hidden="true" />; }
 
@@ -532,7 +424,7 @@ function QueryError({ retry, text = 'We could not reach your field notes.',error
   return <div role="alert" className="instrument-error rounded-2xl border p-7" data-testid="status-query-error">
     <span className="instrument-error-label">ERROR / 01</span><p className="font-editorial text-2xl">{text}</p><p className="mt-2 text-sm">Your work is safe. Give it another try.</p>
     {Boolean(error)&&<SafeRequestError error={error}/>}
-    <button type="button" onClick={retry} data-testid="button-retry" className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#b98d6d] px-4 py-2 text-xs font-semibold"><LoaderCircle size={14} />Try again</button>
+    <button type="button" onClick={retry} data-testid="button-retry" className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#b98d6d] px-4 py-2 text-[13px] font-semibold"><LoaderCircle size={14} />Try again</button>
   </div>;
 }
 
@@ -557,11 +449,11 @@ function DashboardPage() {
       </div>}
     <DeskMargin/><div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
-      <Link href="/library" data-testid="link-view-library" className="inline-flex items-center gap-2 text-xs font-semibold text-[#62776b] hover:text-[#c8794d]">View library <ArrowRight size={14} /></Link>
+      <Link href="/library" data-testid="link-view-library" className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#62776b] hover:text-[#c8794d]">View library <ArrowRight size={14} /></Link>
     </div>
     {investigations.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56" />)}</div>
       : investigations.isError ? <QueryError retry={() => investigations.refetch()} />
-      : rows.length === 0 ? <EmptyState icon={<Compass size={26} />} eyebrow="A new page" title="No investigations yet." text="Start with a photo that has been on your mind. We’ll help you follow its visual clues." action={<Link href="/investigate" data-testid="empty-start-investigation" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Investigate a photo <ArrowRight size={15} /></Link>} />
+      : rows.length === 0 ? <EmptyState icon={<Compass size={26} />} eyebrow="A new page" title="No investigations yet." text="Start with a photo that has been on your mind. We’ll help you follow its visual clues." action={<Link href="/investigate" data-testid="empty-start-investigation" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-[13px] font-semibold text-[#f4f0e6]">Investigate a photo <ArrowRight size={15} /></Link>} />
       : <ContactSheet>{rows.slice(0, 6).map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1}/>)}</ContactSheet>}
   </div>;
 }
@@ -595,16 +487,16 @@ function InvestigationCard({
       {isVideoInvestigation(item) ? <div className="flex h-full w-full items-center justify-center bg-[#2f4a40] text-[#d9e2d4]" data-testid={`placeholder-video-${item.id}`}><Film size={34} strokeWidth={1.4} aria-hidden="true" /></div> : <PixelPrint src={investigationMediaUrl(item.id)} alt={`Original photograph for ${item.title}`} className="h-full" testId={`img-investigation-${item.id}`}/>}
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c3028]/55 to-transparent" />
       {selectable && <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelect?.(item); }} aria-label={`${selected ? 'Deselect' : 'Select'} ${item.title}`} aria-pressed={selected} data-testid={`button-select-investigation-${item.id}`} className={`absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full border-2 shadow-sm transition ${selected ? 'border-[#2e7047] bg-[#2e7047] text-white' : 'border-white bg-black/20 text-transparent hover:bg-black/40'}`}>{selected ? <Check size={18} strokeWidth={3} /> : <Circle size={20} className="text-white" />}</button>}
-      <span className="absolute bottom-3 left-4 font-data text-[9px] uppercase tracking-[.14em] text-white">{place ? `${place.place}${place.country ? ` · ${place.country}` : ''}` : 'Place still unfolding'}</span>
-      {isVideoInvestigation(item) && <span className="absolute bottom-3 right-4 rounded-full bg-[#263d36]/85 px-2.5 py-1 font-data text-[9px] uppercase tracking-[.12em] text-[#f4f0e6]" data-testid={`badge-video-${item.id}`}>Video</span>}
-      {isAnalyzing(item) && <span className="absolute left-3 bottom-9 rounded-full bg-[#f6f2e6]/90 px-2.5 py-1 font-data text-[9px] text-[#a56743]" data-testid={`badge-analyzing-${item.id}`}>Analyzing…</span>}
-      <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[9px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
+      <span className="absolute bottom-3 left-4 font-data text-[13px] uppercase tracking-[.14em] text-white">{place ? `${place.place}${place.country ? ` · ${place.country}` : ''}` : 'Place still unfolding'}</span>
+      {isVideoInvestigation(item) && <span className="absolute bottom-3 right-4 rounded-full bg-[#263d36]/85 px-2.5 py-1 font-data text-[13px] uppercase tracking-[.12em] text-[#f4f0e6]" data-testid={`badge-video-${item.id}`}>Video</span>}
+      {isAnalyzing(item) && <span className="absolute left-3 bottom-9 rounded-full bg-[#f6f2e6]/90 px-2.5 py-1 font-data text-[13px] text-[#a56743]" data-testid={`badge-analyzing-${item.id}`}>Analyzing…</span>}
+      <span className="absolute right-3 top-3 rounded-full border border-white/40 bg-[#f6f2e6]/90 px-3 py-1 font-data text-[13px] text-[#385e51]">{item.candidates.length} {item.candidates.length === 1 ? 'lead' : 'leads'}</span>
     </div>
-    <span className="fd-frame-number">{String(frame).padStart(2,'0')}A / {isVideoInvestigation(item)?'MOTION FILE':'SOURCE PRINT'}</span>
+    <span className="fd-frame-number">{String(frame).padStart(2,'0')}A / {isVideoInvestigation(item)?'Motion file':'Source print'}</span>
     <div className="p-5">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{displayTitle(item.title)}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-xs text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
-      <p className="mt-2 line-clamp-2 min-h-[42px] text-xs leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · Confidence {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
-      <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
+      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">{formatDate(item.createdAt)}</p><h3 className="mt-2 truncate font-editorial text-2xl tracking-[-.03em]" data-testid={`text-investigation-title-${item.id}`}>{displayTitle(item.title)}</h3></div>{(onDelete || onRename) && <details className="relative shrink-0"><summary aria-label={`Actions for ${item.title}`} data-testid={`button-investigation-menu-${item.id}`} className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-full text-[#68796e] hover:bg-[#ebe9de]"><Ellipsis size={17} /></summary><div className="absolute right-0 top-10 z-10 min-w-36 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-1 shadow-lg">{onRename && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onRename(item); }} className="w-full rounded-lg px-3 py-2 text-left text-[13px] hover:bg-[#ebe9de]">Rename</button>}{onDelete && <button type="button" onClick={(event) => { event.currentTarget.closest('details')?.removeAttribute('open'); onDelete(item); }} className="w-full rounded-lg px-3 py-2 text-left text-[13px] text-[#9d5846] hover:bg-[#f7eae4]">Delete</button>}</div></details>}</div>
+      <p className="mt-2 line-clamp-2 min-h-[42px] text-[13px] leading-5 text-[#718078]">{item.desk === 'original' && place ? <>Best guess: <strong className="font-semibold text-[#263d36]">{place.place}</strong> · Confidence {candidateScore(place.confidence)}/100</> : item.summary || 'A collection of clues is ready to explore.'}</p>
+      <Link href={`/investigation/${item.id}`} data-testid={`link-open-investigation-${item.id}`} className="mt-4 inline-flex items-center gap-2 text-[13px] font-semibold text-[#385e51]">Open investigation <ArrowUpRight size={14} /></Link>
     </div>
   </article>;
 }
@@ -627,7 +519,7 @@ function FieldDeskPage() {
     </div>
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text={`The ${desk.label} desk is unavailable just now.`} />
-      : rows.length === 0 ? <EmptyState icon={desk.icon} eyebrow="Desk is ready" title="No investigations here yet." text={`Photos submitted in the ${desk.label} upload spot will be filed here.`} action={<Link href="/investigate" data-testid={`empty-desk-start-${desk.id}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add a photo <ArrowRight size={15} /></Link>} />
+      : rows.length === 0 ? <EmptyState icon={desk.icon} eyebrow="Desk is ready" title="No investigations here yet." text={`Photos submitted in the ${desk.label} upload spot will be filed here.`} action={<Link href="/investigate" data-testid={`empty-desk-start-${desk.id}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-[13px] font-semibold text-[#f4f0e6]">Add a photo <ArrowRight size={15} /></Link>} />
       : <ContactSheet>{rows.map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1}/>)}</ContactSheet>}
   </div>;
 }
@@ -849,15 +741,15 @@ function InvestigatePage() {
   useEffect(()=>{operationRef.current.setRetry(()=>{(document.getElementById('investigate-form') as HTMLFormElement|null)?.requestSubmit();});},[]);
 
   return <div className="wa-intake fade-up investigation-theme mx-auto" data-desk-theme={activeSlotId}>
-    <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
-     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[11px] uppercase tracking-[.12em]">Image investigation / new frame</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Start with what you see.</DeskHeadline></div>
-    <p className="wa-mode-note mb-6 text-xs">Image analysis · <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> · <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link><HelpNote>This is image analysis, not the private missing-person evidence workspace. Private cases organize authorized evidence without automatic image analysis. Each selected image stays assigned to its desk.</HelpNote></p>
+    <Link href="/user-portal" data-testid="link-back-to-overview" className="mb-7 inline-flex items-center gap-2 text-[13px] font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to overview</Link>
+     <div className="wa-page-heading mb-7"><p className="desk-theme-eyebrow font-data text-[13px] uppercase tracking-[.12em]">Image investigation / new frame</p><DeskHeadline className="mt-3 text-5xl md:text-6xl">Start with what you see.</DeskHeadline></div>
+    <p className="wa-mode-note mb-6 text-[13px]">Image analysis · <Link href="/cases" data-testid="link-intake-private-cases" className="font-semibold underline underline-offset-4">Private cases</Link> · <Link href="/start" data-testid="link-intake-guide" className="font-semibold underline underline-offset-4">AI Guide</Link><HelpNote>This is image analysis, not the private missing-person evidence workspace. Private cases organize authorized evidence without automatic image analysis. Each selected image stays assigned to its desk.</HelpNote></p>
     <form id="investigate-form" onSubmit={submit} className="fd-wizard space-y-6" data-drag-region={flowStep===1?'new-investigation':undefined} onKeyDown={event=>{const target=event.target as HTMLInputElement;if(event.key==='Enter'&&flowStep!==3&&target.tagName!=='TEXTAREA'&&target.tagName!=='BUTTON'&&target.type!=='file'){event.preventDefault();setFlowStep(advanceInvestigationStep(flowStep,totalCount));}}}>
       <nav className="fd-step-count" aria-label="Investigation steps">{([1,2,3] as InvestigationStep[]).map(step=><button type="button" key={step} aria-current={flowStep===step?'step':undefined} disabled={pending||originalRunning||step>flowStep} onClick={()=>setFlowStep(step)}>0{step}</button>)}</nav>
       <section hidden={flowStep!==1} className="fd-wizard-step desk-theme-panel">
         <div className="mb-5" hidden>
-          <p className="desk-theme-eyebrow font-data text-[9px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
-          <p className="mt-2 text-xs leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
+          <p className="desk-theme-eyebrow font-data text-[13px] uppercase tracking-[.2em]">01 / Choose a field desk &amp; source</p>
+          <p className="mt-2 text-[13px] leading-5 text-[#718078]">Switch desks to add another photo. Photos you’ve selected remain in their desk; shared details below apply to each one.</p>
         </div>
         <div className="fd-source-desk"><DeskSelector value={activeDeskIndex} onChange={index=>setActiveSlotId(fieldDesks[index].id)} disabled={pending||originalRunning}/>
         <div role="region" className="fd-desk-page" aria-label={`${activeSlot.label} photo upload`} data-active-desk={activeSlotId}>
@@ -875,41 +767,42 @@ function InvestigatePage() {
           /></div>)}
         </div>
         </div>
+        <ul className="fd-desk-descriptions" data-testid="list-new-investigation-types">{fieldDesks.map(desk=><li key={desk.id} data-active={activeSlot.id===desk.id} data-testid={`text-new-investigation-type-${desk.id}`}><strong>{desk.shortLabel}</strong><span>{desk.subtitle}</span></li>)}</ul>
         <div className="desk-batch-reserve" data-active={activeSlot.id!=='original'} inert={activeSlot.id==='original'} aria-hidden={activeSlot.id==='original'}><BatchPrints items={printEntries} errors={extraFileErrors} onOrder={setPrintOrder} onRemove={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}/></div>
-        {localError&&<p role="alert" className="mt-4 text-xs">{localError}</p>}
-        {totalCount>0&&<footer><button type="button" className="fd-next fd-primary px-6 py-3" data-testid="button-investigation-next-photo" onClick={()=>setFlowStep(2)}>Next →</button><span className="font-data text-[10px]">{totalCount} media item{totalCount===1?'':'s'} across selected desks</span></footer>}
+        {localError&&<p role="alert" className="mt-4 text-[13px]">{localError}</p>}
+        {totalCount>0&&<footer><button type="button" className="fd-next fd-primary px-6 py-3" data-testid="button-investigation-next-photo" onClick={()=>setFlowStep(2)}>Next →</button><span className="font-data text-[13px]">{totalCount} media item{totalCount===1?'':'s'} across selected desks</span></footer>}
       </section>
       <div hidden={flowStep!==2} className="fd-wizard-step desk-theme-panel max-w-[720px]">
         <details open className="optional-details group" data-testid="details-optional-fields">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl" data-testid="toggle-optional-fields">
           <span className="min-w-0">
-            <span className="desk-theme-eyebrow block font-data text-[9px] uppercase tracking-[.2em]">02 / Record context <span className="normal-case tracking-normal">· optional</span></span>
-            <span className="mt-1 block truncate text-xs text-[#718078]">{[title.trim() && 'Case name', context.trim() && 'Notes', activeSlotId === 'fake-news' && journalismQuestion.trim() && 'Question', shotAt && (dateFromPhoto ? 'Date (from photo)' : 'Date')].filter(Boolean).join(' · ') || 'Case name, what you already know, date taken'}</span>
+            <span className="desk-theme-eyebrow block font-data text-[13px] uppercase tracking-[.2em]">02 / Record context <span className="normal-case tracking-normal">· optional</span></span>
+            <span className="mt-1 block truncate text-[13px] text-[#718078]">{[title.trim() && 'Case name', context.trim() && 'Notes', activeSlotId === 'fake-news' && journalismQuestion.trim() && 'Question', shotAt && (dateFromPhoto ? 'Date (from photo)' : 'Date')].filter(Boolean).join(' · ') || 'Case name, what you already know, date taken'}</span>
           </span>
           <ChevronDown size={18} aria-hidden="true" className="shrink-0 text-[#718078] transition-transform group-open:rotate-180" />
         </summary>
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-title">Case name <span className="font-normal text-[#97a095]">optional</span><HelpNote>Each title includes its desk label. Without a case name, the photo filename is used.</HelpNote></label>
+        <label className="mt-5 block text-[13px] font-semibold text-[#465c50]" htmlFor="investigation-title">Case name <span className="font-normal text-[#97a095]">optional</span><HelpNote>Each title includes its desk label. Without a case name, the photo filename is used.</HelpNote></label>
         <input id="investigation-title" value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Rocky Mountain trip" data-testid="input-investigation-title" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm outline-none transition focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
-        <label className="mt-5 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Context stays in your private report. The location finder receives only the image. Journalism's optional analyst question is sent for that desk's image analysis.</HelpNote></label>
-        {activeSlotId==='fake-news'&&<div className="flex gap-5 text-xs my-3" role="group" aria-label="Context editor"><button type="button" aria-pressed={!questionTab} onClick={()=>setQuestionTab(false)}>Record notes</button><button type="button" aria-pressed={questionTab} onClick={()=>setQuestionTab(true)}>Analyst question · optional</button></div>}
+        <label className="mt-5 block text-[13px] font-semibold text-[#465c50]" htmlFor="investigation-context">What do you already know? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Context stays in your private report. The location finder receives only the image. Journalism's optional analyst question is sent for that desk's image analysis.</HelpNote></label>
+        {activeSlotId==='fake-news'&&<div className="flex gap-5 text-[13px] my-3" role="group" aria-label="Context editor"><button type="button" aria-pressed={!questionTab} onClick={()=>setQuestionTab(false)}>Record notes</button><button type="button" aria-pressed={questionTab} onClick={()=>setQuestionTab(true)}>Analyst question · optional</button></div>}
         <textarea hidden={activeSlotId==='fake-news'&&questionTab} id="investigation-context" value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={5} placeholder="A trip, a season, a friend's comment, the direction of the light…" data-testid="input-investigation-context" className="mt-2 w-full resize-y rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-[#a0a69c] focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
-        <p className="mt-1 text-right font-data text-[9px] text-[#a1a79d]">{context.length} / 3000</p>
+        <p className="mt-1 text-right font-data text-[13px] text-[#a1a79d]">{context.length} / 3000</p>
         {activeSlotId === 'fake-news' && questionTab&&<textarea aria-label="Journalism analyst question optional" id="journalism-question" value={journalismQuestion} maxLength={1000} onChange={(event) => setJournalismQuestion(event.target.value)} rows={5} placeholder="What detail in this photo could reveal when it was taken?" data-testid="input-journalism-question" className="mt-2 w-full resize-y px-4 py-3 text-sm" />}
-        <label className="mt-4 block text-xs font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Use a date you know, or leave it blank. A supplied date stays in the report, not the image-model request. A real camera date is prefilled only when the selected image contains it.</HelpNote></label>
+        <label className="mt-4 block text-[13px] font-semibold text-[#465c50]" htmlFor="investigation-shot-at">When was it taken? <span className="font-normal text-[#97a095]">optional</span><HelpNote>Use a date you know, or leave it blank. A supplied date stays in the report, not the image-model request. A real camera date is prefilled only when the selected image contains it.</HelpNote></label>
         <input type="date" id="investigation-shot-at" value={shotAt} onChange={(event) => { setShotAt(event.target.value); setDateFromPhoto(false); }} data-testid="input-shot-date" className="mt-2 h-12 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-4 text-sm text-[#53685d] outline-none focus:border-[#668675] focus:ring-2 focus:ring-[#385e51]/10" />
-        {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
+        {dateFromPhoto && shotAt && <p className="mt-1 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#385e51]" data-testid="status-date-from-photo"><Check size={13} />Filled in from the photo</p>}
         </details>
         <footer><button type="button" onClick={()=>setFlowStep(3)}>Skip</button><button type="button" className="fd-primary px-6 py-3" onClick={()=>setFlowStep(3)}>Next →</button></footer>
       </div>
       <div hidden={flowStep!==3} className="fd-wizard-step desk-theme-panel">
         <dl className="fd-summary"><dt>PHOTOS</dt><dd>{String(totalCount).padStart(2,'0')}</dd><dt>DESK</dt><dd>{['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM'][activeDeskIndex]}</dd><dt>CASE</dt><dd>{title.trim()||'Untitled (uses file names)'}</dd></dl><HelpNote>All selected desks are processed; videos retain their existing workflow. Each media item keeps its assigned desk.</HelpNote>
         <FlipChecklist/>
-        {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-xs leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
-        {(pending||originalRunning) && <div className="fd-live-stage" role="status">{progress||(stage==='uploading'?'UPLOAD / transferring selected media…':'PROCESSING / waiting for the saved report…')}<span className="block text-[10px] mt-2">Indeterminate · {analysisDesk} · started {new Date(startedAt).toLocaleTimeString()}</span></div>}
+        {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-[13px] leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
+        {(pending||originalRunning) && <div className="fd-live-stage" role="status">{progress||(stage==='uploading'?'UPLOAD / transferring selected media…':'PROCESSING / waiting for the saved report…')}<span className="block text-[13px] mt-2">Indeterminate · {analysisDesk} · started {new Date(startedAt).toLocaleTimeString()}</span></div>}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
         <div className="fd-shutter-wrap"><ShutterButton type="submit" aria-label="Analyze selected media" onKeyDown={event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();}} disabled={pending||originalRunning||totalCount===0} data-testid="button-analyze-photo-desks"/><span>ANALYZE</span></div>
         <p className="fd-model-reference" aria-label="Illustrative pipeline, not live stage progress">ILLUSTRATIVE MODEL, NOT LIVE PROGRESS<br/>UPLOAD → READ SCENE → COMPARE CLUES → RANK FINDINGS → SAVE REPORT</p>
-        <p className="text-xs text-center">Selected media goes to its desk's analysis provider.<HelpNote>Image Locator handles location estimates. OpenAI handles Journalism image analysis. Shared case names, notes and dates stay in the private record; an optional Journalism question is sent for that desk. No new private missing-person analysis is enabled.</HelpNote></p>
+        <p className="text-[13px] text-center">Selected media goes to its desk's analysis provider.<HelpNote>Image Locator handles location estimates. OpenAI handles Journalism image analysis. Shared case names, notes and dates stay in the private record; an optional Journalism question is sent for that desk. No new private missing-person analysis is enabled.</HelpNote></p>
         {batchStatus && (
           <div
             role="status"
@@ -924,7 +817,7 @@ function InvestigatePage() {
                     <Link
                       href={`/investigation/${saved.id}`}
                       data-testid={`link-created-investigation-${saved.id}`}
-                      className="inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] underline decoration-[#9aaf9d] underline-offset-4 hover:text-[#a56743]"
+                      className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#385e51] underline decoration-[#9aaf9d] underline-offset-4 hover:text-[#a56743]"
                     >
                       {saved.slotLabel}: {saved.title}
                       <ArrowUpRight size={13} />
@@ -1005,15 +898,15 @@ function LibraryPage() {
     <div className="mb-7 library-instruments">
       <label className="fd-search-ruler relative block max-w-[560px] flex-1"><span className="sr-only">Search your library</span><input type="search" value={search} maxLength={LIBRARY_SEARCH_MAX_LENGTH} onChange={(event) => { setSearch(constrainLibrarySearch(event.target.value)); setSelectedIds(new Set()); }} placeholder="Search by title, place, or clue…" data-testid="input-library-search" className="h-12 w-full pr-4 text-sm" /></label>
       <DeskFilterKeys value={deskFilter} onChange={value=>{setDeskFilter(value);setSelectedIds(new Set());}}/>
-      <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[9px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={rows.length}/>: '—'} saved <span style={{visibility:query.isFetching?'visible':'hidden'}}> / UPDATING INDEX</span></div>
-      <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>
-      {selectMode && <button type="button" onClick={deleteSelected} disabled={!selectedRows.length || remove.isPending} data-testid="button-delete-selected-investigations" className="rounded-full bg-[#a65044] px-5 py-3 text-xs font-semibold text-white disabled:opacity-45">Delete selected ({selectedRows.length})</button>}
+      <div className="flex items-center gap-2 self-start px-4 py-3 font-data text-[13px] uppercase tracking-[.12em] sm:self-auto" aria-live="polite">{query.data?<Odometer value={rows.length}/>: '—'} saved <span style={{visibility:query.isFetching?'visible':'hidden'}}> / UPDATING INDEX</span></div>
+      <button type="button" onClick={() => { setSelectMode((current) => !current); setSelectedIds(new Set()); }} data-testid="button-toggle-library-select" className="rounded-full border border-[#c9c7b7] px-5 py-3 text-[13px] font-semibold text-[#53695d] hover:bg-[#ebe9de]">{selectMode ? 'Cancel selection' : 'Select'}</button>
+      {selectMode && <button type="button" onClick={deleteSelected} disabled={!selectedRows.length || remove.isPending} data-testid="button-delete-selected-investigations" className="rounded-full bg-[#a65044] px-5 py-3 text-[13px] font-semibold text-white disabled:opacity-45">Delete selected ({selectedRows.length})</button>}
     </div>
     {deleteError && <p role="alert" className="mb-5 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-sm text-[#875545]" data-testid="status-delete-error">{deleteError}</p>}
     {actionMessage && <p role="status" className="mb-5 text-sm text-[#476450]" data-testid="status-library-action">{actionMessage}</p>}
     {query.isLoading ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((item) => <SkeletonBlock key={item} className="h-[340px]" />)}</div>
       : query.isError ? <QueryError retry={() => query.refetch()} text="Your library is unavailable just now." error={query.error}/>
-      : rows.length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search||deskFilter ? 'No matching notes' : 'The index is open'} title={search||deskFilter ? 'Nothing found here.' : 'Your library is still empty.'} text={search||deskFilter ? 'Try another desk, place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search||deskFilter ? <button type="button" onClick={() => {setSearch('');setDeskFilter(0);}} data-testid="button-clear-search" className="mt-5 text-xs font-semibold text-[#385e51] underline underline-offset-4">Clear filters</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
+      : rows.length === 0 ? <EmptyState icon={<Search size={24} />} eyebrow={search||deskFilter ? 'No matching notes' : 'The index is open'} title={search||deskFilter ? 'Nothing found here.' : 'Your library is still empty.'} text={search||deskFilter ? 'Try another desk, place name, title, or clue.' : 'Investigations you save will be gathered here, ready to search and revisit.'} action={search||deskFilter ? <button type="button" onClick={() => {setSearch('');setDeskFilter(0);}} data-testid="button-clear-search" className="mt-5 text-[13px] font-semibold text-[#385e51] underline underline-offset-4">Clear filters</button> : <Link href="/investigate" data-testid="empty-library-start" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-[13px] font-semibold text-[#f4f0e6]">Add your first photograph <ArrowRight size={15} /></Link>} />
       : <ContactSheet orderKey={`${search}:${rows.map(row=>row.id).join(',')}`}>{rows.map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1} onDelete={deleteItem} onRename={renameItem} selectable={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} />)}</ContactSheet>}
   </div>;
 }
@@ -1110,16 +1003,16 @@ function InvestigationPage() {
     ? `The Image Locator service ranked ${rankedLeads[0].place} as the strongest location lead.`
     : humanizeClueText(item.summary);
   return <div className="wa-result fade-up">
-    <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
+    <Link href="/library" data-testid="link-back-to-library" className="mb-7 inline-flex items-center gap-2 text-[13px] font-semibold text-[#718078] hover:text-[#385e51]"><ArrowLeft size={14} />Back to library</Link>
     <div className={imageGeolocation?'mb-4 flex w-full flex-wrap items-end justify-between gap-3':'mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end'}>
-      <div className="min-w-0"><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><DeskHeadline className={imageGeolocation?'mt-1 text-2xl md:text-3xl break-words':'mt-3 max-w-4xl text-5xl md:text-6xl'} testId="text-detail-title">{displayTitle(item.title)}</DeskHeadline>{!imageGeolocation&&<p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p>}{imageGeolocation&&item.shotAt&&<p className="mt-1 text-xs text-[#738078]">Photographed {formatDate(item.shotAt)}</p>}</div>
-      <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-xs font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-xs font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
+      <div className="min-w-0"><PageEyebrow>Investigation / {formatDate(item.createdAt)}</PageEyebrow><DeskHeadline className={imageGeolocation?'mt-1 text-2xl md:text-3xl break-words':'mt-3 max-w-4xl text-5xl md:text-6xl'} testId="text-detail-title">{displayTitle(item.title)}</DeskHeadline>{!imageGeolocation&&<p className="mt-3 text-sm text-[#738078]">{item.originalName}{item.shotAt ? ` · photographed ${formatDate(item.shotAt)}` : ''}</p>}{imageGeolocation&&item.shotAt&&<p className="mt-1 text-[13px] text-[#738078]">Photographed {formatDate(item.shotAt)}</p>}</div>
+      <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setEditing(!editing)} data-testid="button-edit-investigation" className="whitespace-nowrap rounded-full border border-[#c9c7b7] px-4 py-2.5 text-[13px] font-semibold text-[#53695d] hover:bg-[#ebe9de]">{editing ? 'Cancel editing' : 'Edit notes'}</button><button type="button" onClick={deleteCurrent} disabled={remove.isPending} data-testid="button-delete-current-investigation" className="inline-flex whitespace-nowrap items-center gap-2 rounded-full border border-[#ddc4b5] px-4 py-2.5 text-[13px] font-semibold text-[#9d5846] hover:bg-[#f7eae4]"><Trash2 size={14} />Remove</button></div>
     </div>
     {message && <p role="status" data-testid="status-investigation-update" className="mb-5 rounded-xl border border-[#c8d4c4] bg-[#edf2e9] px-4 py-3 text-sm text-[#476450]">{message}</p>}
     {editing && <form onSubmit={saveDetails} className="mb-7 grid gap-4 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 md:grid-cols-[.8fr_1.2fr_auto] md:items-end">
-      <label className="block text-xs font-semibold text-[#465c50]">Investigation name<input value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} data-testid="input-edit-title" className="mt-2 h-11 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm outline-none focus:border-[#668675]" /></label>
-      <label className="block text-xs font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
-      <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-xs font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
+      <label className="block text-[13px] font-semibold text-[#465c50]">Investigation name<input value={title} maxLength={120} onChange={(event) => setTitle(event.target.value)} data-testid="input-edit-title" className="mt-2 h-11 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm outline-none focus:border-[#668675]" /></label>
+      <label className="block text-[13px] font-semibold text-[#465c50]">Background notes<textarea value={context} maxLength={3000} onChange={(event) => setContext(event.target.value)} rows={2} data-testid="input-edit-context" className="mt-2 w-full rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] px-3 py-2 text-sm outline-none focus:border-[#668675]" /></label>
+      <button type="submit" disabled={update.isPending} data-testid="button-save-investigation" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#385e51] px-5 text-[13px] font-semibold text-[#f4f0e6] disabled:opacity-60">{update.isPending ? 'Saving…' : <><Check size={14} />Save changes</>}</button>
     </form>}
     {imageGeolocation?<ImageGeolocationReport item={item} leads={rankedLeads} sceneSummary={sceneSummary} photoURL={photoUrl} photoLoading={photo.isLoading} photoError={photo.isError} onRetryPhoto={()=>{void photo.refetch();}} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} onRefresh={()=>{void refreshLocations();}} refreshing={refreshCandidates.isPending} refreshMessage={refreshMessage} onRetryAnalysis={()=>{void retryVideo();}} retrying={retryAnalysis.isPending} retryError={retryError}/>:<>
     <HealthUrgencyCard investigation={item} />
@@ -1129,34 +1022,34 @@ function InvestigationPage() {
       <div>
         <div className="photo-frame relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-3xl border border-[#d8d1c2] bg-[#e5e3d6] p-4 md:min-h-[490px]">
           {isVideo ? <VideoPlayer id={item.id} name={item.originalName} playerRef={playerRef} /> : photo.isLoading ? <SkeletonBlock className="absolute inset-4" /> : photo.isError ? <div className="px-6 text-center text-sm text-[#7c8378]" data-testid="status-photo-error"><FileImage size={26} className="mx-auto mb-3 text-[#a06d4b]" />The saved photograph is temporarily unavailable.</div> : <img src={photoUrl || `/api/investigations/${encodeURIComponent(item.id)}/photo`} alt={`Original photograph: ${item.originalName}`} className="max-h-[620px] w-full rounded-2xl object-contain" data-testid="img-original-investigation-photo" />}
-          <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[9px] uppercase tracking-[.13em] text-[#52695d]">{isVideo ? 'Saved video' : 'Original photograph'}</span>
+          <span className="absolute bottom-7 left-7 rounded-full border border-white/50 bg-[#f4f0e6]/90 px-3 py-1.5 font-data text-[13px] uppercase tracking-[.13em] text-[#52695d]">{isVideo ? 'Saved video' : 'Original photograph'}</span>
         </div>
         {isVideo && <KeyMoments analysis={item.analysis} onSeek={seekTo} />}
         <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6 md:p-7">
           <PageEyebrow>{item.desk === 'fake-news' ? 'Image integrity review' : legacySourceReport ? 'Legacy source-image report' : 'Scene notes'}</PageEyebrow>
           {item.desk !== 'fake-news' && !legacySourceReport && rankedLeads[0] && <p className="mt-4 text-sm font-semibold text-[#385e51]">Strongest location lead: {rankedLeads[0].place}</p>}
           <p className={`mt-2 ${item.desk === 'fake-news' ? 'whitespace-pre-wrap text-sm leading-7' : 'font-editorial text-2xl leading-[1.25]'} text-[#344b42]`} data-testid="text-investigation-summary">{sceneSummary}</p>
-          <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Your notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context?.trim() || 'No notes added yet.'}</p></div>
+          <div className="mt-6 border-t border-[#e1dbce] pt-4"><p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">Your notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#718078]" data-testid="text-investigation-context">{item.context?.trim() || 'No notes added yet.'}</p></div>
         </section>
         <details className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
-          <summary className="cursor-pointer list-none"><PageEyebrow>Visual evidence</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Details in the frame</h2><span className="mt-2 block font-data text-[9px] uppercase tracking-[.13em] text-[#929b90]">{item.clues.length} clues · expand</span></summary>
-          {item.clues.length ? <div className="mt-5 space-y-3">{item.clues.map((clue, index) => <article key={`${clue.label}-${index}`} data-testid={`card-clue-${index}`} className="relative rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 pl-[68px]"><span className="absolute left-5 top-5 font-data text-[10px] text-[#c8794d]">0{index + 1}</span><h3 className="font-editorial text-xl">{humanizeClueText(clue.label)}</h3><p className="mt-2 text-sm leading-6 text-[#66796e]">{humanizeClueText(clue.observation)}</p><p className="mt-3 border-t border-[#e4dfd2] pt-3 text-xs leading-5 text-[#89948a]">{humanizeClueText(clue.significance)}</p></article>)}</div> : <div className="mt-5 rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-clues">No visual clues were returned for this investigation.</div>}
+          <summary className="cursor-pointer list-none"><PageEyebrow>Visual evidence</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Details in the frame</h2><span className="mt-2 block font-data text-[13px] uppercase tracking-[.13em] text-[#929b90]">{item.clues.length} clues · expand</span></summary>
+          {item.clues.length ? <div className="mt-5 space-y-3">{item.clues.map((clue, index) => <article key={`${clue.label}-${index}`} data-testid={`card-clue-${index}`} className="relative rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5 pl-[68px]"><span className="absolute left-5 top-5 font-data text-[13px] text-[#c8794d]">0{index + 1}</span><h3 className="font-editorial text-xl">{humanizeClueText(clue.label)}</h3><p className="mt-2 text-sm leading-6 text-[#66796e]">{humanizeClueText(clue.observation)}</p><p className="mt-3 border-t border-[#e4dfd2] pt-3 text-[13px] leading-5 text-[#89948a]">{humanizeClueText(clue.significance)}</p></article>)}</div> : <div className="mt-5 rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-clues">No visual clues were returned for this investigation.</div>}
         </details>
       </div>
       <div>
         {legacySourceReport ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
           <PageEyebrow>Legacy source-image report</PageEyebrow>
-          <p className="mt-3 text-xs leading-5 text-[#859187]">This report was created before Recreation was corrected to personal-photo location discovery. Its saved matches are not location findings.</p>
-          <p className="mt-2 text-xs leading-5 text-[#859187]">Re-analyzing will replace these older source matches only if new location leads are returned.</p>
-          <button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-analyze-legacy-recreation" className="mt-4 rounded-full border border-[#c9c7b7] px-4 py-2 text-xs font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Analyzing location…' : 'Find this photo’s location'}</button>
-          {refreshMessage && <p role="status" className="mt-3 text-xs leading-5 text-[#718078]">{refreshMessage}</p>}
+          <p className="mt-3 text-[13px] leading-5 text-[#859187]">This report was created before Recreation was corrected to personal-photo location discovery. Its saved matches are not location findings.</p>
+          <p className="mt-2 text-[13px] leading-5 text-[#859187]">Re-analyzing will replace these older source matches only if new location leads are returned.</p>
+          <button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-analyze-legacy-recreation" className="mt-4 rounded-full border border-[#c9c7b7] px-4 py-2 text-[13px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Analyzing location…' : 'Find this photo’s location'}</button>
+          {refreshMessage && <p role="status" className="mt-3 text-[13px] leading-5 text-[#718078]">{refreshMessage}</p>}
           <h2 className="mt-2 font-editorial text-3xl">Possible original images</h2>
-          <p className="mt-3 text-xs leading-5 text-[#859187]">The image analyst searched public image pages for possible source matches. These are leads, not confirmed originals.</p>
+          <p className="mt-3 text-[13px] leading-5 text-[#859187]">The image analyst searched public image pages for possible source matches. These are leads, not confirmed originals.</p>
           {rankedLeads.length ? <div className="mt-4 space-y-3">{rankedLeads.map((candidate, index) => {
             const reference = candidate.photoReferences?.[0];
             return <article key={`${candidate.mapsUrl}-${index}`} className="overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#fbf9f3]">
               {reference && <img src={reference.thumbnailUrl ?? reference.imageUrl} alt={candidate.place} loading="lazy" referrerPolicy="no-referrer" className="max-h-56 w-full object-contain" />}
-              <div className="p-4"><p className="font-editorial text-lg">{candidate.place}</p>{candidate.rationale && <p className="mt-2 text-xs leading-5 text-[#718078]">{candidate.rationale}</p>}<a href={candidate.mapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#385e51]">Open source page <ArrowUpRight size={13} /></a></div>
+              <div className="p-4"><p className="font-editorial text-lg">{candidate.place}</p>{candidate.rationale && <p className="mt-2 text-[13px] leading-5 text-[#718078]">{candidate.rationale}</p>}<a href={candidate.mapsUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#385e51]">Open source page <ArrowUpRight size={13} /></a></div>
             </article>;
           })}</div> : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-5 text-sm leading-6 text-[#718078]" data-testid="content-no-source-images">No plausible original source image was found in the public search. Private, removed, or unindexed images may not appear.</p>}
         </section> : item.desk === 'fake-news' ? <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
@@ -1165,37 +1058,37 @@ function InvestigationPage() {
           <p className="mt-3 text-sm leading-6 text-[#596d61]">The model assesses visible signs of editing, CGI, or AI generation. It cannot authenticate a photograph from pixels alone; check the original file, provenance, and independent sources.</p>
         </section> : <>
         {rankedLeads[0] && <div className="hidden lg:block"><BestGuessCard lead={rankedLeads[0]} summaryText={buildLeadSummary(item, rankedLeads)} /></div>}
-        <div className="mb-4 flex items-end justify-between gap-3"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-refresh-location-leads" className="shrink-0 rounded-full border border-[#c9c7b7] px-3 py-2 text-[10px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Searching…' : 'Try different leads'}</button></div>
-        {refreshMessage && <p role="status" className="mb-3 text-xs leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
-        <p className="mb-4 text-xs leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
+        <div className="mb-4 flex items-end justify-between gap-3"><div><PageEyebrow>Possible whereabouts</PageEyebrow><h2 className="mt-2 font-editorial text-3xl">Follow the leads</h2></div><button type="button" disabled={refreshCandidates.isPending} onClick={refreshLocations} data-testid="button-refresh-location-leads" className="shrink-0 rounded-full border border-[#c9c7b7] px-3 py-2 text-[13px] font-semibold text-[#53695d] disabled:opacity-50">{refreshCandidates.isPending ? 'Searching…' : 'Try different leads'}</button></div>
+        {refreshMessage && <p role="status" className="mb-3 text-[13px] leading-5 text-[#718078]" data-testid="status-refresh-leads">{refreshMessage}</p>}
+        <p className="mb-4 text-[13px] leading-5 text-[#859187]">The separate search for public reference photos uses location names only; it never receives the original photo or your notes.</p>
         {rankedLeads.length ? <>
-          <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-xs leading-5 text-[#718078]">Confidence = how well the clues in the photo match this place. It ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
+          <p className="mb-4 rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] px-4 py-3 text-[13px] leading-5 text-[#718078]">Confidence = how well the clues in the photo match this place. It ranks the suggestions; it is not a probability that a place is correct or an independent verification.</p>
           <LeadLocationMap candidates={rankedLeads.slice(0, 3)} selectedIndex={selectedCandidateIndex} onSelect={setSelectedCandidateIndex} onOpenLead={(index) => setLocation(`/investigation/${encodeURIComponent(item.id)}/location/${index}`)} />
           <div className="mt-4 space-y-2" data-testid="list-ranked-location-leads">
             {rankedLeads.map((candidate, index) => <button key={`${candidate.place}-${index}`} type="button" aria-pressed={selectedCandidateIndex === index} onClick={() => setSelectedCandidateIndex(index)} data-testid={`button-select-lead-${index}`} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${selectedCandidateIndex === index ? 'border-[#9eaf9f] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#f8f5ec] hover:border-[#b8c4b5]'}`}>
-              <span className="flex min-w-0 items-center gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-[#fbf9f3]" style={{ background: confidenceTier(confidencePercent(candidate.confidence)).color }}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[11px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
+              <span className="flex min-w-0 items-center gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[13px] font-semibold text-[#fbf9f3]" style={{ background: confidenceTier(confidencePercent(candidate.confidence)).color }}>{index + 1}</span><span className="min-w-0"><span className="block truncate font-editorial text-lg text-[#263d36]">{candidate.place}</span><span className="block truncate text-[13px] text-[#718078]">{[candidate.region, candidate.country].filter(Boolean).join(', ') || 'Region not specified'}</span></span></span>
               <span className="w-[150px] shrink-0"><ConfidenceMeter percent={confidencePercent(candidate.confidence)} size="sm" testId={`text-lead-confidence-${index}`} /></span>
             </button>)}
           </div>
           {selectedLead && <article className="mt-4 rounded-2xl border border-[#b8c4b5] bg-[#e9ede3] p-5" data-testid="panel-selected-location-lead">
             <PageEyebrow>{selectedCandidateIndex === 0 ? 'Highest Confidence' : 'Selected location lead'}</PageEyebrow>
             <h3 className="mt-2 font-editorial text-2xl text-[#263d36]">{selectedLead.place}</h3>
-            <p className="mt-1 text-xs text-[#718078]">{[selectedLead.region, selectedLead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
-            <div className="mt-4 border-t border-[#c9d0c2] pt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Why it was suggested</p><p className="mt-2 text-sm leading-6 text-[#596d61]">{selectedLead.rationale}</p></div>
-             {selectedLead.clues.length > 0 && <div className="mt-4"><p className="font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Related scene clues</p><div className="mt-2 flex flex-wrap gap-2">{selectedLead.clues.map((clue, clueIndex) => <span key={`${clue}-${clueIndex}`} className="rounded-full border border-[#c7d0c1] bg-[#f8f5ec] px-3 py-1.5 text-[10px] text-[#627569]">{humanizeClueText(clue)}</span>)}</div></div>}
+            <p className="mt-1 text-[13px] text-[#718078]">{[selectedLead.region, selectedLead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>
+            <div className="mt-4 border-t border-[#c9d0c2] pt-4"><p className="font-data text-[13px] uppercase tracking-[.13em] text-[#758477]">Why it was suggested</p><p className="mt-2 text-sm leading-6 text-[#596d61]">{selectedLead.rationale}</p></div>
+             {selectedLead.clues.length > 0 && <div className="mt-4"><p className="font-data text-[13px] uppercase tracking-[.13em] text-[#758477]">Related scene clues</p><div className="mt-2 flex flex-wrap gap-2">{selectedLead.clues.map((clue, clueIndex) => <span key={`${clue}-${clueIndex}`} className="rounded-full border border-[#c7d0c1] bg-[#f8f5ec] px-3 py-1.5 text-[13px] text-[#627569]">{humanizeClueText(clue)}</span>)}</div></div>}
             {(selectedLead.photoReferences ?? []).length > 0 ? <details className="mt-5 border-t border-[#c9d0c2] pt-4" data-testid={`section-photo-references-${selectedCandidateIndex}`}>
-              <summary className="cursor-pointer font-data text-[9px] uppercase tracking-[.13em] text-[#758477]">Public photo references ({selectedLead.photoReferences!.length})</summary>
+              <summary className="cursor-pointer font-data text-[13px] uppercase tracking-[.13em] text-[#758477]">Public photo references ({selectedLead.photoReferences!.length})</summary>
               <div className="mt-3 grid grid-cols-3 gap-2">{(selectedLead.photoReferences ?? []).map((reference, referenceIndex) => <a key={`${reference.imageUrl}-${referenceIndex}`} href={reference.sourceUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-photo-reference-${selectedCandidateIndex}-${referenceIndex}`} className="group min-w-0 overflow-hidden rounded-xl border border-[#d8d1c2] bg-[#f8f5ec] transition hover:-translate-y-0.5 hover:shadow-sm">
                 <div className="aspect-[4/3] overflow-hidden bg-[#e5e3d6]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Public photo reference for ${selectedLead.place}`} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" /></div>
-                <span className="block line-clamp-2 px-2 pt-2 text-[10px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${selectedLead.place}`}</span>
-                <span className="block truncate px-2 pb-2 pt-1 text-[8px] text-[#929b90]">{photoReferenceHost(reference.sourceUrl)} <ArrowUpRight size={10} className="ml-0.5 inline" /></span>
+                <span className="block line-clamp-2 px-2 pt-2 text-[13px] leading-4 text-[#596d61]">{reference.caption ?? `Photos of ${selectedLead.place}`}</span>
+                <span className="block truncate px-2 pb-2 pt-1 text-[13px] text-[#929b90]">{photoReferenceHost(reference.sourceUrl)} <ArrowUpRight size={10} className="ml-0.5 inline" /></span>
               </a>)}</div>
-            </details> : <p className="mt-4 text-xs leading-5 text-[#859187]" data-testid={`status-photo-search-${selectedCandidateIndex}`}>{item.analysis?.source === 'Replit AI vision fallback' ? 'Public photo references were not searched for these unverified fallback guesses.' : selectedLead.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : selectedLead.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
-            <a href={selectedLead.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${selectedCandidateIndex}`} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#385e51] hover:text-[#b36e48]">Explore this location <ArrowUpRight size={14} /></a>
-            <Link href={`/investigation/${encodeURIComponent(item.id)}/location/${selectedCandidateIndex}`} data-testid={`link-location-report-${selectedCandidateIndex}`} className="mt-3 block text-xs font-semibold text-[#385e51] underline underline-offset-4">Open full in-app location report</Link>
+            </details> : <p className="mt-4 text-[13px] leading-5 text-[#859187]" data-testid={`status-photo-search-${selectedCandidateIndex}`}>{item.analysis?.source === 'Replit AI vision fallback' ? 'Public photo references were not searched for these unverified fallback guesses.' : selectedLead.photoSearchStatus === 'unavailable' ? 'Web photo search is temporarily unavailable for this lead.' : selectedLead.photoSearchStatus === 'no_results' ? 'No public photo references were found for this place.' : 'Photo references were not collected for this investigation.'}</p>}
+            <a href={selectedLead.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-map-candidate-${selectedCandidateIndex}`} className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-[#385e51] hover:text-[#b36e48]">Explore this location <ArrowUpRight size={14} /></a>
+            <Link href={`/investigation/${encodeURIComponent(item.id)}/location/${selectedCandidateIndex}`} data-testid={`link-location-report-${selectedCandidateIndex}`} className="mt-3 block text-[13px] font-semibold text-[#385e51] underline underline-offset-4">Open full in-app location report</Link>
           </article>}
         </> : <div className="rounded-2xl border border-dashed border-[#c9c3b4] p-6 text-sm text-[#718078]" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</div>}
-        <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[9px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-xs leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
+        <div className="mt-5 rounded-2xl bg-[#263d36] p-5 text-[#f4f0e6]"><div className="flex items-center gap-2 text-[#d78b5a]"><Globe2 size={16} /><p className="font-data text-[13px] uppercase tracking-[.16em]">Read the map, not the answer</p></div><p className="mt-3 text-[13px] leading-5 text-[#c1cdbf]">These are leads to explore, not certainties. Compare the landmarks with what you remember.</p></div>
         </>}
       </div>
     </div>
@@ -1216,27 +1109,27 @@ function LeadLocationPage() {
   const coordinates = coordinatesFromMapsUrl(lead.mapsUrl);
   const legacySourceReport = isLegacyRecreationReport(query.data);
   return <article className="fade-up mx-auto max-w-3xl">
-    <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-xs font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
+    <Link href={`/investigation/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 text-[13px] font-semibold text-[#718078]"><ArrowLeft size={14} />Back to investigation</Link>
     <PageEyebrow>{legacySourceReport ? `Legacy source-image report / Result ${index + 1}` : `Location report / Lead ${index + 1}`}</PageEyebrow>
     <DeskHeadline className="mt-3 text-5xl">{lead.place}</DeskHeadline>
     {!legacySourceReport && <p className="mt-2 text-sm text-[#718078]">{[lead.region, lead.country].filter(Boolean).join(', ') || 'Region not specified'}</p>}
     <HealthUrgencyCard investigation={query.data} />
     <section className="mt-7 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
-      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">{legacySourceReport ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
+      <p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">{legacySourceReport ? 'Why this source image was surfaced' : 'Why this location was suggested'}</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">{lead.rationale}</p>
-      {!legacySourceReport && <><p className="mt-5 font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Confidence</p>
+      {!legacySourceReport && <><p className="mt-5 font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">Confidence</p>
       <p className="mt-1 text-lg font-semibold text-[#385e51]">{candidateScore(lead.confidence)} / 100 · ranked lead {index + 1}</p>
       {coordinates && <p className="mt-5 text-sm text-[#596d61]"><strong>Coordinates</strong><br />Latitude {coordinates[0].toFixed(5)} · Longitude {coordinates[1].toFixed(5)}</p>}</>}
     </section>
     {legacySourceReport ? <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
-      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Possible source match</p>
+      <p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">Possible source match</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">This older report contains source-image matches, not location findings. Return to the report to analyze the photo’s location with the corrected Recreation workflow.</p>
       {lead.photoReferences?.[0] && <a href={lead.photoReferences[0].sourceUrl} target="_blank" rel="noreferrer" className="mt-4 block overflow-hidden rounded-xl border border-[#d8d1c2]">
         <img src={lead.photoReferences[0].thumbnailUrl ?? lead.photoReferences[0].imageUrl} alt={lead.photoReferences[0].caption ?? lead.place} referrerPolicy="no-referrer" className="max-h-[480px] w-full object-contain" />
-        <span className="block p-3 text-xs text-[#385e51]">Open image source: {photoReferenceHost(lead.photoReferences[0].sourceUrl)} <ArrowUpRight size={13} className="inline" /></span>
+        <span className="block p-3 text-[13px] text-[#385e51]">Open image source: {photoReferenceHost(lead.photoReferences[0].sourceUrl)} <ArrowUpRight size={13} className="inline" /></span>
       </a>}
     </section> : <section className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-6">
-      <p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">How the photograph informed this lead</p>
+      <p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">How the photograph informed this lead</p>
       <p className="mt-3 text-sm leading-7 text-[#596d61]">The suggestion combines the analyzer’s location rationale with the visible scene details below. These details explain what can be compared in the image; they are clues, not confirmation that this is the photographed place.</p>
       {query.data.clues.length > 0
         ? <div className="mt-5 space-y-4">{query.data.clues.map((clue, clueIndex) => {
@@ -1245,15 +1138,15 @@ function LeadLocationPage() {
             <p className="font-editorial text-xl text-[#344b42]">{humanizeClueText(clue.label)}</p>
             <p className="mt-2 text-sm leading-6 text-[#596d61]"><strong>Seen in the frame:</strong> {humanizeClueText(clue.observation)}</p>
             <p className="mt-2 text-sm leading-6 text-[#718078]"><strong>Why it may help:</strong> {humanizeClueText(clue.significance)}</p>
-            <p className="mt-3 border-t border-[#e4dfd2] pt-3 text-xs leading-5 text-[#718078]">{linkedLeadClues.length
+            <p className="mt-3 border-t border-[#e4dfd2] pt-3 text-[13px] leading-5 text-[#718078]">{linkedLeadClues.length
               ? <>The analyzer also named <strong>{linkedLeadClues.map(humanizeClueText).join('; ')}</strong> for {lead.place}, connecting this visual detail to the suggested location.</>
               : <>The analyzer did not explicitly link this scene detail to {lead.place}; treat it as comparison context, not direct support for this lead.</>}</p>
           </article>;
         })}</div>
         : <p className="mt-4 rounded-xl border border-dashed border-[#c9c3b4] p-4 text-sm leading-6 text-[#718078]">No structured visual details were saved for this photograph, so the report cannot connect specific features in the frame to this lead.</p>}
-      {lead.clues.length > 0 && <div className="mt-5 border-t border-[#e1dbce] pt-4"><p className="font-data text-[9px] uppercase tracking-[.15em] text-[#9c6d4e]">Location-specific clues named by the analyzer</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></div>}
+      {lead.clues.length > 0 && <div className="mt-5 border-t border-[#e1dbce] pt-4"><p className="font-data text-[13px] uppercase tracking-[.15em] text-[#9c6d4e]">Location-specific clues named by the analyzer</p><ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-6 text-[#596d61]">{lead.clues.map((clue) => <li key={clue}>{humanizeClueText(clue)}</li>)}</ul></div>}
     </section>}
-    {!legacySourceReport && lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-xs">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
+    {!legacySourceReport && lead.photoReferences?.length ? <details className="mt-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5"><summary className="cursor-pointer text-sm font-semibold">Public reference photos ({lead.photoReferences.length})</summary><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{lead.photoReferences.map((reference, i) => <a key={`${reference.sourceUrl}-${i}`} href={reference.sourceUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-xl border border-[#d8d1c2]"><img src={reference.thumbnailUrl ?? reference.imageUrl} alt={reference.caption ?? `Reference for ${lead.place}`} className="aspect-[4/3] w-full object-cover" /><span className="block p-2 text-[13px]">{reference.caption ?? 'View source'}</span></a>)}</div></details> : null}
   </article>;
 }
 
@@ -1302,17 +1195,17 @@ function SettingsPage() {
       <h2 className="font-editorial text-2xl">Text font</h2>
       <div className="fd-type-options" role="group" aria-label="Text font">{([['default','Bricolage + DM Sans','"Bricolage Grotesque",sans-serif'],['sans','DM Sans','"DM Sans",sans-serif'],['dyslexic','Atkinson Hyperlegible','"Atkinson Hyperlegible",sans-serif']] as const).map(([value,label,font])=><button type="button" key={value} className="fd-type-card" style={{'--specimen':font} as React.CSSProperties} aria-pressed={preferences.font===value} data-testid={`font-${value}`} onClick={()=>update('font',value)}><strong>Aa</strong><span>{label}</span></button>)}</div>
       <FontSizeSlider value={preferences.textSize} onChange={value=>update('textSize',value)}/>
-      <p className="mt-3 text-xs leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
+      <p className="mt-3 text-[13px] leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
     </section>
-    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span className="physical-switch-state" data-testid="status-desk-sound">Sound · {sound?'ON':'OFF'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
+    <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span className="physical-switch-state" data-testid="status-desk-sound">Sound · {sound?'ON':'OFF'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-[13px]">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-xl">Your analysis API key</h2>
-      <p className="mt-1 text-xs text-[#718078]">Optional · session memory only.<HelpNote>Your key is kept in memory for this session only, never saved in browser storage.</HelpNote></p>
+      <p className="mt-1 text-[13px] text-[#718078]">Optional · session memory only.<HelpNote>Your key is kept in memory for this session only, never saved in browser storage.</HelpNote></p>
       <div className="mt-3 flex gap-2">
         <input type="password" autoComplete="off" value={draftKey} onChange={(event) => setDraftKey(event.target.value)} placeholder="Paste your API key" aria-label="Your analysis API key" data-testid="input-personal-api-key" className="h-10 min-w-0 flex-1 rounded-lg border border-[#d8d1c2] bg-[#fbf9f3] px-3 text-sm" />
-        <button type="button" onClick={() => { setApiKey(draftKey.trim()); setKeyStatus(draftKey.trim() ? 'Key set for this session.' : 'Session key cleared.'); }} data-testid="button-save-personal-api-key" className="rounded-lg bg-[#385e51] px-3 text-xs font-semibold text-white">Use key</button>
+        <button type="button" onClick={() => { setApiKey(draftKey.trim()); setKeyStatus(draftKey.trim() ? 'Key set for this session.' : 'Session key cleared.'); }} data-testid="button-save-personal-api-key" className="rounded-lg bg-[#385e51] px-3 text-[13px] font-semibold text-white">Use key</button>
       </div>
-      {keyStatus && <p role="status" className="mt-2 text-xs text-[#476450]">{keyStatus}</p>}
+      {keyStatus && <p role="status" className="mt-2 text-[13px] text-[#476450]">{keyStatus}</p>}
     </section>
   </div>;
 }

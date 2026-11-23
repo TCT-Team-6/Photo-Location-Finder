@@ -68,11 +68,11 @@ export function PhotoUploadSlot({
           <h2 className="photo-upload-title font-editorial text-xl leading-tight">
             {slot.label}
           </h2>
-          <p className="mt-1 text-[11px] leading-4 text-[#78847b]">
+          <p className="mt-1 text-[13px] leading-4 text-[#78847b]">
             {slot.description}
           </p>
         </div>
-        <span className="photo-upload-optional shrink-0 rounded-full border px-2.5 py-1 font-data text-[8px] uppercase tracking-[.12em]">
+        <span className="photo-upload-optional shrink-0 rounded-full border px-2.5 py-1 font-data text-[13px] uppercase tracking-[.12em]">
           Optional
         </span>
       </div>
@@ -109,7 +109,7 @@ export function PhotoUploadSlot({
         data-testid={dropzoneTestId}
         data-selected={Boolean(trayFiles?.length||file)}
       >
-        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{onSelectFiles?'DROP TO ADD':dragging?'RELEASE TO FILE':file?'SPECIMEN SELECTED / LOCAL PREVIEW':'TRAY EMPTY / 00 ITEMS'}</span>
+        <PhysicalTray active={dragging}/><span className="fd-drag-label" aria-live="polite">{onSelectFiles?'Drop to add':dragging?'Release to file':file?'Specimen selected, local preview':'TRAY EMPTY / 00 ITEMS'}</span>
         {trayOnly&&<><TrayMediaStack items={trayFiles??(file?[{id:slot.id,file}]:[])} onRemove={id=>onRemoveTrayFile?onRemoveTrayFile(id):onRemoveFile()}/><span className="tray-browse-caption" aria-hidden="true">BROWSE / ADD MEDIA</span></>}
         <input
           id={inputId}
@@ -132,7 +132,7 @@ export function PhotoUploadSlot({
           {file&&!trayOnly ? (
             <>
               {previewUnavailable ? (
-                <div className="photo-upload-fallback flex h-full w-full flex-col items-center justify-center gap-3 rounded-lg px-4 text-center text-xs leading-5">
+                <div className="photo-upload-fallback flex h-full w-full flex-col items-center justify-center gap-3 rounded-lg px-4 text-center text-[13px] leading-5">
                   <FileImage size={30} />
                   <span>
                     This format can’t be previewed here, but it can still be
@@ -152,7 +152,7 @@ export function PhotoUploadSlot({
                   }
                 />
               )}
-              <span className="photo-upload-filename absolute bottom-3 left-3 right-3 truncate rounded-full px-3 py-2 text-[10px] text-[#f4f0e6]">
+              <span className="photo-upload-filename absolute bottom-3 left-3 right-3 truncate rounded-full px-3 py-2 text-[13px] text-[#f4f0e6]">
                 {file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB
               </span>
             </>
@@ -162,8 +162,8 @@ export function PhotoUploadSlot({
                 <Upload size={21} strokeWidth={1.6} />
               </span>
               <p className="mt-4 font-editorial text-lg">Drop a photo</p>
-              <p className="mt-1 text-xs text-[#77847a]">or browse · up to 6 images, 25 MB each</p>
-              <span className="photo-upload-optional mt-4 rounded-full border px-3 py-1.5 font-data text-[8px] uppercase tracking-[.1em]">
+              <p className="mt-1 text-[13px] text-[#77847a]">or browse · up to 6 images, 25 MB each</p>
+              <span className="photo-upload-optional mt-4 rounded-full border px-3 py-1.5 font-data text-[13px] uppercase tracking-[.1em]">
                 Image · up to 25 MB
               </span>
             </>
@@ -177,7 +177,7 @@ export function PhotoUploadSlot({
           onClick={onRemoveFile}
           disabled={disabled}
           data-testid={removeTestId}
-          className="photo-upload-remove mt-2 inline-flex min-h-8 items-center gap-1.5 px-1 text-[11px] disabled:opacity-50"
+          className="photo-upload-remove mt-2 inline-flex min-h-8 items-center gap-1.5 px-1 text-[13px] disabled:opacity-50"
         >
           <X size={13} />
           Remove photo
@@ -186,7 +186,7 @@ export function PhotoUploadSlot({
       {error && (
         <p
           role="alert"
-          className="mt-2 rounded-lg border border-[#dfc6b6] bg-[#f9eee6] px-3 py-2 text-[11px] leading-4 text-[#875545]"
+          className="mt-2 rounded-lg border border-[#dfc6b6] bg-[#f9eee6] px-3 py-2 text-[13px] leading-4 text-[#875545]"
           data-testid={`status-photo-upload-error-${slot.id}`}
         >
           {error}

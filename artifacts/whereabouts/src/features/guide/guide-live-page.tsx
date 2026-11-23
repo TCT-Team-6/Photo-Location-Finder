@@ -92,32 +92,32 @@ export function GuideStartPage() {
   }
 
   return <div className="wa-guide-workspace fade-up mx-auto max-w-2xl space-y-5">
-    <Link href="/cases" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#718078]" data-testid="link-guide-back"><ArrowLeft size={14} />Cases</Link>
-    <div><p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private</p><DeskHeadline className="mt-2 text-4xl sm:text-5xl">Let's write it down together.</DeskHeadline><p className="mt-2 text-sm leading-6 text-[#62756c]">The guide organizes what you know for police and searchers. It does not analyze photos, guess locations or contact anyone.</p></div>
+    <Link href="/cases" className="inline-flex min-h-11 items-center gap-2 text-[13px] font-semibold text-[#718078]" data-testid="link-guide-back"><ArrowLeft size={14} />Cases</Link>
+    <div><p className="font-data text-[13px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private</p><DeskHeadline className="mt-2 text-4xl sm:text-5xl">Let's write it down together.</DeskHeadline><p className="mt-2 text-sm leading-6 text-[#62756c]">The guide organizes what you know for police and searchers. It does not analyze photos, guess locations or contact anyone.</p></div>
     <EmergencyBar />
     {error && <ErrorBanner message={error} onRetry={submit} />}
     <fieldset disabled={!!busy} className="min-w-0 space-y-5 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 sm:p-5" aria-busy={!!busy}>
-      <div><label htmlFor="g-text" className="mb-1.5 block text-sm font-semibold text-[#344b42]">What happened</label><textarea id="g-text" rows={5} maxLength={6000} value={text} onChange={(e) => setText(e.target.value)} className={inputCls} data-testid="input-guide-text" />{errs.text && <p role="alert" className="mt-1 text-xs text-[#a64e43]">{errs.text}</p>}</div>
-      <div><label htmlFor="g-name" className="mb-1.5 block text-sm font-semibold text-[#344b42]">Their first name</label><input id="g-name" maxLength={80} value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} placeholder="Leave blank to use 'Guide case'" data-testid="input-guide-first-name" /><p className="mt-1 text-xs text-[#718078]">You can edit this any time on the case page.</p></div>
-      <fieldset><legend className="mb-1.5 text-sm font-semibold text-[#344b42]">Your role (self-declared)</legend><div className="grid gap-2 sm:grid-cols-3">{roles.map((r) => <label key={r.v} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${role === r.v ? 'border-[#385e51] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#fbf9f3]'}`}><input type="radio" name="g-role" checked={role === r.v} onChange={() => setRole(r.v)} className="h-4 w-4 accent-[#385e51]" data-testid={`radio-guide-role-${r.v}`} />{r.l}</label>)}</div>{errs.role && <p role="alert" className="mt-1 text-xs text-[#a64e43]">{errs.role}</p>}</fieldset>
+      <div><label htmlFor="g-text" className="mb-1.5 block text-sm font-semibold text-[#344b42]">What happened</label><textarea id="g-text" rows={5} maxLength={6000} value={text} onChange={(e) => setText(e.target.value)} className={inputCls} data-testid="input-guide-text" />{errs.text && <p role="alert" className="mt-1 text-[13px] text-[#a64e43]">{errs.text}</p>}</div>
+      <div><label htmlFor="g-name" className="mb-1.5 block text-sm font-semibold text-[#344b42]">Their first name</label><input id="g-name" maxLength={80} value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} placeholder="Leave blank to use 'Guide case'" data-testid="input-guide-first-name" /><p className="mt-1 text-[13px] text-[#718078]">You can edit this any time on the case page.</p></div>
+      <fieldset><legend className="mb-1.5 text-sm font-semibold text-[#344b42]">Your role (self-declared)</legend><div className="grid gap-2 sm:grid-cols-3">{roles.map((r) => <label key={r.v} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm ${role === r.v ? 'border-[#385e51] bg-[#e9ede3]' : 'border-[#d8d1c2] bg-[#fbf9f3]'}`}><input type="radio" name="g-role" checked={role === r.v} onChange={() => setRole(r.v)} className="h-4 w-4 accent-[#385e51]" data-testid={`radio-guide-role-${r.v}`} />{r.l}</label>)}</div>{errs.role && <p role="alert" className="mt-1 text-[13px] text-[#a64e43]">{errs.role}</p>}</fieldset>
       <div className="rounded-xl border border-dashed border-[#b9c4b5] bg-[#e8e9df] p-3">
         <p className="text-sm font-semibold text-[#344b42]">Last photo (optional)</p>
-        <p className="text-xs text-[#718078]">Saved privately as reference evidence on the case. It is never sent to the AI and is not a headshot.</p>
+        <p className="text-[13px] text-[#718078]">Saved privately as reference evidence on the case. It is never sent to the AI and is not a headshot.</p>
         <div className="mt-2 flex items-center gap-3">
           {preview ? <img src={preview} alt="Selected last photo" className="h-16 w-16 rounded-lg object-cover" /> : null}
           <label className={`${guideGhost} cursor-pointer`}><input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" data-testid="input-guide-start-photo" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; const m = validatePhoto(f); if (m) { setErrs((p) => ({ ...p, photo: m })); return; } leadReqId.current = newId(); setFile(f); }} />{file ? 'Replace' : 'Choose photo'}</label>
-          {file && <button type="button" onClick={() => { setFile(null); setPhotoOk(false); }} className="min-h-11 px-2 text-xs font-semibold text-[#a64e43] underline" data-testid="button-guide-start-remove-photo">Remove</button>}
+          {file && <button type="button" onClick={() => { setFile(null); setPhotoOk(false); }} className="min-h-11 px-2 text-[13px] font-semibold text-[#a64e43] underline" data-testid="button-guide-start-remove-photo">Remove</button>}
         </div>
-        {file && <label className="mt-2 flex min-h-11 items-start gap-3 text-xs leading-5 text-[#344b42]"><input type="checkbox" checked={photoOk} onChange={(e) => setPhotoOk(e.target.checked)} className="mt-1 h-4 w-4 accent-[#385e51]" data-testid="checkbox-guide-photo-permission" />I have permission to save this photo privately on the case.</label>}
-        {errs.photo && <p role="alert" className="mt-1 text-xs text-[#a64e43]">{errs.photo}</p>}
+        {file && <label className="mt-2 flex min-h-11 items-start gap-3 text-[13px] leading-5 text-[#344b42]"><input type="checkbox" checked={photoOk} onChange={(e) => setPhotoOk(e.target.checked)} className="mt-1 h-4 w-4 accent-[#385e51]" data-testid="checkbox-guide-photo-permission" />I have permission to save this photo privately on the case.</label>}
+        {errs.photo && <p role="alert" className="mt-1 text-[13px] text-[#a64e43]">{errs.photo}</p>}
       </div>
       <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#d8d1c2] bg-[#fbf9f3] p-4 text-sm leading-6 text-[#344b42]"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1.5 h-4 w-4 accent-[#385e51]" data-testid="checkbox-guide-consent" /><span>I have permission to save these details in a private case. I understand my written words (not photos) are sent to OpenAI to organize the facts, that this is not an emergency service, and that nothing here confirms anyone's identity or location.</span></label>
-      {errs.consent && <p role="alert" className="-mt-3 text-xs text-[#a64e43]">{errs.consent}</p>}
+      {errs.consent && <p role="alert" className="-mt-3 text-[13px] text-[#a64e43]">{errs.consent}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/cases/new" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#385e51] underline underline-offset-4" data-testid="link-guide-start-regular">{REGULAR_FORM_LINK}</Link>
         <button type="button" onClick={submit} disabled={!!busy} className={guidePrimary} data-testid="button-guide-create">{busy ? <><Loader2 size={15} className="animate-spin" />{busy}</> : <>Start the guide <Send size={15} /></>}</button>
       </div>
-      {photoWarn && <p role="status" className="text-xs text-[#a64e43]">{photoWarn}</p>}
+      {photoWarn && <p role="status" className="text-[13px] text-[#a64e43]">{photoWarn}</p>}
     </fieldset>
     <Disclaimer />
     <PrivacyNotice compact />
@@ -172,8 +172,8 @@ export function GuideCasePage() {
 
   const pending = intake.isPending || note.isPending;
   const header = <div>
-    <Link href={`/cases/${id}`} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[#718078]" data-testid="link-guide-case"><ArrowLeft size={14} />Case details</Link>
-    <p className="font-data text-[10px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private case</p>
+    <Link href={`/cases/${id}`} className="inline-flex min-h-11 items-center gap-2 text-[13px] font-semibold text-[#718078]" data-testid="link-guide-case"><ArrowLeft size={14} />Case details</Link>
+    <p className="font-data text-[13px] uppercase tracking-[.18em] text-[#9c6d4e]">AI Guide / private case</p>
     <DeskHeadline className="mt-1 text-4xl" testId="text-guide-case-name">{displayName(c)}</DeskHeadline>
   </div>;
 
@@ -200,9 +200,9 @@ export function GuideCasePage() {
     </section>}
     <section className="rounded-2xl border border-[#d8d1c2] bg-[#f4f0e6] p-3 sm:p-4" aria-label="Guide conversation">
       <GuideChat messages={messages} pending={pending} />
-      {clarifying && guide.question && <p className="mt-3 font-data text-[10px] uppercase tracking-[.14em] text-[#718078]" data-testid="text-guide-question-count">Question {questionNumber(guide)} of up to {MAX_REQUIRED_QUESTIONS}</p>}
+      {clarifying && guide.question && <p className="mt-3 font-data text-[13px] uppercase tracking-[.14em] text-[#718078]" data-testid="text-guide-question-count">Question {questionNumber(guide)} of up to {MAX_REQUIRED_QUESTIONS}</p>}
     </section>
-    {notice && <div role="status" className="flex items-start justify-between gap-3 rounded-xl border border-[#dbb6a8] bg-[#fbefeb] p-3 text-sm text-[#a64e43]" data-testid="status-guide-photo-notice"><p>{notice}</p><button type="button" onClick={() => setNotice('')} className="min-h-11 shrink-0 px-2 text-xs font-semibold underline" data-testid="button-dismiss-notice">Dismiss</button></div>}
+    {notice && <div role="status" className="flex items-start justify-between gap-3 rounded-xl border border-[#dbb6a8] bg-[#fbefeb] p-3 text-sm text-[#a64e43]" data-testid="status-guide-photo-notice"><p>{notice}</p><button type="button" onClick={() => setNotice('')} className="min-h-11 shrink-0 px-2 text-[13px] font-semibold underline" data-testid="button-dismiss-notice">Dismiss</button></div>}
     {error && <ErrorBanner message={error} onRetry={() => { setError(''); q.refetch(); }} />}
     {!blocked && <section className="sticky bottom-3 z-10 rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] p-3 shadow-[0_12px_30px_rgba(38,61,54,.12)]" aria-label="Your reply">
       {yesNo && <div className="mb-2"><ReplyChips options={['Yes', 'No', 'Not sure']} onPick={send} disabled={pending} /></div>}
@@ -217,7 +217,7 @@ export function GuideCasePage() {
 
     {allowed && <section className="space-y-3 rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4 sm:p-5" aria-labelledby="opt-h">
       <h2 id="opt-h" className="font-editorial text-2xl">A few optional details</h2>
-      <p className="text-xs text-[#718078]">Skip any of these. Each answer is saved as a note on the case.</p>
+      <p className="text-[13px] text-[#718078]">Skip any of these. Each answer is saved as a note on the case.</p>
       {optionalQuestions.map((oq) => <div key={oq.id}><label htmlFor={`opt-${oq.id}`} className="mb-1 block text-sm font-semibold text-[#344b42]">{oq.prompt}</label>
         <div className="flex gap-2"><input id={`opt-${oq.id}`} maxLength={500} value={optAnswers[oq.id] ?? ''} onChange={(e) => { setOptAnswers((p) => ({ ...p, [oq.id]: e.target.value })); setSavedOpt((p) => ({ ...p, [oq.id]: false })); }} className={`${inputCls} min-h-11`} data-testid={`input-optional-${oq.id}`} />
           <button type="button" disabled={note.isPending || !optAnswers[oq.id]?.trim() || savedOpt[oq.id]} onClick={() => saveOptional(oq.id, oq.prefix)} className={guideGhost} data-testid={`button-save-optional-${oq.id}`}>{savedOpt[oq.id] ? 'Saved' : 'Save'}</button></div></div>)}
@@ -228,9 +228,9 @@ export function GuideCasePage() {
       {!planData && <button type="button" onClick={preparePlan} disabled={plan.isPending} className={`${guidePrimary} w-full sm:w-auto`} data-testid="button-prepare-summary">{plan.isPending ? <Loader2 size={16} className="animate-spin" /> : <ClipboardList size={16} />}Prepare responder summary</button>}
       {planData && <>
         {planData.actions.length > 0 && <ul className="grid gap-3" data-testid="list-guide-actions">{planData.actions.map((a, i) => <li key={`${a.kind}-${i}`} className="rounded-2xl border border-[#d8d1c2] bg-[#fbf9f3] p-4" data-testid={`card-guide-action-${a.kind}`}>
-          <p className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">From: {a.sourceLabel}</p>
+          <p className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">From: {a.sourceLabel}</p>
           <details className="mt-1 group" data-testid={`details-why-${a.kind}`}><summary className="inline-flex min-h-11 cursor-pointer items-center gap-1 text-sm font-semibold text-[#385e51]">Why this <ChevronDown size={14} className="transition group-open:rotate-180" /></summary>
-            <dl className="rounded-xl bg-[#f4f0e6] p-3 text-xs leading-5 text-[#465c50]"><dt className="font-semibold">Source</dt><dd>{a.sourceLabel} (user-reported, unverified)</dd><dt className="mt-1 font-semibold">Reason</dt><dd>{a.reason}</dd></dl></details>
+            <dl className="rounded-xl bg-[#f4f0e6] p-3 text-[13px] leading-5 text-[#465c50]"><dt className="font-semibold">Source</dt><dd>{a.sourceLabel} (user-reported, unverified)</dd><dt className="mt-1 font-semibold">Reason</dt><dd>{a.reason}</dd></dl></details>
           <div className="mt-3">{a.kind === 'call_911' ? <a href="tel:911" className={`${guidePrimary} !bg-[#a64e43]`} data-testid="link-action-call"><Phone size={15} />Call 911</a>
             : a.kind === 'share_report' ? <a href="#summary-h" className={guideGhost} data-testid="link-action-share"><Share2 size={15} />Review and share below</a>
             : <a href="#summary-h" className={guideGhost} data-testid="link-action-print"><Printer size={15} />Review and print below</a>}</div>
@@ -238,8 +238,8 @@ export function GuideCasePage() {
         <ResponderSummary text={summaryText} filename={`responder-summary-${displayName(c).replace(/\W+/g, '-').toLowerCase()}.txt`} />
       </>}
     </section>}
-    {!allowed && !blocked && <p className="rounded-xl bg-[#f8f5ec] p-3 text-xs text-[#718078]">The responder summary becomes available once the required facts are in.</p>}
-    {allowed && clarifying && <p className="rounded-xl bg-[#f8f5ec] p-3 text-xs text-[#718078]">One question is still open above. Answering it makes the summary more useful.</p>}
+    {!allowed && !blocked && <p className="rounded-xl bg-[#f8f5ec] p-3 text-[13px] text-[#718078]">The responder summary becomes available once the required facts are in.</p>}
+    {allowed && clarifying && <p className="rounded-xl bg-[#f8f5ec] p-3 text-[13px] text-[#718078]">One question is still open above. Answering it makes the summary more useful.</p>}
     <Link href={`/cases/${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-[#385e51] underline underline-offset-4" data-testid="link-guide-open-form">{REGULAR_FORM_LINK}</Link>
     <Disclaimer />
     <PrivacyNotice compact />
@@ -249,7 +249,7 @@ export function GuideCasePage() {
 export function FactsPanel({ guide }: { guide: GuideState }) {
   return <details className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-4" data-testid="panel-guide-facts">
     <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-[#385e51]">Facts so far · user-reported, unverified</summary>
-    <dl className="mt-2 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{factRows(guide.facts).map((r) => <div key={r.key} data-testid={`fact-${r.key}`}><dt className="font-data text-[9px] uppercase tracking-[.14em] text-[#9c6d4e]">{r.label}</dt><dd className={r.known ? 'text-[#263d36]' : 'italic text-[#89948a]'}>{r.value}</dd></div>)}</dl>
-    <p className="mt-3 text-xs text-[#718078]">To correct a fact, type the correction in the reply box. The guide records it.</p>
+    <dl className="mt-2 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{factRows(guide.facts).map((r) => <div key={r.key} data-testid={`fact-${r.key}`}><dt className="font-data text-[13px] uppercase tracking-[.14em] text-[#9c6d4e]">{r.label}</dt><dd className={r.known ? 'text-[#263d36]' : 'italic text-[#89948a]'}>{r.value}</dd></div>)}</dl>
+    <p className="mt-3 text-[13px] text-[#718078]">To correct a fact, type the correction in the reply box. The guide records it.</p>
   </details>;
 }

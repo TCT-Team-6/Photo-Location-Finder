@@ -43,7 +43,7 @@ export function DemoResult({ sample }: { sample: DemoSample }) {
         <RankedPlacesList items={items} selectedIndex={selected} onSelect={(i) => { setSelected(i); setFocusToken((t) => t + 1); }} scrollToken={scrollToken} activeTag={activeTag} onClueFocus={setActiveTag} testId="list-demo-candidates"
           renderDetails={(i) => { const c = inv.candidates[i]; const pos = entries[i].position; return <div className="rp-item-details" data-testid={`panel-demo-candidate-details-${i}`}>
             <p>{c.rationale}</p>
-            <p className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]"><span data-testid={`text-demo-candidate-coordinates-${i}`}>Coordinates {pos?.map((v) => v.toFixed(4)).join(', ') ?? 'unavailable'}</span><a href={c.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-demo-candidate-map-${i}`}>Open map <ArrowUpRight size={11} className="inline" /></a></p>
+            <p className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[13px]"><span data-testid={`text-demo-candidate-coordinates-${i}`}>Coordinates {pos?.map((v) => v.toFixed(4)).join(', ') ?? 'unavailable'}</span><a href={c.mapsUrl} target="_blank" rel="noreferrer" data-testid={`link-demo-candidate-map-${i}`}>Open map <ArrowUpRight size={11} className="inline" /></a></p>
           </div>; }} />
       </div>
       <div className="rp-area-photo rp-photo" data-testid="panel-demo-photo">
@@ -57,20 +57,20 @@ export function DemoResult({ sample }: { sample: DemoSample }) {
     </div>
     <section className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5" data-testid="panel-demo-family">
       <h2 className="font-editorial text-2xl">What the family told us</h2>
-      <p className="mt-2 text-xs text-[#718078]">Scenario facts supplied by the family, not inferred from the photo.</p>
-      <ul className="mt-3 flex flex-wrap gap-2">{sample.familyFacts.map((fact) => <li key={fact} className="rounded-full bg-[#e9ede3] px-3 py-2 text-xs text-[#385e51]">{fact}</li>)}</ul>
-      {sample.reason && <p className="mt-3 text-xs">Reason: {sample.reason}</p>}
+      <p className="mt-2 text-[13px] text-[#718078]">Scenario facts supplied by the family, not inferred from the photo.</p>
+      <ul className="mt-3 flex flex-wrap gap-2">{sample.familyFacts.map((fact) => <li key={fact} className="rounded-full bg-[#e9ede3] px-3 py-2 text-[13px] text-[#385e51]">{fact}</li>)}</ul>
+      {sample.reason && <p className="mt-3 text-[13px]">Reason: {sample.reason}</p>}
     </section>
     <details className="rounded-2xl border border-[#d8d1c2] bg-[#f8f5ec] p-5">
       <summary className="cursor-pointer font-editorial text-xl">Scene details &amp; all risk factors</summary>
       <h2 className="mt-3 font-editorial text-xl" data-testid="text-demo-result-title">{inv.title}</h2>
       <p className="mt-2 text-sm leading-6" data-testid="text-demo-summary">{inv.summary}</p>
-      <p className="mt-2 text-xs leading-5 text-[#718078]" data-testid="panel-demo-summary">{inv.context}</p>
-      <ul className="mt-3 space-y-3">{inv.clues.map((clue, i) => <li key={clue.label} className="text-xs leading-5" data-testid={`item-demo-clue-${i}`}><strong>{clue.label}</strong> — {clue.observation}<p className="text-[#718078]">{clue.significance}</p></li>)}</ul>
-      <ul className="mt-4 space-y-2">{sample.urgency.risks.map((risk) => <li key={risk.label} className="text-xs leading-5"><strong>{risk.label} (+{risk.points})</strong> — {risk.reason}</li>)}</ul>
-      <p className="mt-4 text-[10px] text-[#718078]">{inv.originalName} · <a href={sample.sourceImageUrl} target="_blank" rel="noreferrer" data-testid="link-demo-photo-source" className="underline">{sample.sourceName} source</a> · <a href={sample.licenseUrl} target="_blank" rel="noreferrer" data-testid="link-demo-photo-license" className="underline">License</a></p>
+      <p className="mt-2 text-[13px] leading-5 text-[#718078]" data-testid="panel-demo-summary">{inv.context}</p>
+      <ul className="mt-3 space-y-3">{inv.clues.map((clue, i) => <li key={clue.label} className="text-[13px] leading-5" data-testid={`item-demo-clue-${i}`}><strong>{clue.label}</strong> — {clue.observation}<p className="text-[#718078]">{clue.significance}</p></li>)}</ul>
+      <ul className="mt-4 space-y-2">{sample.urgency.risks.map((risk) => <li key={risk.label} className="text-[13px] leading-5"><strong>{risk.label} (+{risk.points})</strong> — {risk.reason}</li>)}</ul>
+      <p className="mt-4 text-[13px] text-[#718078]">{inv.originalName} · <a href={sample.sourceImageUrl} target="_blank" rel="noreferrer" data-testid="link-demo-photo-source" className="underline">{sample.sourceName} source</a> · <a href={sample.licenseUrl} target="_blank" rel="noreferrer" data-testid="link-demo-photo-license" className="underline">License</a></p>
     </details>
-    <p className="border-t border-[#e1dbce] pt-3 text-xs font-semibold leading-5 text-[#604a37]" data-testid="text-urgency-disclaimer">{sample.urgency.disclaimer}</p>
+    <p className="border-t border-[#e1dbce] pt-3 text-[13px] font-semibold leading-5 text-[#604a37]" data-testid="text-urgency-disclaimer">{sample.urgency.disclaimer}</p>
     {share && createPortal(<DemoPrintSummary sample={sample} onClose={() => setShare(false)} />, document.body)}
   </div>;
 }
