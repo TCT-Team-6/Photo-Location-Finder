@@ -46,12 +46,14 @@ html{scrollbar-gutter:stable}
 .wa-topbar{background:var(--paper)!important;z-index:120}
 .wa-sidebar{z-index:120}
 .wa-workspace main{padding-bottom:112px!important}
-.wa-shell>.wa-workspace{flex:1 1 0%;min-width:0;max-width:100%}
+/* Instrument tracking rectangles include decorative bleed beyond the page.
+   Keep it from widening the scrollable workspace on phones and tablets. */
+.wa-shell>.wa-workspace{flex:1 1 0%;min-width:0;max-width:100%;overflow-x:clip}
 .wa-workspace>main,.fd-sheet,.wa-intake,#investigate-form.fd-wizard,.fd-source-desk,.fd-desk-page{box-sizing:border-box;min-width:0}
 .wa-workspace .wa-intake{width:100%;max-width:1120px;justify-self:stretch}
 #investigate-form.fd-wizard{width:100%;max-width:none}
 .fd-source-desk{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start;justify-items:stretch;width:100%;max-width:100%}
-.fd-source-desk>.physical-dial{grid-column:1;grid-row:1;justify-self:start;margin:0}
+.fd-source-desk>.desk-selector-layout{grid-column:1;grid-row:1;justify-self:start;margin:0}
 .fd-desk-page{display:grid;grid-column:2;grid-row:1;width:100%;max-width:100%;min-width:0;min-height:310px}
 .fd-desk-page>[data-desk-panel]{grid-area:1/1;align-self:start;visibility:hidden;pointer-events:none}
 .fd-desk-page>[data-desk-panel][data-active=true]{visibility:visible;pointer-events:auto}
@@ -135,7 +137,7 @@ html:has(.physical-progress){--instrument-layer:210}
 @media(max-width:991px) and (min-width:768px){.physical-swatch{width:440px;height:330px}}
 @media(max-width:767px){
   .fd-source-desk{grid-template-columns:minmax(0,1fr)}
-  .fd-source-desk>.physical-dial{grid-column:1;grid-row:1}
+  .fd-source-desk>.desk-selector-layout{grid-column:1;grid-row:1}
   .fd-source-desk>.fd-desk-page{grid-column:1;grid-row:2}
   .fd-wizard-step{min-height:1280px}
   .physical-swatch{width:300px;height:225px}

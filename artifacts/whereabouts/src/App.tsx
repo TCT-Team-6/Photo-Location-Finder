@@ -767,7 +767,6 @@ function InvestigatePage() {
           /></div>)}
         </div>
         </div>
-        <ul className="fd-desk-descriptions" data-testid="list-new-investigation-types">{fieldDesks.map(desk=><li key={desk.id} data-active={activeSlot.id===desk.id} data-testid={`text-new-investigation-type-${desk.id}`}><strong>{desk.shortLabel}</strong><span>{desk.subtitle}</span></li>)}</ul>
         <div className="desk-batch-reserve" data-active={activeSlot.id!=='original'} inert={activeSlot.id==='original'} aria-hidden={activeSlot.id==='original'}><BatchPrints items={printEntries} errors={extraFileErrors} onOrder={setPrintOrder} onRemove={id=>{if(id.startsWith('slot:'))removeSelectedFile(id.slice(5) as PhotoUploadSlotId);else setExtraFiles(current=>current.filter(row=>row.id!==id));}}/></div>
         {localError&&<p role="alert" className="mt-4 text-[13px]">{localError}</p>}
         {totalCount>0&&<footer><button type="button" className="fd-next fd-primary px-6 py-3" data-testid="button-investigation-next-photo" onClick={()=>setFlowStep(2)}>Next →</button><span className="font-data text-[13px]">{totalCount} media item{totalCount===1?'':'s'} across selected desks</span></footer>}

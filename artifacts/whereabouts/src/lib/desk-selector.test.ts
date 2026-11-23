@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {caughtDeskAngle,clampSelectorAngle,createSelectorMotion,crossedDeskDetents,DESK_DETENTS,nearestDeskDetent,selectorStop,startSelectorMotion,tactileAngle,unwrappedPointer} from './desk-selector';
 
+test('selector descriptions stay outside the fixed-size instrument footprint',()=>{
+  const ui=readFileSync(new URL('../components/desk-selector.tsx',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../styles/readability.css',import.meta.url),'utf8');
+  const app=readFileSync(new URL('../App.tsx',import.meta.url),'utf8');
+  assert.match(ui,/<\/div><ul className="desk-selector-legend"/);
+  assert.match(css,/\.physical-dial\s*\{[^}]*height:\s*280px/);
+  assert.doesNotMatch(css,/\.physical-dial\s*\{[^}]*padding-top:\s*280px/);
+  assert.doesNotMatch(app,/list-new-investigation-types/);
+});
+
 test('selector has exactly three finite detents and clamps at both physical stops',()=>{
   assert.deepEqual(DESK_DETENTS,[-Math.PI/3,0,Math.PI/3]);
   for(let angle=-9;angle<9;angle+=.03){assert.ok(clampSelectorAngle(angle)>=-Math.PI/3);assert.ok(clampSelectorAngle(angle)<=Math.PI/3);}

@@ -28,9 +28,9 @@ export function DeskSelector({value,onChange,disabled=false}:{value:number;onCha
     const next=event.key==='Home'?0:event.key==='End'?2:Math.max(0,Math.min(2,index+(['ArrowRight','ArrowDown'].includes(event.key)?1:-1)));
     if(next===index){deskSound('stop');return;}choose(next);radios.current[next]?.focus({preventScroll:true});
   };
-  return <div className="physical-footprint physical-dial" data-control="Desk selector" data-testid="dial-desk" role="radiogroup" aria-label="Choose photo field desk">
+  return <div className="desk-selector-layout"><div className="physical-footprint physical-dial" data-control="Desk selector" data-testid="dial-desk" role="radiogroup" aria-label="Choose photo field desk">
     <InstrumentView kind="dial" value={value} selector={motion} interaction={{disabled,onTurn:turn,onCancel:()=>{drag.current.held=false;choose(current.current.value,70,'out');}}}/>
     {options.map((option,index)=><button key={option.label} ref={node=>{radios.current[index]=node;}} type="button" role="radio" aria-checked={value===index} disabled={disabled} tabIndex={value===index?0:-1} className="desk-selector-radio" data-testid={`button-selector-desk-${index}`} onKeyDown={event=>key(event,index)} onClick={()=>choose(index)}>{option.label}<i aria-hidden="true"/></button>)}
-    <ul className="desk-selector-legend" data-testid="list-desk-descriptions">{options.map((option,index)=><li key={option.label} data-active={value===index}><strong>{option.label}</strong><span data-testid={`text-desk-description-${index}`}>{option.description}</span></li>)}</ul>
+    </div><ul className="desk-selector-legend" data-testid="list-desk-descriptions">{options.map((option,index)=><li key={option.label} data-active={value===index}><strong>{option.label}</strong><span data-testid={`text-desk-description-${index}`}>{option.description}</span></li>)}</ul>
   </div>;
 }
