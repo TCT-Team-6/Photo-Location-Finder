@@ -228,6 +228,19 @@ function applyLocationFallback(
   };
 }
 
+// The backend's headline `confidence` is the chance its answer is the exact
+// spot, so a correct but broad answer ("Las Vegas", a national park) scores
+// low on purpose. `confidence_by_distance["25km"]` is the chance the answer is
+// within 25 km, which is what a search plan needs. Use it for the chosen
+// location when the backend sends it; older backends fall back to `confidence`.
+function searchAreaConfidence(body: JsonRecord): unknown {
+  const byDistance = asRecord(body.confidence_by_distance);
+  const within25km = byDistance?.["25km"];
+  return typeof within25km === "number" && Number.isFinite(within25km)
+    ? within25km
+    : body.confidence;
+}
+
 export function normalizeImageLocationResponse(
   value: unknown,
 ): ImageLocationAnalysis {
@@ -307,7 +320,7 @@ export function normalizeImageLocationResponse(
       region: region?.slice(0, 120) ?? null,
       country: country?.slice(0, 120) ?? null,
       confidence: confidence(
-        primary ? body.confidence ?? source.confidence : source.confidence,
+        primary ? searchAreaConfidence(body) ?? source.confidence : source.confidence,
       ),
       rationale: [
         reason ??
@@ -329,7 +342,7 @@ export function normalizeImageLocationResponse(
         ...(primarySource ?? {}),
         region: body.region ?? primarySource?.region,
         country: body.country ?? primarySource?.country,
-        confidence: body.confidence ?? primarySource?.confidence,
+        confidence: searchAreaConfidence(body) ?? primarySource?.confidence,
         latitude: body.latitude ?? bestGuess?.latitude ?? primarySource?.latitude,
         longitude:
           body.longitude ?? bestGuess?.longitude ?? primarySource?.longitude,
