@@ -124,7 +124,7 @@ export function RankedPlacesMap({ entries, selectedIndex, onSelect, focusToken, 
         {circle && <Circle center={circle.center} radius={circle.radiusKm * 1000} pathOptions={{ color: '#385e51', weight: 2, dashArray: '6 6', fillOpacity: 0, interactive: true }}>
           <Tooltip sticky>Walking-distance search circle · {circle.radiusKm.toFixed(1)} km</Tooltip>
         </Circle>}
-        {[...located].reverse().map((e) => <Marker key={e.index} position={e.position} icon={pinIcon(e.index + 1, confidenceTier(e.percent).color, e.index === selectedIndex)} zIndexOffset={e.index === selectedIndex ? 1000 : -e.index} title={`${e.index + 1}. ${e.place}`} eventHandlers={{ click: () => onSelectRef.current(e.index), add: (ev) => bindPinKeys(ev.target as L.Marker, e.index, onSelectRef) }}>
+        {located.filter(e => e.index < 3).reverse().map((e) => <Marker key={e.index} position={e.position} icon={pinIcon(e.index + 1, confidenceTier(e.percent).color, e.index === selectedIndex)} zIndexOffset={e.index === selectedIndex ? 1000 : -e.index} title={`${e.index + 1}. ${e.place}`} eventHandlers={{ click: () => onSelectRef.current(e.index), add: (ev) => bindPinKeys(ev.target as L.Marker, e.index, onSelectRef) }}>
           <Tooltip direction="top">{e.index + 1}. {e.place} · Confidence {e.percent ?? 'not supplied'}</Tooltip>
         </Marker>)}
       </MapContainer>

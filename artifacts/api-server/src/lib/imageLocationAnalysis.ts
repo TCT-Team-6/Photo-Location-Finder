@@ -11,6 +11,7 @@ import { logger } from "./logger";
 const DEFAULT_IMAGE_LOCATOR_URL =
   "https://mit-app-inventor-backend.onrender.com";
 const MAX_ANALYZER_RESPONSE_BYTES = 2 * 1024 * 1024;
+const MAX_CANDIDATES = 10;
 const FALLBACK_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -300,7 +301,7 @@ export function normalizeImageLocationResponse(
       primary ? bestGuess?.country : null,
     );
     const key = name.trim().toLocaleLowerCase();
-    if (seenCandidates.has(key) || normalizedCandidates.length >= 4) return;
+    if (seenCandidates.has(key) || normalizedCandidates.length >= MAX_CANDIDATES) return;
     seenCandidates.add(key);
 
     const latitude = coordinate(
@@ -355,7 +356,7 @@ export function normalizeImageLocationResponse(
   for (const source of possibleCandidates) {
     const name = candidateName(source);
     if (name) appendCandidate(source, name, false);
-    if (normalizedCandidates.length >= 4) break;
+    if (normalizedCandidates.length >= MAX_CANDIDATES) break;
   }
 
   // The backend's primary answer carries a fused, map-verified confidence,

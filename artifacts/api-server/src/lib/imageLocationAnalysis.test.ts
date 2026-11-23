@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { analyzeImageLocation, locatorHealth, normalizeImageLocationResponse } from "./imageLocationAnalysis.js";
+test("retains up to ten distinct location leads in service order", () => {
+  const result = normalizeImageLocationResponse({
+    location_name: "Primary location", confidence: 0.9,
+    alternatives: Array.from({ length: 12 }, (_, i) => ({
+      name: `Alternative ${i + 1}`, confidence: 0.8 - i * 0.01,
+    })),
+  });
+  assert.equal(result.candidates.length, 10);
+  assert.equal(result.candidates[0].place, "Primary location");
+  assert.equal(result.candidates[9].place, "Alternative 9");
+});
 import { extractImageLocationMetadata } from "./imageLocationMetadata.js";
 import { IMAGE_LIMIT, VIDEO_LIMIT, mediaValidationError } from "./locatorMedia.js";
 
