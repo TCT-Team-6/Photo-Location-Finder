@@ -32,9 +32,6 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
         <section className="geo-scene-notes"><p className="geo-eyebrow">Scene notes</p><p className="geo-scene-summary" data-testid="text-investigation-summary">{sceneSummary||'No scene summary was returned.'}</p>
           <div className="geo-context"><p className="geo-eyebrow">Your notes</p><p data-testid="text-investigation-context">{item.context?.trim()||'No notes added yet.'}</p></div>
         </section>
-        <details className="geo-evidence" open><summary><p className="geo-eyebrow">Visual evidence</p><h2 className="geo-section-title">Details in the frame.</h2><span>{item.clues.length} clues · expand or collapse</span></summary>
-          {item.clues.length?item.clues.map((clue,index)=><article key={`${clue.label}-${index}`} className="geo-clue" data-testid={`card-clue-${index}`}><h3><span className="geo-eyebrow">{String(index+1).padStart(2,'0')} / </span>{readableClue(clue.label)}</h3><p>{readableClue(clue.observation)}</p><p>{readableClue(clue.significance)}</p></article>):<p className="geo-empty" data-testid="content-no-clues">No visual clues were returned for this investigation.</p>}
-        </details>
       </div>
       <GeographicConfidenceMap candidates={leads} selectedIndex={actualIndex} onSelect={onSelect}/>
     </div>
@@ -59,6 +56,9 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
       })}</ol>{selected&&<LocationLeadDetails key={`${actualIndex}:${selected.place}`} lead={selected} index={actualIndex} item={item}/>}</>:<p className="geo-empty" data-testid="content-no-candidates">No likely places were returned. Keep the image in your library and revisit as new clues surface.</p>}
       <p className="geo-candidate-note">Read the map, not an answer: compare the visible evidence with independent sources. Nothing in this report establishes anyone’s present whereabouts.</p>
     </section>
+    <details className="geo-evidence" open><summary><p className="geo-eyebrow">Visual evidence</p><h2 className="geo-section-title">Details in the frame.</h2><span>{item.clues.length} clues · expand or collapse</span></summary>
+      {item.clues.length?item.clues.map((clue,index)=><article key={`${clue.label}-${index}`} className="geo-clue" data-testid={`card-clue-${index}`}><h3><span className="geo-eyebrow">{String(index+1).padStart(2,'0')} / </span>{readableClue(clue.label)}</h3><p>{readableClue(clue.observation)}</p><p>{readableClue(clue.significance)}</p></article>):<p className="geo-empty" data-testid="content-no-clues">No visual clues were returned for this investigation.</p>}
+    </details>
     <HealthUrgencyCard investigation={item}/>
   </div>;
 }

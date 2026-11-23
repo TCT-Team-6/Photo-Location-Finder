@@ -12,10 +12,10 @@ test('new layout is limited to image geolocation, preserving video, fake-news an
   assert.equal(isImageGeolocationReport({desk:'recreation',contentType:'image/jpeg'}),false);
   assert.equal(isImageGeolocationReport({desk:'recreation',analysis:null}),false);
 });
-test('image report orders evidence/map first, full-width ranked candidates second, safety last',()=>{
+test('image report orders photo and notes beside map, then leads, visual evidence and safety',()=>{
   const source=readFileSync(new URL('../components/image-geolocation-report.tsx',import.meta.url),'utf8');
   const primary=source.indexOf('className="geo-report-primary"'),photo=source.indexOf('<SavedOriginal'),notes=source.indexOf('Scene notes'),evidence=source.indexOf('Visual evidence'),map=source.indexOf('<GeographicConfidenceMap'),list=source.indexOf('className="geo-candidates"'),health=source.indexOf('<HealthUrgencyCard');
-  assert.ok(primary<photo&&photo<notes&&notes<evidence&&evidence<map&&map<list&&list<health);
+  assert.ok(primary<photo&&photo<notes&&notes<map&&map<list&&list<evidence&&evidence<health);
   assert.match(source,/<ol className="geo-candidate-list"/);
   assert.match(source,/index===0&&<InstrumentView kind="leadpaper"/);
   assert.match(source,/onClick=\{\(\)=>onSelect\(index\)\}/);

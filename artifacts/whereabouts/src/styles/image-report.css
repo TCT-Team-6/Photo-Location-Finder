@@ -19,7 +19,7 @@
 .geo-clue h3{font:500 21px var(--app-font-serif)}
 .geo-clue p{font-size:13px;line-height:1.7;margin-top:9px;color:var(--quiet)}
 .geo-clue p:last-child{font-size:11px}
-.geo-map-section{border-top:2px solid var(--ink);padding-top:20px;min-width:0}
+.geo-map-section{border:1px solid #000;padding:20px;min-width:0}
 .geo-map-explanation{font-size:12px;line-height:1.7;color:var(--quiet);margin-top:14px}
 .geo-map-surface{position:relative;margin-top:20px;isolation:isolate;background:var(--recess)}
 .geo-map-surface .leaflet-container{height:clamp(340px,52vh,500px);width:100%;background:var(--recess);font-family:var(--app-font-sans)}
@@ -36,7 +36,7 @@
 .geo-map-method{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:10px;line-height:1.7;color:var(--quiet)}
 .geo-map-unmapped{margin-top:10px;font-size:11px;line-height:1.7;color:var(--quiet)}
 .geo-overview-button{font:10px var(--app-font-mono);text-decoration:underline;text-underline-offset:4px;margin-top:16px}
-.geo-candidates{margin-top:46px;padding-top:25px;border-top:2px solid var(--ink);min-width:0}
+.geo-candidates{margin-top:32px;padding:24px;border:1px solid #000;min-width:0}
 .geo-candidate-heading{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:22px}
 .geo-candidate-actions{display:flex;gap:12px;flex-wrap:wrap}
 .geo-candidate-actions button{padding:10px 14px;border:1px solid var(--line);font-size:11px}
