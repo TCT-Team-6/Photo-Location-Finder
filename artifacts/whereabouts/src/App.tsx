@@ -46,6 +46,7 @@ import { EmbeddedGpsNotice, KeyMoments, VideoAnalysisStatus, VideoPlayer } from 
 import { DemoExperience } from '@/components/demo-experience';
 import { LandingPage } from '@/components/landing-page';
 import AboutPage from '@/pages/about-page';
+import TesterLoginPage from '@/pages/tester-login';
 import { SiteCursor } from '@/components/site-cursor';
 import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray } from '@/components/field-desk';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
@@ -232,6 +233,7 @@ function SignInPage() {
       <div className="flex min-h-[690px] items-center justify-center px-4 py-12 sm:px-10"><SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} /></div>
     </div>
     <p className="mt-6 text-center font-data text-[13px] uppercase tracking-[.14em] text-[#849087]">Private by default · your photographs stay yours</p>
+    <p className="mt-4 text-center"><Link href="/tester-login" className="underline" data-testid="link-tester-login">Automation tester sign-in</Link></p>
   </div>;
 }
 
@@ -301,6 +303,7 @@ function ClerkProviderWithRoutes() {
       <Route path="/guide/:id" component={GuideCaseRoute} />
       <Route path="/guide-demo/:sample" component={GuideDemoPage} />
       <Route path="/sign-in/*?" component={SignInPage} />
+      <Route path="/tester-login" component={TesterLoginPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/user-portal" component={PortalRoute} />
       <Route path="/investigate" component={InvestigateRoute} />

@@ -5,6 +5,20 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type TesterTicketEnvironment = typeof TesterTicketEnvironment[keyof typeof TesterTicketEnvironment];
+
+
+export const TesterTicketEnvironment = {
+  development: 'development',
+  production: 'production',
+} as const;
+
+export interface TesterTicket {
+  ticket: string;
+  expiresInSeconds: 60;
+  environment: TesterTicketEnvironment;
+}
+
 export interface GuideIntakeInput {
   caseId: string;
   /**

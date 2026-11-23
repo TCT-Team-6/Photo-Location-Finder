@@ -8,6 +8,26 @@
 import * as zod from 'zod';
 
 
+/**
+ * Server-to-server only. No body or query parameters. X-Tester-Key selects no user; the account is fixed by the server. Never expose this key to browser JavaScript.
+ * @summary Issue a one-use sign-in ticket for the dedicated automation account
+ */
+export const issueTesterSignInTicketHeaderXTesterKeyMin = 32;
+export const issueTesterSignInTicketHeaderXTesterKeyMax = 512;
+
+
+
+export const IssueTesterSignInTicketHeader = zod.object({
+  "X-Tester-Key": zod.string().min(issueTesterSignInTicketHeaderXTesterKeyMin).max(issueTesterSignInTicketHeaderXTesterKeyMax)
+})
+
+export const IssueTesterSignInTicketResponse = zod.object({
+  "ticket": zod.string(),
+  "expiresInSeconds": zod.literal(60),
+  "environment": zod.enum(['development', 'production'])
+})
+
+
 export const guideIntakeBodyTextMax = 6000;
 
 export const guideIntakeBodyRevisionMin = 0;

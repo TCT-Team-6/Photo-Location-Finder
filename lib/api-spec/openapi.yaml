@@ -15,6 +15,32 @@ tags:
   - name: Investigations
     description: Photo location investigations and the user's saved library.
 paths:
+  /testing/sign-in-ticket:
+    post:
+      operationId: issueTesterSignInTicket
+      summary: Issue a one-use sign-in ticket for the dedicated automation account
+      description: Server-to-server only. No body or query parameters. X-Tester-Key selects no user; the account is fixed by the server. Never expose this key to browser JavaScript.
+      parameters:
+        - in: header
+          name: X-Tester-Key
+          required: true
+          schema: { type: string, minLength: 32, maxLength: 512 }
+      responses:
+        "200":
+          description: Sensitive one-use Clerk ticket. Never log or persist.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TesterTicket" }
+        "400":
+          description: Unexpected parameters
+        "401":
+          description: Invalid credentials or browser-origin request
+        "404":
+          description: Tester login disabled or misconfigured
+        "429":
+          description: Rate limited
+        "503":
+          description: Dedicated account or authentication provider unavailable
   /guide/intake:
     post:
       operationId: guideIntake
@@ -449,6 +475,13 @@ components:
         type: string
         format: uuid
   schemas:
+    TesterTicket:
+      type: object
+      required: [ticket, expiresInSeconds, environment]
+      properties:
+        ticket: { type: string }
+        expiresInSeconds: { type: integer, const: 60 }
+        environment: { type: string, enum: [development, production] }
     GuideIntakeInput:
       type: object
       required: [caseId, text, revision]

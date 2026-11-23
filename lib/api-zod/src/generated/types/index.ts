@@ -60,6 +60,8 @@ export * from './missingPersonCase';
 export * from './missingPersonCaseInput';
 export * from './missingPersonCaseInputResponderRole';
 export * from './refreshInvestigationCandidatesInput';
+export * from './testerTicket';
+export * from './testerTicketEnvironment';
 export * from './uploadUrlRequest';
 export * from './uploadUrlRequestContentType';
 export * from './uploadUrlResponse';

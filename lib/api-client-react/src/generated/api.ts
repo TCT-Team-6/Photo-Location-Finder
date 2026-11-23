@@ -38,6 +38,7 @@ import type {
   MissingPersonCase,
   MissingPersonCaseInput,
   RefreshInvestigationCandidatesInput,
+  TesterTicket,
   UploadUrlRequest,
   UploadUrlResponse
 } from './api.schemas';
@@ -68,6 +69,81 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getIssueTesterSignInTicketUrl = () => {
+
+
+
+
+  return `/api/testing/sign-in-ticket`
+}
+
+/**
+ * Server-to-server only. No body or query parameters. X-Tester-Key selects no user; the account is fixed by the server. Never expose this key to browser JavaScript.
+ * @summary Issue a one-use sign-in ticket for the dedicated automation account
+ */
+export const issueTesterSignInTicket = async ( options?: Parameters<typeof customFetch>[1]): Promise<TesterTicket> => {
+
+  return customFetch<TesterTicket>(getIssueTesterSignInTicketUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getIssueTesterSignInTicketMutationKey = () => ['issueTesterSignInTicket'] as const;
+
+export const getIssueTesterSignInTicketMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueTesterSignInTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof issueTesterSignInTicket>>, TError,void, TContext> => {
+
+const mutationKey = getIssueTesterSignInTicketMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueTesterSignInTicket>>, void> = () => {
+
+
+          return  issueTesterSignInTicket(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IssueTesterSignInTicketMutationResult = NonNullable<Awaited<ReturnType<typeof issueTesterSignInTicket>>>
+
+    export type IssueTesterSignInTicketMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Issue a one-use sign-in ticket for the dedicated automation account
+ */
+export const useIssueTesterSignInTicket = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueTesterSignInTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof issueTesterSignInTicket>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getIssueTesterSignInTicketMutationOptions(options));
+    }
 
 export const getGuideIntakeUrl = () => {
 
