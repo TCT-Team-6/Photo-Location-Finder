@@ -28,8 +28,12 @@ test('geographic surface is the existing Leaflet/tile stack with a geodesic rast
   assert.match(source,/map\.containerPointToLatLng/);assert.match(source,/geographicFieldValue/);
   assert.match(source,/ctx\.putImageData/);assert.match(source,/\.46\*255/);
   assert.doesNotMatch(source,/CircleMarker|<Circle|<Marker|createRadialGradient|normalize\(|\bfetch\(/);
-  assert.match(source,/not a measured search radius/);
-  assert.match(source,/never normalized to total 100%/);
+  const report=readFileSync(new URL('../components/image-geolocation-report.tsx',import.meta.url),'utf8');
+  assert.match(report,/not a measured search radius/);
+  assert.match(report,/never normalized to total 100%/);
+  assert.ok(report.indexOf('Higher model scores produce stronger')>report.indexOf('<HealthUrgencyCard'));
+  assert.ok(report.indexOf('Map tiles are requested')>report.indexOf('<HealthUrgencyCard'));
+  assert.doesNotMatch(source,/Higher model scores produce stronger|Map tiles are requested/);
   assert.match(source,/referrerPolicy="strict-origin"/);
 });
 test('paper is actual shared Three.js geometry; HTML remains above it and text sizes are not frozen',()=>{

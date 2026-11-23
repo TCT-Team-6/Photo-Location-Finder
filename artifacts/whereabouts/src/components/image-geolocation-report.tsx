@@ -62,5 +62,9 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
       {item.clues.length?item.clues.map((clue,index)=><article key={`${clue.label}-${index}`} className="geo-clue" data-testid={`card-clue-${index}`}><h3><span className="geo-eyebrow">{String(index+1).padStart(2,'0')} / </span>{readableClue(clue.label)}</h3><p>{readableClue(clue.observation)}</p><p>{readableClue(clue.significance)}</p></article>):<p className="geo-empty" data-testid="content-no-clues">No visual clues were returned for this investigation.</p>}
     </details>
     <HealthUrgencyCard investigation={item}/>
+    <footer aria-label="Map methodology and privacy">
+      <p className="geo-map-method">Higher model scores produce stronger, broader fields. Spread is a display heuristic, not a measured search radius, location uncertainty, or calibrated probability. Distant fields stay separate; overlapping values use the stronger field, not a sum. Scores are never normalized to total 100%. Zoom into a field for local detail.</p>
+      <p className="geo-map-method">Map tiles are requested from OpenStreetMap for the viewed area. The original photograph and private notes are not sent to the tile provider. No place-name geocoding is performed.</p>
+    </footer>
   </div>;
 }
