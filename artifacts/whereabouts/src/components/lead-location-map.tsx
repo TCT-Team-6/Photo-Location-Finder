@@ -63,7 +63,8 @@ export function LeadLocationMap({ candidates, selectedIndex, onSelect, onOpenLea
     {points.length ? <MapContainer key={mapKey || 'no-coordinate-map'} center={center} zoom={2} scrollWheelZoom={false} className="h-[310px] w-full" data-testid="map-lead-locations">
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        referrerPolicy="strict-origin"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapViewController points={points} selectedIndex={selectedIndex} mapKey={mapKey} />
       {points.map(({ lead, index, position }) => {

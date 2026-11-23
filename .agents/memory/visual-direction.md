@@ -74,6 +74,12 @@ Image investigation results prioritize a full-width title, photo/evidence beside
 
 **How to apply:** Preserve geographic separation and never imply model scores are calibrated probabilities or that illustrative field widths are measured search radii.
 
+OSM tile requests must send an origin-only Referer; do not apply the private-photo `no-referrer` policy to map tiles.
+
+**Why:** Suppressing the Referer violates the OSM tile policy and produced blocked-map tiles. Origin-only identification avoids leaking investigation paths while identifying the website.
+
+**How to apply:** Keep tile attribution, normal browser caching and the documented tile host; retain no-referrer on unrelated private-context outbound image requests.
+
 Do not put an effectful renderer-failure detector in R3F Canvas's `fallback` prop.
 
 **Why:** Fiber mounts that fallback as children of the HTML canvas even when canvas is supported. A fallback component's effect can falsely declare WebGL unavailable and unmount the real renderer.

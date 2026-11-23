@@ -63,7 +63,7 @@ export function GeographicConfidenceMap({candidates,selectedIndex,onSelect}:{can
     <p className="geo-eyebrow">Geographic comparison / top three</p><h2 className="geo-section-title" id="geographic-map-title">Where the leads point.</h2>
     <p className="geo-map-explanation">Independent model scores, shown as quiet local fields on the geographic map. Darker shading means a higher model score—not a greater verified likelihood.</p>
     {fields.length?<><div className="geo-map-surface"><MapContainer key={mapKey} center={center} zoom={3} scrollWheelZoom={false} aria-label="Geographic map of the highest-ranked coordinate-bearing leads">
-      <TileLayer key={retry} referrerPolicy="no-referrer" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={{loading:()=>setLoading(true),load:()=>setLoading(false),tileerror:()=>{setTileError(true);setLoading(false);}}}/>
+      <TileLayer key={retry} referrerPolicy="strict-origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={{loading:()=>setLoading(true),load:()=>setLoading(false),tileerror:()=>{setTileError(true);setLoading(false);}}}/>
       <GeographicViewport positions={positions} selectedPosition={selectedPosition} overview={overview} focusVersion={focusVersion}/>
       <GeographicRaster fields={fields}/>
     </MapContainer></div>

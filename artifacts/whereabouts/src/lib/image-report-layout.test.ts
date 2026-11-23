@@ -30,7 +30,7 @@ test('geographic surface is the existing Leaflet/tile stack with a geodesic rast
   assert.doesNotMatch(source,/CircleMarker|<Circle|<Marker|createRadialGradient|normalize\(|\bfetch\(/);
   assert.match(source,/not a measured search radius/);
   assert.match(source,/never normalized to total 100%/);
-  assert.match(source,/referrerPolicy="no-referrer"/);
+  assert.match(source,/referrerPolicy="strict-origin"/);
 });
 test('paper is actual shared Three.js geometry; HTML remains above it and text sizes are not frozen',()=>{
   const models=readFileSync(new URL('../components/physical-models.tsx',import.meta.url),'utf8'),css=readFileSync(new URL('../styles/image-report.css',import.meta.url),'utf8');
