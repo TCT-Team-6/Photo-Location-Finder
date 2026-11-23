@@ -24,13 +24,15 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
   useEffect(()=>()=>clearTimeout(timer.current),[]);
   const copy=async()=>{try{await navigator.clipboard.writeText(buildLeadSummary(item,leads));setCopyState('copied');}catch{setCopyState('failed');}clearTimeout(timer.current);timer.current=setTimeout(()=>setCopyState('idle'),2500);};
   const selected=leads[selectedIndex]??leads[0],actualIndex=leads[selectedIndex]?selectedIndex:0;
+  const sceneScore=leads[0]?modelScoreUnit(leads[0].confidence):null;
   return <div className="geo-report" data-testid="image-geolocation-report">
     {item.status==='analyzing'&&<p className="geo-candidate-note" role="status">Location analysis is still running. Any saved leads below may be incomplete.</p>}
     {item.status==='failed'&&<div className="geo-candidate-note" role="alert"><p>The location analysis did not finish. Your original photograph is still saved.</p><button type="button" data-testid="button-retry-image-analysis" disabled={retrying} onClick={onRetryAnalysis}>{retrying?'Restarting analysis…':'Try analysis again'}</button>{retryError&&<p>{retryError}</p>}</div>}
     <div className="geo-report-primary">
       <div data-testid="column-image-evidence"><SavedOriginal key={photoURL} url={photoURL} name={item.originalName} loading={photoLoading} error={photoError} retry={onRetryPhoto}/>
         <section className="geo-scene-notes"><p className="geo-eyebrow">Scene notes</p><p className="geo-scene-summary" data-testid="text-investigation-summary">{sceneSummary||'No scene summary was returned.'}</p>
-          <div className="geo-context"><p className="geo-eyebrow">Your notes</p><p data-testid="text-investigation-context">{item.context?.trim()||'No notes added yet.'}</p></div>
+          {leads[0]&&<p className="geo-scene-confidence" data-testid="text-scene-confidence">Confidence: {sceneScore===null?'Not supplied':`${Math.round(sceneScore*100)} / 100`} · strongest lead model score, not a verified probability.</p>}
+          {item.context?.trim()&&<div className="geo-context"><p className="geo-eyebrow">Your notes</p><p data-testid="text-investigation-context">{item.context.trim()}</p></div>}
         </section>
       </div>
       <GeographicConfidenceMap candidates={leads} selectedIndex={actualIndex} onSelect={onSelect}/>

@@ -1,6 +1,8 @@
 .geo-report{min-width:0}
 .geo-report-primary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}
 .geo-report-primary>*{min-width:0}
+.geo-mapped-leads{grid-column:1/-1;min-width:0}
+.geo-scene-confidence{font:12px/1.6 var(--app-font-mono);margin-top:12px;color:var(--quiet)}
 .geo-eyebrow{font:9px var(--app-font-mono);text-transform:uppercase;letter-spacing:.15em;color:var(--fd-red)}
 .geo-section-title{font:500 30px/1.1 var(--app-font-serif);letter-spacing:-.035em;margin-top:9px}
 .geo-photo{position:relative;margin:0;min-height:280px;display:grid;place-items:center;background:var(--recess);padding:14px}

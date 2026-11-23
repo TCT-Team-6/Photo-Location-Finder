@@ -59,7 +59,7 @@ export function GeographicConfidenceMap({candidates,selectedIndex,onSelect}:{can
   const[overview,setOverview]=useState(0),[focusVersion,setFocusVersion]=useState(0),[tileError,setTileError]=useState(false),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
   const mapKey=fields.map(field=>`${field.position}:${field.score}`).join('|');
   useEffect(()=>{setTileError(false);setLoading(true);},[mapKey]);
-  return <section className="geo-map-section" aria-labelledby="geographic-map-title" data-testid="map-confidence-fields">
+  return <><section className="geo-map-section" aria-labelledby="geographic-map-title" data-testid="map-confidence-fields">
     <p className="geo-eyebrow">Geographic comparison / top three</p><h2 className="geo-section-title" id="geographic-map-title">Where the leads point.</h2>
     <p className="geo-map-explanation">Independent model scores, shown as quiet local fields on the geographic map. Darker shading means a higher model score—not a greater verified likelihood.</p>
     {fields.length?<><div className="geo-map-surface"><MapContainer key={mapKey} center={center} zoom={3} scrollWheelZoom={false} aria-label="Geographic map of the highest-ranked coordinate-bearing leads">
@@ -69,10 +69,14 @@ export function GeographicConfidenceMap({candidates,selectedIndex,onSelect}:{can
     </MapContainer></div>
       {tileError?<p className="geo-map-status" role="alert" data-testid="status-map-tiles-error">Some geographic tiles could not load. Field coordinates are unchanged.<button type="button" data-testid="button-retry-map-tiles" onClick={()=>{setTileError(false);setLoading(true);setRetry(value=>value+1);}}>Retry tiles</button></p>:loading?<p className="geo-map-status skeleton" role="status" data-testid="status-map-tiles-loading">Loading geographic tiles…</p>:null}
       <button type="button" className="geo-overview-button" data-testid="button-map-all-fields" onClick={()=>setOverview(value=>value+1)}>Fit all mapped leads</button>
-      <div className="geo-map-key" aria-label="Geographic field values">{located.filter(entry=>entry.reason===null).map(entry=><button type="button" key={entry.index} aria-pressed={entry.index===selectedIndex} data-testid={`button-map-field-${entry.index}`} onClick={()=>{onSelect(entry.index);setFocusVersion(value=>value+1);}}><span>{entry.index+1}. {entry.lead.place}<br/><small>{entry.position?.map(value=>value.toFixed(4)).join(', ')}</small></span><span className="geo-map-score">{Math.round((entry.score??0)*100)} / 100<small>View field</small></span></button>)}</div>
     </>:<div className="geo-empty" data-testid="map-no-coordinates">{candidates.length?'The three highest-ranked leads do not contain both usable map coordinates and a valid model score. No confidence field has been invented.':'No location candidates were returned. There is no geographic field to display.'}</div>}
     {located.some(entry=>entry.reason!==null)&&<ul className="geo-map-unmapped" data-testid="list-unmappable-leads">{located.filter(entry=>entry.reason!==null).map(entry=><li key={entry.index}>{entry.index+1}. {entry.lead.place}: {entry.reason==='missing_coordinates'?'no explicit valid coordinates in the saved map link':entry.reason==='projection_limit'?'outside the geographic latitude supported by these map tiles':'no valid model score'}.</li>)}</ul>}
     <p className="geo-map-method">Higher model scores produce stronger, broader fields. Spread is a display heuristic, not a measured search radius, location uncertainty, or calibrated probability. Distant fields stay separate; overlapping values use the stronger field, not a sum. Scores are never normalized to total 100%. Zoom into a field for local detail.</p>
     <p className="geo-map-method">Map tiles are requested from OpenStreetMap for the viewed area. The original photograph and private notes are not sent to the tile provider. No place-name geocoding is performed.</p>
-  </section>;
+  </section>
+    {fields.length>0&&<section className="geo-mapped-leads" aria-labelledby="mapped-leads-title">
+      <h2 className="geo-eyebrow" id="mapped-leads-title">Mapped leads</h2>
+      <div className="geo-map-key" aria-label="Geographic field values">{located.filter(entry=>entry.reason===null).map(entry=><button type="button" key={entry.index} aria-pressed={entry.index===selectedIndex} data-testid={`button-map-field-${entry.index}`} onClick={()=>{onSelect(entry.index);setFocusVersion(value=>value+1);}}><span>{entry.index+1}. {entry.lead.place}<br/><small>{entry.position?.map(value=>value.toFixed(4)).join(', ')}</small></span><span className="geo-map-score">{Math.round((entry.score??0)*100)} / 100<small>View field</small></span></button>)}</div>
+    </section>}
+  </>;
 }
