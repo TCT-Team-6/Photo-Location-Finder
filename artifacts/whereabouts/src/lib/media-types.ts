@@ -48,8 +48,8 @@ export function validateOriginalMedia(
     return {
       ok: false,
       error: videoEnabled
-        ? "Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image, or an MP4, MOV, WebM, MKV, AVI, or 3GP video."
-        : "Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.",
+        ? `${file.name} isn't a supported photo or video. Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image, or an MP4, MOV, WebM, MKV, AVI, or 3GP video.`
+        : `${file.name} isn't a supported photo. Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.`,
     };
   }
   const kind = isVideoContentType(contentType) ? "video" : "image";

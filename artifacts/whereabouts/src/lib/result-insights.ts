@@ -96,7 +96,7 @@ export function livePipeline(item: LiveLike): PipelineSummary {
     { name: "Scene reading", complete: item.clues.length > 0, evidence: item.clues.length ? `${item.clues.length} visual clue${item.clues.length === 1 ? "" : "s"} returned.` : "No visual clues returned." },
     { name: "Location ideas", complete: item.candidates.length > 0, evidence: item.candidates.length ? `${item.candidates.length} possible place${item.candidates.length === 1 ? "" : "s"} returned.` : "No places returned." },
     { name: "Map check", complete: mapped > 0, evidence: mapped ? `${mapped} place${mapped === 1 ? "" : "s"} with usable map coordinates.` : "No usable map coordinates returned." },
-    { name: "Ranking", complete: scored > 0, evidence: scored ? `${scored} place${scored === 1 ? "" : "s"} carry a Confidence value.` : "No Confidence values returned." },
+    { name: "Ranking", complete: scored > 0, evidence: scored ? `${scored} ${scored === 1 ? "place carries" : "places carry"} a Confidence value.` : "No Confidence values returned." },
   ];
   // The API exposes no model name or timing; only the provider-level source label, when present.
   return { stages, model: null, durationLabel: null, sourceLabel: a?.source?.trim() || null };

@@ -47,6 +47,7 @@ import { DemoExperience } from '@/components/demo-experience';
 import { LandingPage } from '@/components/landing-page';
 import AboutPage from '@/pages/about-page';
 import TesterLoginPage from '@/pages/tester-login';
+import { imageDecodeError } from '@/lib/image-decode';
 import { SiteCursor } from '@/components/site-cursor';
 import { ContactSheet, CropMarks, DeskHeadline, DeskRuler, FieldDeskFilingNotice, FieldIndex, FieldSheet, Odometer, PixelPrint, SpecimenTray } from '@/components/field-desk';
 import { investigationMediaUrl, isAnalyzing, isVideoInvestigation, pollListWhileAnalyzing, pollWhileAnalyzing } from '@/lib/video-analysis';
@@ -578,11 +579,17 @@ function InvestigatePage() {
   const originalRunner=useRef<(()=>Promise<boolean>)|null>(null),originalDestination=useRef('/library');
   const[extraFiles,setExtraFiles]=useState<{id:string;desk:PhotoUploadSlotId;file:File}[]>([]),[printOrder,setPrintOrder]=useState<string[]>([]);
   const totalCount=originalCount+selectedCount+extraFiles.length;
+  useEffect(() => {
+    if (operation.state.phase !== 'completed') return;
+    setFlowStep(1); setTitle(''); setContext(''); setShotAt('');
+    setDateFromPhoto(false); setPrintOrder([]); setLocalError(''); setBatchStatus('');
+  }, [operation.state.phase]);
   const printEntries=[...investigationPhotoSlots.flatMap(slot=>files[slot.id]?[{id:`slot:${slot.id}`,file:files[slot.id]!,label:slot.label}]:[]),...extraFiles.map(row=>({id:row.id,file:row.file,label:investigationPhotoSlots.find(slot=>slot.id===row.desk)!.label}))].sort((a,b)=>(printOrder.includes(a.id)?printOrder.indexOf(a.id):999)-(printOrder.includes(b.id)?printOrder.indexOf(b.id):999));
   const addDeskFiles=(list:FileList|File[]|null)=>{let available=6-totalCount,main=Boolean(files[activeSlotId]);const additions:typeof extraFiles=[];for(const file of Array.from(list??[])){const contentType=imageContentType(file);if(available<=0){setLocalError('Up to six selected files. Existing selections were kept.');break;}if(!contentType||!visualModelImageTypes.has(contentType)||file.size>25*1024*1024){setLocalError('For this desk, use a supported JPEG, PNG, WebP or GIF image up to 25 MB.');continue;}if(!main){setSelectedFile(activeSlotId,file);main=true;}else additions.push({id:crypto.randomUUID(),desk:activeSlotId,file});available--;}if(additions.length)setExtraFiles(current=>[...current,...additions]);};
   useEffect(()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const pane=document.querySelector('[data-active-desk]');const animation=pane?.animate([{transform:'translateX(12px)',opacity:.5},{transform:'translateX(0)',opacity:1}],{duration:250,easing:'ease-out'});return()=>animation?.cancel();},[activeSlotId]);
   const pending = submitting || uploadUrl.isPending || create.isPending;
-  const setSelectedFile = (slotId: PhotoUploadSlotId, selected: File) => {
+  const setSelectedFile = async (slotId: PhotoUploadSlotId, selected: File) => {
+    if (operation.state.phase === 'completed') operation.reset();
     if(!files[slotId]&&totalCount>=6){setLocalError('Up to six selected media items. Remove a print before adding another.');return;}
     setLocalError('');
     setBatchStatus('');
@@ -594,7 +601,7 @@ function InvestigatePage() {
       setSlotErrors((current) => ({
         ...current,
         [slotId]:
-          'Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.',
+          `${selected.name} isn't a supported photo. Choose a JPEG, PNG, WebP, AVIF, GIF, BMP, TIFF, HEIC, or HEIF image.`,
       }));
       return;
     }
@@ -616,6 +623,8 @@ function InvestigatePage() {
       }));
       return;
     }
+    const decodeError = await imageDecodeError(selected);
+    if (decodeError) { setSlotErrors(current => ({ ...current, [slotId]: decodeError })); return; }
     setFiles((current) => ({ ...current, [slotId]: selected }));
     setRequestIds((current) => ({ ...current, [slotId]: crypto.randomUUID() }));
     setFailureMessage('');
@@ -798,10 +807,12 @@ function InvestigatePage() {
       </div>
       <div hidden={flowStep!==3} className="fd-wizard-step desk-theme-panel">
         <dl className="fd-summary"><dt>PHOTOS</dt><dd>{String(totalCount).padStart(2,'0')}</dd><dt>DESK</dt><dd>{['A · INVESTIGATIONS','B · RECREATION','C · JOURNALISM'][activeDeskIndex]}</dd><dt>CASE</dt><dd>{title.trim()||'Untitled (uses file names)'}</dd></dl><HelpNote>All selected desks are processed; videos retain their existing workflow. Each media item keeps its assigned desk.</HelpNote>
-        <FlipChecklist/>
+        <div className="hidden sm:block"><FlipChecklist/></div>
+        <details className="sm:hidden my-2"><summary className="min-h-11 cursor-pointer py-2">Field checklist · optional review</summary><FlipChecklist/></details>
         {localError && <p role="alert" className="mt-4 rounded-xl border border-[#dfc6b6] bg-[#f9eee6] px-4 py-3 text-[13px] leading-5 text-[#875545]" data-testid="status-upload-error">{localError}</p>}
         {(pending||originalRunning) && <div className="fd-live-stage" role="status">{progress||(stage==='uploading'?'UPLOAD / transferring selected media…':'PROCESSING / waiting for the saved report…')}<span className="block text-[13px] mt-2">Indeterminate · {analysisDesk} · started {new Date(startedAt).toLocaleTimeString()}</span></div>}
         {!pending && failureMessage && <AnalysisFailed message={failureMessage} onRetry={() => (document.getElementById('investigate-form') as HTMLFormElement | null)?.requestSubmit()} />}
+        <button type="submit" className="mobile-analyze-button" disabled={pending||originalRunning||totalCount===0} data-testid="button-analyze-mobile">Analyze selected media</button>
         <div className="fd-shutter-wrap"><ShutterButton type="submit" aria-label="Analyze selected media" onKeyDown={event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();}} disabled={pending||originalRunning||totalCount===0} data-testid="button-analyze-photo-desks"/><span>ANALYZE</span></div>
         <p className="fd-model-reference" aria-label="Illustrative pipeline, not live stage progress">ILLUSTRATIVE MODEL, NOT LIVE PROGRESS<br/>UPLOAD → READ SCENE → COMPARE CLUES → RANK FINDINGS → SAVE REPORT</p>
         <p className="text-[13px] text-center">Selected media goes to its desk's analysis provider.<HelpNote>Image Locator handles location estimates. OpenAI handles Journalism image analysis. Shared case names, notes and dates stay in the private record; an optional Journalism question is sent for that desk. No new private missing-person analysis is enabled.</HelpNote></p>

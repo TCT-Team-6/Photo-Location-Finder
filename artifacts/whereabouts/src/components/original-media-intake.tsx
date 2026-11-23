@@ -14,6 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { AnalysisProgress, type AnalysisStage } from "@/components/analysis-status";
 import { planSelection, runIntakeItem, type IntakeItem } from "@/lib/original-intake";
+import { imageDecodeError } from "@/lib/image-decode";
 import { MAX_ORIGINAL_PHOTOS } from "@/lib/media-types";
 import {movePrint} from '@/lib/investigation-steps';
 import {PrintInspector} from './desk-controls';
@@ -82,10 +83,16 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
   const patch = (id: string, change: Partial<IntakeItem>) =>
     setItems((current) => current.map((item) => (item.id === id ? { ...item, ...change } : item)));
 
+  const selectionWork = useRef(Promise.resolve());
   const addFiles = (list: FileList | File[] | null | undefined) => {
     const files = Array.from(list ?? []);
     if (!files.length || runningRef.current) return;
-    const plan = planSelection(itemsRef.current, files, videoEnabled);
+    if (operation.state.phase === 'completed') operation.reset();
+    selectionWork.current = selectionWork.current.then(async () => {
+    const errors = await Promise.all(files.map(imageDecodeError));
+    if (runningRef.current) return;
+    const plan = planSelection(itemsRef.current, files.filter((_, i) => !errors[i]), videoEnabled);
+    plan.errors.push(...errors.filter((error): error is string => error !== null));
     setMessages(plan.errors);
     const kept=plan.items.filter(item=>itemsRef.current.some(old=>old.id===item.id));
     const added=plan.items.filter(item=>!itemsRef.current.some(old=>old.id===item.id));
@@ -93,6 +100,8 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
     const accepted=[...kept,...added.slice(0,Math.max(0,maxItems-kept.length))];setItems(accepted);
     const firstImage = accepted.find((item) => item.kind === "image" && !itemsRef.current.some((old) => old.id === item.id));
     if (firstImage) onImageSelected?.(firstImage.file);
+    itemsRef.current = accepted;
+    });
   };
 
   const run = async (ids?: string[]) => {
@@ -105,8 +114,8 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
     setMessages([]);
     setStartedAt(Date.now());
     const savedIds: string[] = [];
-    const savedSet = new Set(itemsRef.current.filter((item) => item.status === "saved").map((item) => item.id));
-    const total = itemsRef.current.length;
+    const savedSet = new Set(itemsRef.current.filter((item) => item.status === "saved" && item.analysisStatus !== 'analyzing' && item.analysisStatus !== 'failed').map((item) => item.id));
+    const total = queue.length;
     let lastError='';
     try {
       for (const [index,item] of queue.entries()) {
@@ -158,10 +167,11 @@ export function OriginalMediaIntake({ title, context, shotAt, apiKey, onImageSel
       setRunning(false);
       onRunningChangeRef.current?.(false);
     }
-    const allSaved = savedSet.size === total&&!operation.stopped();
+    const allSaved = queue.every(item => savedSet.has(item.id))&&!operation.stopped();
     if (allSaved && savedIds.length) {
       lastDestination.current=savedIds.length === 1 && total === 1 ? `/investigation/${encodeURIComponent(savedIds[0])}` : "/library";
       onOpen(lastDestination.current);
+      setItems(current => current.filter(item => !savedSet.has(item.id)));
     }
     if(!allSaved)throw Error(lastError||'Queue stopped. Accepted server analysis may continue; your selected media is retained.');
     return allSaved;

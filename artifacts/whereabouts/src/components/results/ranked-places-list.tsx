@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { CONFIDENCE_DEFINITION, confidenceTier, type SupportingClue } from '@/lib/result-insights';
 
@@ -28,23 +28,32 @@ export function RankedPlacesList({ items, selectedIndex, onSelect, scrollToken, 
   testId?: string;
 }) {
   const refs = useRef(new Map<number, HTMLLIElement>());
+  const [expanded, setExpanded] = useState(false);
   const first = useRef(true);
+  const lastScrollToken = useRef(scrollToken);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
+    const mapSelectionChanged = lastScrollToken.current !== scrollToken;
+    lastScrollToken.current = scrollToken;
+    if (mapSelectionChanged && !expanded && items.slice(3).some(item => item.index === selectedIndex)) {
+      setExpanded(true);
+      return;
+    }
     const node = refs.current.get(selectedIndex);
     if (!node) return;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     node.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
     node.querySelector<HTMLButtonElement>('.rp-item-select')?.focus({ preventScroll: true });
-  }, [scrollToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scrollToken, expanded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <section className="rp-list" aria-labelledby="rp-list-title" data-testid="section-ranked-places">
     <header className="rp-list-head">
       <div className="min-w-0"><p className="rp-eyebrow">Ranked by Confidence</p><h2 className="rp-title" id="rp-list-title">Likely places to check</h2>
+        <p className="rp-sub" data-testid="text-lead-count">{items.length} {items.length === 1 ? 'lead' : 'leads'} · ranked by confidence</p>
         <p className="rp-sub" data-testid="text-confidence-definition">{CONFIDENCE_DEFINITION}</p></div>
       {actions && <div className="rp-list-actions">{actions}</div>}
     </header>
-    {items.length ? <ol className="rp-items" data-testid={testId}>{items.map((item) => {
+    {items.length ? <ol className="rp-items" data-testid={testId}>{(expanded ? items : items.slice(0, 3)).map((item) => {
       const tier = confidenceTier(item.percent), selected = item.index === selectedIndex;
       return <li key={`${item.place}-${item.index}`} ref={(node) => { if (node) refs.current.set(item.index, node); else refs.current.delete(item.index); }} className={`rp-item${selected ? ' is-selected' : ''}`} style={{ ['--tier' as string]: tier.color }} data-testid={`card-ranked-place-${item.index}`}>
         <button type="button" className="rp-item-select" aria-pressed={selected} onClick={() => onSelect(item.index)} data-testid={`button-select-place-${item.index}`}>
@@ -58,10 +67,12 @@ export function RankedPlacesList({ items, selectedIndex, onSelect, scrollToken, 
             onClick={() => onClueFocus(clue.photoTag)}
             title={clue.photoTag ? `Highlights "${clue.photoTag}" on the photo` : 'No matching tag on the photo'} data-testid={`chip-place-clue-${item.index}-${i}`}>
             <Check size={11} strokeWidth={3} aria-hidden="true" />{clue.label}
-          </button>) : <span className="rp-chip-none" data-testid={`text-place-clues-unavailable-${item.index}`}>Supporting photo clues unavailable for this place</span>}
+          </button>) : null}
         </div>
         {selected && renderDetails?.(item.index)}
       </li>;
     })}</ol> : <p className="rp-empty" data-testid="content-no-candidates">No likely places were returned. Keep the photo saved and revisit as new clues surface.</p>}
+    {items.length > 3 && <button type="button" className="mt-4 min-h-11 border border-current px-4 py-2" aria-expanded={expanded}
+      data-testid="button-toggle-leads" onClick={() => setExpanded(value => !value)}>{expanded ? 'Show top 3 leads' : `Show all ${items.length} leads`}</button>}
   </section>;
 }

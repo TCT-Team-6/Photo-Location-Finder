@@ -18,12 +18,37 @@ const Context = createContext<Operation | null>(null);
 export function useReportOperation() { const context = useContext(Context); if (!context) throw Error('Report operation provider missing'); return context; }
 export function ReportOperationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(emptyReport), stateRef = useRef(state); stateRef.current = state;
+  const [location, navigate] = useLocation();
+  const previousLocation = useRef(location);
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    const enteredIntake = location === '/investigate' && previousLocation.current !== location;
+    previousLocation.current = location;
+    if (state.phase === 'completed' && (location === state.destination || enteredIntake)) {
+      setState(emptyReport); setNotice('');
+    }
+  }, [location, state.phase, state.destination]);
+  useEffect(() => {
+    if (state.phase === 'idle') { setNotice(''); return; }
+    if (state.open) return;
+    if (state.phase === 'completed') setNotice(`Report ready: ${state.title}`);
+    else if (state.phase === 'error') setNotice(`Report needs attention: ${state.title}`);
+  }, [state.phase, state.open, state.title]);
+  useEffect(() => {
+    if (state.phase !== 'completed' || !document.hidden) return;
+    const original = document.title;
+    document.title = `✓ Report ready · ${original}`;
+    const restore = () => { if (!document.hidden) document.title = original; };
+    document.addEventListener('visibilitychange', restore);
+    return () => { document.removeEventListener('visibilitychange', restore); if (document.title.startsWith('✓ Report ready ·')) document.title = original; };
+  }, [state.phase]);
   const abort = useRef(new AbortController()), stopRequested = useRef(false), retry = useRef<() => void>(() => {});
   const generation=useRef(0),scope=generation.current;
   const update = (patch: Partial<ReportState>, message?: string) => {if(scope!==generation.current)return;setState(old => ({ ...old, ...patch, events: message ? [...old.events, { at: Date.now(), message }] : old.events }));};
   const operation: Operation = {
     state,
     begin: (title, total, file) => {
+      setNotice('');
       abort.current = new AbortController(); stopRequested.current = false;
       setState({ ...emptyReport, open: true, phase: 'uploading',settling:true, title: title.trim() || 'Untitled (uses file names)', total, file: file ?? null, startedAt: Date.now(), index: 1, events: [{ at: Date.now(), message: 'Investigation started in this browser.' }] });
     },
@@ -44,13 +69,20 @@ export function ReportOperationProvider({ children }: { children: ReactNode }) {
     reset:()=>{generation.current++;stopRequested.current=true;abort.current.abort();setState(emptyReport);retry.current=()=>{};},
     settled:()=>update({settling:false}),
   };
-  return <Context.Provider value={operation}>{children}<ReportSheet onRetry={() => retry.current()} /></Context.Provider>;
+  return <Context.Provider value={operation}>{children}<ReportSheet onRetry={() => retry.current()} />
+    <div className="sr-only" aria-live="polite" aria-atomic="true">{notice}</div>
+    {notice && !state.open && (state.phase === 'completed' || state.phase === 'error') && createPortal(<aside style={{position:'fixed',bottom:16,right:16,left:'auto',zIndex:200,width:'min(480px, calc(100vw - 32px))',padding:16,background:'white',border:'1px solid currentColor'}} data-testid="toast-report-ready">
+      <p>{notice}</p><button type="button" className="mt-2 min-h-11 underline" onClick={() => { setNotice(''); if (state.phase === 'completed') navigate(state.destination); else operation.show(); }}>{state.phase === 'completed' ? 'Open report' : 'Review'}</button>
+      <button type="button" className="ml-5 min-h-11 underline" onClick={() => setNotice('')}>Dismiss</button>
+    </aside>, document.body)}
+  </Context.Provider>;
 }
 export function ReportChip() {
   const op = useReportOperation(), { phase } = op.state;
   if (phase === 'idle') return null;
   const label = phase === 'completed' ? 'FILED · OPEN REPORT' : phase === 'error' ? 'Report needs attention' : phase === 'stopped' ? 'Queue stopped' : `ANALYZING · ${phase === 'uploading' ? '01' : '02'}/05`;
-  return <button type="button" className="report-chip" data-testid="button-report-progress" onClick={op.show}>{label}</button>;
+  const short = phase === 'completed' ? 'Ready ›' : phase === 'error' || phase === 'stopped' ? 'Review' : `${phase === 'uploading' ? '01' : '02'}/05`;
+  return <button type="button" className="report-chip" aria-label={label} data-testid="button-report-progress" onClick={op.show}><span className="report-chip-long">{label}</span><span className="report-chip-short">{short}</span></button>;
 }
 function ReportSheet({ onRetry }: { onRetry: () => void }) {
   const op = useReportOperation(), { state } = op, [, navigate] = useLocation();

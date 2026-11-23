@@ -170,3 +170,16 @@ html body { font-size: 16px; }
 .fd-desk-descriptions span { font-size: 16px; line-height: 1.45; color: var(--quiet); }
 @media (max-width: 767px) { .fd-desk-descriptions { grid-template-columns: 1fr; } }
 @media (max-width: 767px) { .wa-specimen-tag { width: 150px !important; max-width: 46% !important; padding: 10px 8px 8px !important; line-height: 1.35 !important; } }
+.report-chip-short { display: none; }
+.mobile-analyze-button { display: none; }
+@media (max-width: 479px) {
+  .report-chip { width: auto !important; min-width: 72px; flex-shrink: 0; padding: 0 8px; }
+  .report-chip-long { display: none; }
+  .report-chip-short { display: inline; }
+  .fd-wizard-step:has(.fd-shutter-wrap) { display: flex; flex-direction: column; padding: 12px !important; gap: 8px; }
+  .fd-wizard-step[hidden] { display: none !important; }
+  .fd-wizard-step .fd-shutter-wrap { display: none !important; }
+  .mobile-analyze-button { display: block; order: -1; min-height: 52px; padding: 12px 16px; background: var(--ink); color: var(--paper); font: inherit; font-weight: 600; }
+  .mobile-analyze-button:disabled { opacity: .5; }
+  .fd-wizard-step .fd-summary { margin: 0 !important; padding: 8px !important; }
+}

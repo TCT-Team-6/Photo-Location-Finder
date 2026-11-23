@@ -70,6 +70,7 @@ export function HealthUrgencyCard({ investigation, stored, person, demo = false 
         <Clock3 size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
         <div><p data-testid="text-time-since-photo"><strong>Time since photo:</strong> {result.timeSincePhoto ?? "Unknown — usable capture metadata unavailable"}</p>
           {!demo && <p className="mt-1 text-[13px] leading-5 text-[#718078]">Photo age is not proof of how long someone has been missing.</p>}
+          {!demo && investigation.shotAt && !scene.photoTakenAt && <p className="mt-1 text-[13px] leading-5 text-[#718078]" data-testid="text-reported-date-explanation">The date shown above is the saved photo date. This safety assessment uses only capture metadata with a usable time and timezone; a date alone is not used to calculate elapsed time.</p>}
           {sourceTimestamp && !scene.photoTakenAt && <p className="mt-1 text-[13px] leading-5 text-[#718078]" data-testid="text-capture-time-unusable">The capture time cannot be reliably compared with now. A missing timezone, invalid date or future camera clock is not treated as elapsed time.</p>}
         </div>
       </div>
