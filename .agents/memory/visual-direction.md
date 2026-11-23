@@ -8,6 +8,11 @@ Readability takes priority: body text at least 16px, main paragraphs 18px, label
 **Why:** The user requested app-wide readability improvements after the visual redesign.
 **How to apply:** Preserve these minimums in future UI work. Keep Home to the hero, three-step how-it-works, audience section, and one safety section; put detailed methods and technology explanations on About.
 
+Keep readable descriptions outside measured 3D instrument footprints. Invisible 3D tracking/shadow bounds can cause horizontal page scrolling even when the visible instrument fits.
+
+**Why:** Enlarging the dial footprint for explanatory text moved the rendered knob over the descriptions; clipping only the workspace did not contain the tracking bounds.
+**How to apply:** Preserve instrument calibration when changing typography, and measure document overflow on the signed-in investigation page at phone and tablet widths.
+
 Base Whereabouts aesthetics and feel on the (Not Boring) Camera iOS app and https://a24.raviklaassens.com/. It should be a little avant-garde, but design must not impede function. Consult CSS Design Awards winners or finalists when uncertain how to redesign a feature.
 
 **Why:** The user explicitly requested a complete app-wide aesthetic redesign using these references.

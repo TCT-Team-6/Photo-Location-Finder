@@ -1,5 +1,8 @@
 /* InstrumentKit: layout and accessibility only. All instrument depth is real geometry. */
 html{scrollbar-gutter:stable}
+/* 3D view tracking boxes include invisible shadow bleed. They must not
+   expand the document's horizontal scrolling area on the upload screen. */
+html:has(#investigate-form),body:has(#investigate-form){overflow-x:clip!important}
 @supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
 .physical-footprint{position:relative;display:inline-block;flex:none;vertical-align:middle;isolation:auto;touch-action:manipulation;overflow:visible}
 .physical-view{position:absolute!important;pointer-events:none;z-index:1;overflow:visible!important}
