@@ -5,7 +5,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const source=process.argv[2];
 if(!source)throw new Error('Pass the JSON returned by await window.InstrumentKitExport() from ?instrument-kit=export at a 1500×2000 viewport.');
 const frames=JSON.parse(await readFile(source,'utf8')),manifest={};
-const expected=['dial','shutter','keys','voice','swatch','lever','rocker','tally','splitflap','archiveprint','drawer','loupe','tray','print'];
+const expected=['dial','shutter','keys','voice','swatch','lever','rocker','tally','splitflap','archiveprint','fontslider','drawer','loupe','tray','print'];
 const missing=expected.filter(kind=>!frames.some(frame=>frame.kind===kind));
 if(missing.length)throw new Error(`Missing real model frames: ${missing.join(', ')}. Use a 1500×2000 viewport, wait for fonts and every model to render, then export again.`);
 await mkdir(path.join(root,'public/instrument-renders'),{recursive:true});

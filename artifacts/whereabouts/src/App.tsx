@@ -60,6 +60,9 @@ import './styles/field-desk.css';
 import './styles/desk-refinements.css';
 import {BatchPrints,DeskMargin,FlipChecklist,HelpNote} from '@/components/desk-controls';
 import {OverviewClock,OverviewPhoto} from '@/components/overview-instruments';
+import {FontSizeSlider} from '@/components/font-size-slider';
+import {useTextSize} from '@/hooks/use-text-size';
+import {defaultPreferences,readPreferences,writePreferences,type AppPreferences} from '@/lib/app-preferences';
 import {DeskSelector} from '@/components/desk-selector';
 import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
 import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
@@ -76,8 +79,6 @@ import './styles/physical-desk.css';
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, retry: 1, refetchOnWindowFocus: true, refetchOnMount: 'always' } },
 });
-type AppPreferences = { theme: 'rescue' | 'field' | 'ocean' | 'sunset' | 'mono'; highContrast: boolean; font: 'default' | 'sans' | 'dyslexic' };
-const defaultPreferences: AppPreferences = { theme: 'rescue', highContrast: false, font: 'default' };
 const ApiKeyContext = createContext<{ apiKey: string; setApiKey: (value: string) => void }>({ apiKey: '', setApiKey: () => {} });
 function useApiKey() { return useContext(ApiKeyContext); }
 const PreferencesContext = createContext<{ preferences: AppPreferences; setPreferences: (next: AppPreferences) => void }>({
@@ -1302,6 +1303,7 @@ function SettingsPage() {
     <section className="fd-preference-section mt-5">
       <h2 className="font-editorial text-2xl">Text font</h2>
       <div className="fd-type-options" role="group" aria-label="Text font">{([['default','Bricolage + DM Sans','"Bricolage Grotesque",sans-serif'],['sans','DM Sans','"DM Sans",sans-serif'],['dyslexic','Atkinson Hyperlegible','"Atkinson Hyperlegible",sans-serif']] as const).map(([value,label,font])=><button type="button" key={value} className="fd-type-card" style={{'--specimen':font} as React.CSSProperties} aria-pressed={preferences.font===value} data-testid={`font-${value}`} onClick={()=>update('font',value)}><strong>Aa</strong><span>{label}</span></button>)}</div>
+      <FontSizeSlider value={preferences.textSize} onChange={value=>update('textSize',value)}/>
       <p className="mt-3 text-xs leading-5 text-[#718078]">Saved on this device.<HelpNote>Your choices are saved in this browser and apply across the app.</HelpNote></p>
     </section>
     <section className="fd-preference-section mt-5"><h2 className="font-editorial text-2xl">Sound &amp; haptics</h2><div className="fd-lever"><span className="physical-switch-state" data-testid="status-desk-sound">Sound · {sound?'ON':'OFF'}</span><PhysicalSwitch kind="rocker" value={sound} label="Sound" testId="toggle-desk-sound" onChange={value=>{setSound(value);setSoundEnabled(value);if(value)deskSound('switch');}}/></div><p className="text-xs">Quiet mechanical feedback, off by default.<HelpNote>Enables short local clicks and a 10 ms vibration where supported. The Sound switch never requests microphone access.</HelpNote></p></section>
@@ -1339,14 +1341,12 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function App() {
   const [preferences, setPreferences] = useState<AppPreferences>(() => {
-    try {
-      const stored = localStorage.getItem('whereabouts-preferences');
-      return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : defaultPreferences;
-    } catch { return defaultPreferences; }
+    try { return readPreferences(localStorage); } catch { return {...defaultPreferences}; }
   });
+  useTextSize(preferences.textSize);
   const [apiKey, setApiKey] = useState('');
   useEffect(() => {
-    localStorage.setItem('whereabouts-preferences', JSON.stringify(preferences));
+    try{writePreferences(localStorage,preferences);}catch{/* Storage can be unavailable; session preferences still apply. */}
     const root=document.documentElement;root.dataset.appTheme=preferences.theme;root.dataset.highContrast=String(preferences.highContrast);root.dataset.appFont=preferences.font;
     return()=>{delete root.dataset.appTheme;delete root.dataset.highContrast;delete root.dataset.appFont;};
   }, [preferences]);

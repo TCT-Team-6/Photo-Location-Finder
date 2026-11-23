@@ -11,7 +11,7 @@ try {
   });
   page.on('pageerror', error => console.error(error.message));
   await page.goto(`https://${process.env.REPLIT_DEV_DOMAIN}/?instrument-kit=export`);
-  await page.waitForFunction(() => document.querySelectorAll('[data-instrument-kind][data-rendered="true"]').length >= 14, undefined, {timeout:60000});
+  await page.waitForFunction(() => document.querySelectorAll('[data-instrument-kind][data-rendered="true"]').length >= 15, undefined, {timeout:60000});
   await page.evaluate(() => document.fonts.ready);
   const frames = await page.evaluate(() => window.InstrumentKitExport());
   await writeFile('/tmp/instrument-renders.json', JSON.stringify(frames));

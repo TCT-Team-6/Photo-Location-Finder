@@ -1,0 +1,29 @@
+/* Text, not page zoom: explicit px labels and rem typography share measured bases.
+   Measuring temporarily restores authored CSS in the same synchronous frame. */
+html[data-wa-text-size]:not([data-wa-text-measuring]) :is(body,[data-wa-text-scaled])[data-wa-text-scaled][data-wa-text-scaled]{
+  font-size:calc(var(--wa-base-font-size) * var(--wa-text-factor))!important;
+  line-height:var(--wa-scaled-line-height)!important;
+}
+html[data-wa-text-size]:not([data-wa-text-measuring]) [data-wa-text-control]{
+  height:auto!important;min-height:var(--wa-control-min-height)!important;white-space:normal;overflow-wrap:anywhere;
+}
+.fd-text-size{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.fd-text-size-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.fd-text-size-heading h3{font-size:14px;font-weight:600}
+.fd-text-size-heading output{font-family:var(--app-font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.physical-font-slider{display:block;width:min(320px,100%);height:48px;touch-action:none;cursor:grab;position:relative}
+.physical-font-slider[data-dragging=true]{cursor:grabbing}
+.physical-font-slider .physical-view,.physical-font-slider .physical-fallback{pointer-events:none}
+.physical-font-slider .instrument-track::before{pointer-events:none}
+.fd-text-size-footer{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.fd-text-size-footer p{font-size:11px;color:var(--quiet);line-height:1.6;max-width:38em}
+.fd-text-size-reset{font-family:var(--app-font-mono);font-size:10px;text-decoration:underline;text-underline-offset:4px;white-space:normal}
+.fd-text-size-reset:disabled{opacity:.45;cursor:default;text-decoration:none}
+/* Grow text-bearing controls rather than enlarging the scene or cropping labels. */
+html[data-wa-text-size] :is(.wa-sidebar,.wa-topbar,.wa-dashboard-actions,.fd-type-options){min-width:0}
+html[data-wa-text-size] :is(.fd-type-card,.wa-dashboard-actions a){height:auto;white-space:normal;overflow-wrap:anywhere}
+html[data-wa-text-size] .fd-index a{min-height:44px;height:auto;white-space:normal}
+html[data-wa-text-size] :is(button,input,select,textarea){max-width:100%}
+html[data-wa-text-size] .wa-topbar{height:auto;min-height:64px;flex-wrap:wrap;row-gap:10px;padding-block:12px}
+html[data-wa-text-size] :is(p,h1,h2,h3,h4,h5,h6,label){overflow-wrap:break-word}
+html[data-wa-text-size] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),html[data-wa-text-size] select{min-height:2.5em}

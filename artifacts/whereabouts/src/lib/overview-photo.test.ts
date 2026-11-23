@@ -36,5 +36,5 @@ test('Overview uses the generated authenticated hook and shared Canvas; title, d
 });
 test('personal counts and photographs cannot fall back to another value or specimen image',()=>{
   const source=readFileSync(new URL('../components/InstrumentKit.tsx',import.meta.url),'utf8');
-  assert.match(source,/if\(kind==='splitflap'\|\|kind==='archiveprint'\)\{setPng\(undefined\);return;\}/);
+  assert.match(source,/if\(kind==='splitflap'\|\|kind==='archiveprint'\|\|kind==='fontslider'\)\{setPng\(undefined\);return;\}/);
 });
