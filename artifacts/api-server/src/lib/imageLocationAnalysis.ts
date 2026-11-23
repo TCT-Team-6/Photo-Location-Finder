@@ -345,7 +345,15 @@ export function normalizeImageLocationResponse(
     if (normalizedCandidates.length >= 4) break;
   }
 
-  normalizedCandidates.sort((left, right) => right.confidence - left.confidence);
+  // The backend's primary answer carries a fused, map-verified confidence,
+  // while alternatives carry the vision model's raw self-reported confidence.
+  // Those scales are not comparable, so keep the backend's chosen location
+  // first and rank only the alternatives among themselves.
+  const hasPrimary = !!primaryName && normalizedCandidates.length > 0;
+  const rankedAlternatives = normalizedCandidates
+    .slice(hasPrimary ? 1 : 0)
+    .sort((left, right) => right.confidence - left.confidence);
+  normalizedCandidates.splice(hasPrimary ? 1 : 0, rankedAlternatives.length, ...rankedAlternatives);
 
   const serviceSummary = text(body.summary);
   const summaryConflictsWithRanking =

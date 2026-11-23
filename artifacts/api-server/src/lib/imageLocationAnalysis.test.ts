@@ -4,7 +4,7 @@ import { analyzeImageLocation, locatorHealth, normalizeImageLocationResponse } f
 import { extractImageLocationMetadata } from "./imageLocationMetadata.js";
 import { IMAGE_LIMIT, VIDEO_LIMIT, mediaValidationError } from "./locatorMedia.js";
 
-test("ranks the highest-scored lead first and keeps the summary aligned", () => {
+test("keeps the backend's chosen location first even when an alternative scores higher", () => {
   const result = normalizeImageLocationResponse({
     location_name: "Front Range",
     country: "USA",
@@ -19,10 +19,29 @@ test("ranks the highest-scored lead first and keeps the summary aligned", () => 
     ],
   });
 
-  assert.equal(result.candidates[0]?.place, "Alberta Foothills");
-  assert.equal(result.candidates[0]?.confidence, 0.6);
-  assert.match(result.summary, /Alberta Foothills/);
-  assert.doesNotMatch(result.summary, /Front Range/);
+  // Alternatives carry the vision model's raw confidence, which is not on the
+  // same scale as the backend's fused confidence, so they never outrank it.
+  assert.equal(result.candidates[0]?.place, "Front Range");
+  assert.equal(result.candidates[0]?.confidence, 0.573);
+  assert.equal(result.candidates[1]?.place, "Alberta Foothills");
+  assert.equal(result.candidates[2]?.place, "Cantabrian Mountains");
+  assert.match(result.summary, /Front Range/);
+});
+
+test("ranks alternatives by confidence behind the primary location", () => {
+  const result = normalizeImageLocationResponse({
+    location_name: "Lake Chelan",
+    confidence: 0.3,
+    alternatives: [
+      { name: "Lake Wenatchee", confidence: 0.2 },
+      { name: "Lake Coeur d'Alene", confidence: 0.45 },
+    ],
+  });
+
+  assert.deepEqual(
+    result.candidates.map((candidate) => candidate.place),
+    ["Lake Chelan", "Lake Coeur d'Alene", "Lake Wenatchee"],
+  );
 });
 
 test("replaces underscores in visual clue details with spaces", () => {
