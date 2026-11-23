@@ -19,16 +19,16 @@ async function getTester() {
       try {
         await clerkClient.users.createUser({
           externalId: TESTER_EXTERNAL_ID,
-          emailAddress: ["whereabouts-external-tester@example.test"],
+          emailAddress: ["whereabouts-external-tester@example.com"],
           firstName: "Automation",
           lastName: "Tester",
           skipPasswordRequirement: true,
           privateMetadata: { testerLogin: TESTER_MARKER },
         });
-      } catch {
+      } catch (error) {
         // Another server may have won the unique-ID race; only accept its
         // correctly marked account, never a different user or email match.
-        if (!(await find()).some(isDedicatedTester)) throw new Error("Tester provisioning failed");
+        if (!(await find()).some(isDedicatedTester)) throw error;
       }
     })().finally(() => { provisioning = null; });
     await provisioning;
@@ -63,9 +63,12 @@ router.post("/testing/sign-in-ticket", async (req, res) => {
     });
     req.log.info({ environment: config.environment }, "Issued dedicated tester sign-in ticket");
     res.json({ ticket: ticket.token, expiresInSeconds: TICKET_LIFETIME_SECONDS, environment: config.environment });
-  } catch {
+  } catch (error) {
     // Clerk errors can contain sensitive request data. Do not log raw errors.
-    req.log.error("Dedicated tester ticket could not be issued");
+    const codes = (error as { errors?: { code?: unknown }[] })?.errors;
+    const providerCodes = Array.isArray(codes) ? codes.map(e => e.code)
+      .filter((code): code is string => typeof code === "string" && /^[a-z_]{1,80}$/.test(code)).slice(0, 5) : [];
+    req.log.error({ providerCodes }, "Dedicated tester ticket could not be issued");
     res.status(503).json({ error: "Tester account or authentication service is unavailable." });
   }
 });

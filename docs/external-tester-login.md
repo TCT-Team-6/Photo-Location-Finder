@@ -14,7 +14,8 @@ arbitrary-user impersonation, database bypass, or shared personal account is use
 - Each Clerk environment gets a **separate dedicated account**, created lazily on
   the first authorized request. It has the reserved external ID
   `whereabouts-external-tester-v1` and a server-controlled private metadata marker.
-  The reserved `example.test` email is not a deliverable inbox.
+  The reserved `example.com` email is not a tester-controlled inbox; this account
+  uses tickets, not email-based sign-in or recovery.
 - The runtime environment and Clerk key type must agree. Misconfiguration fails
   closed with HTTP 404. A development key cannot be used to sign into production.
 - If Replit's private-preview gate prevents access before the request reaches
