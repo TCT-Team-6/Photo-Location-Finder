@@ -8,9 +8,11 @@ export const instrumentPNGs:Partial<Record<InstrumentKind,string>>={
   "lever": "lever.png",
   "rocker": "rocker.png",
   "tally": "tally.png",
+  "splitflap": "splitflap.png",
   "drawer": "drawer.png",
   "loupe": "loupe.png",
   "tray": "tray.png",
+  "archiveprint": "archiveprint.png",
   "print": "print.png",
   "dial": "dial.png",
   "swatch": "swatch.png"

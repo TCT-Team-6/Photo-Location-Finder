@@ -58,7 +58,8 @@ import { GuideDraftProvider, useGuideDraft } from '@/features/guide/guide-ui';
 import './index.css';
 import './styles/field-desk.css';
 import './styles/desk-refinements.css';
-import {BatchPrints,DeskMargin,FlipChecklist,HangingTag,HelpNote} from '@/components/desk-controls';
+import {BatchPrints,DeskMargin,FlipChecklist,HelpNote} from '@/components/desk-controls';
+import {OverviewClock,OverviewPhoto} from '@/components/overview-instruments';
 import {DeskSelector} from '@/components/desk-selector';
 import {advanceInvestigationStep,canSubmitInvestigation,type InvestigationStep} from '@/lib/investigation-steps';
 import {deskSound,setSoundEnabled,soundEnabled} from '@/lib/desk-sound';
@@ -66,7 +67,7 @@ import type {SavedInvestigationPhoto} from '@/lib/investigation-photo-uploads';
 import {PhysicalWorkspace} from '@/components/physical-workspace';
 import {OperatorAvatar} from '@/components/operator-avatar';
 import {SafeRequestError} from '@/components/safe-request-error';
-import {DeskFilterKeys,PhysicalSwitch,ShutterButton,SwatchBook,TallyCounter} from '@/components/physical-controls';
+import {DeskFilterKeys,PhysicalSwitch,ShutterButton,SwatchBook} from '@/components/physical-controls';
 import {ReportChip,ReportOperationProvider,useReportOperation} from '@/components/report-operation';
 import {deskMatchesFilter} from '@/lib/desk-filters';
 import {constrainLibrarySearch,LIBRARY_SEARCH_MAX_LENGTH} from '@/lib/library-search';
@@ -542,10 +543,10 @@ function DashboardPage() {
     </div>
     {summary.isLoading ? <div className="mb-8 grid gap-4 sm:grid-cols-3"><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /><SkeletonBlock className="h-32" /></div>
       : summary.isError ? <div className="mb-8"><QueryError retry={() => summary.refetch()} text="Your archive summary is taking a moment." /></div>
-      : <div className="wa-stats mb-9">
-        <Stat label="Saved investigations" value={summary.data?.total ?? 0} total={summary.data?.total??0} caption="In your image archive" icon={<Layers3 size={18} />} />
-        <Stat label="This month" value={summary.data?.thisMonth ?? 0} total={summary.data?.total??0} caption="Investigations opened" icon={<Crosshair size={18} />} />
-        <HangingTag><p className="font-data text-[9px] uppercase tracking-[.17em]">Most recent</p><p className="mt-4 line-clamp-1 font-editorial text-2xl">{latest ? displayTitle(latest.title) : 'Your first clue is waiting'}</p><p className="mt-1 text-xs">{latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}</p>{latest && <Link href={`/investigation/${latest.id}`} data-testid="link-latest-investigation" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold">Open trail <ArrowRight size={14} /></Link>}</HangingTag>
+      : <div className="wa-stats wa-instrument-shelf mb-9">
+        <OverviewClock label="Saved investigations" value={summary.data?.total ?? 0} caption="In your image archive" />
+        <OverviewClock label="This month" value={summary.data?.thisMonth ?? 0} caption="Investigations opened" />
+        <OverviewPhoto item={latest} title={latest ? displayTitle(latest.title) : 'Your first clue is waiting'} date={latest ? formatDate(latest.createdAt) : 'Begin with a photograph'}/>
       </div>}
     <DeskMargin/><div className="mb-5 flex items-end justify-between border-b border-[#d8d1c2] pb-4">
       <div><PageEyebrow>Recently opened</PageEyebrow><h2 className="mt-2 font-editorial text-3xl tracking-[-.03em]">Your latest trails</h2></div>
@@ -555,13 +556,6 @@ function DashboardPage() {
       : investigations.isError ? <QueryError retry={() => investigations.refetch()} />
       : rows.length === 0 ? <EmptyState icon={<Compass size={26} />} eyebrow="A new page" title="No investigations yet." text="Start with a photo that has been on your mind. We’ll help you follow its visual clues." action={<Link href="/investigate" data-testid="empty-start-investigation" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#385e51] px-5 py-3 text-xs font-semibold text-[#f4f0e6]">Investigate a photo <ArrowRight size={15} /></Link>} />
       : <ContactSheet>{rows.slice(0, 6).map((item,i) => <InvestigationCard key={item.id} item={item} frame={i+1}/>)}</ContactSheet>}
-  </div>;
-}
-
-function Stat({ label, value, caption, icon,total }: { label: string; value: number; caption: string; icon: ReactNode;total:number }) {
-  return <div className="wa-stat">
-    <div data-testid={`stat-${label.toLowerCase().replaceAll(' ', '-')}`}><TallyCounter value={value} label={label}/></div>
-    <div className="flex items-center justify-between"><p className="text-xs text-[#738078]">{label}</p><span className="text-[#b47751]">{icon}</span></div><div className="fd-stat-ruler" title={`${value} of ${total} saved investigations`} aria-hidden="true"><span style={{width:`${total?Math.min(100,value/total*100):0}%`}}/></div><p className="mt-3 font-data text-[9px] uppercase tracking-[.12em] text-[#96a095]">{caption}</p>
   </div>;
 }
 

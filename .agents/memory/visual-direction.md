@@ -62,6 +62,12 @@ Hidden instrument panels must not retain active Drei render portals or explicitl
 
 **How to apply:** Keep layout placeholders when needed, but gate scene portals and fallback visibility on the panel's actual visibility. On removal, request a complete redraw.
 
+Overview counters should resemble black mechanical split-flap clocks with white numerals and integrated product-name labels. “Most recent” should include the actual saved photograph as a raised Three.js print, not only its trail name.
+
+**Why:** The user explicitly requested this reference-led material treatment, hinged split-flap motion, and tactile flip sound.
+
+**How to apply:** Preserve real counts and private photo access; respect sound and reduced-motion preferences. Never substitute specimen counts or stock photographs for account data.
+
 Do not put an effectful renderer-failure detector in R3F Canvas's `fallback` prop.
 
 **Why:** Fiber mounts that fallback as children of the HTML canvas even when canvas is supported. A fallback component's effect can falsely declare WebGL unavailable and unmount the real renderer.
