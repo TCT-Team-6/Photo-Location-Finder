@@ -43,6 +43,9 @@
 .rp-list-actions button{font:13px var(--app-font-mono);border:1px solid var(--line);border-radius:999px;padding:0 12px;color:var(--moss);background:var(--surface);display:inline-flex;align-items:center;gap:5px}
 .rp-list-actions button:disabled{opacity:.5}
 .rp-items{display:grid;gap:10px;padding:12px;scroll-margin-top:80px}
+/* Fixed height: every lead is listed and the list scrolls inside its box. */
+.rp-items{max-height:min(620px,70vh);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.rp-count{margin:6px 0 0;font-size:.78rem;font-weight:600;opacity:.75}
 .rp-item{--tier:#2f7550;position:relative;border:1px solid var(--line);border-left:4px solid var(--tier);border-radius:12px;background:hsl(var(--card));padding:12px 12px 12px 12px;scroll-margin:90px 0 24px;transition:border-color .2s,background-color .2s}
 .rp-item.is-selected{background:var(--recess);border-color:var(--tier);box-shadow:0 0 0 1px var(--tier)}
 .rp-item-select{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(128px,.62fr);gap:12px;align-items:center;width:100%;text-align:left}

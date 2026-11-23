@@ -41,10 +41,11 @@ export function RankedPlacesList({ items, selectedIndex, onSelect, scrollToken, 
   return <section className="rp-list" aria-labelledby="rp-list-title" data-testid="section-ranked-places">
     <header className="rp-list-head">
       <div className="min-w-0"><p className="rp-eyebrow">Ranked by Confidence</p><h2 className="rp-title" id="rp-list-title">Likely places to check</h2>
-        <p className="rp-sub" data-testid="text-confidence-definition">{CONFIDENCE_DEFINITION}</p></div>
+        <p className="rp-sub" data-testid="text-confidence-definition">{CONFIDENCE_DEFINITION}</p>
+        {items.length > 0 && <p className="rp-count" data-testid="text-leads-count">{items.length === 1 ? '1 lead considered' : `${items.length} leads considered${items.length > 3 ? ' · scroll to see all' : ''}`}</p>}</div>
       {actions && <div className="rp-list-actions">{actions}</div>}
     </header>
-    {items.length ? <ol className="rp-items" data-testid={testId}>{items.map((item) => {
+    {items.length ? <ol className="rp-items" tabIndex={0} aria-label="All leads considered, ranked" data-testid={testId}>{items.map((item) => {
       const tier = confidenceTier(item.percent), selected = item.index === selectedIndex;
       return <li key={`${item.place}-${item.index}`} ref={(node) => { if (node) refs.current.set(item.index, node); else refs.current.delete(item.index); }} className={`rp-item${selected ? ' is-selected' : ''}`} style={{ ['--tier' as string]: tier.color }} data-testid={`card-ranked-place-${item.index}`}>
         <button type="button" className="rp-item-select" aria-pressed={selected} onClick={() => onSelect(item.index)} data-testid={`button-select-place-${item.index}`}>

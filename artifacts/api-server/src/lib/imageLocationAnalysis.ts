@@ -53,6 +53,9 @@ type FallbackAnalyzer = (
 
 type JsonRecord = Record<string, unknown>;
 
+// Every lead the backend considered is listed (the results list scrolls).
+const MAX_CANDIDATES = 10;
+
 function asRecord(value: unknown): JsonRecord | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as JsonRecord)
@@ -300,7 +303,7 @@ export function normalizeImageLocationResponse(
       primary ? bestGuess?.country : null,
     );
     const key = name.trim().toLocaleLowerCase();
-    if (seenCandidates.has(key) || normalizedCandidates.length >= 4) return;
+    if (seenCandidates.has(key) || normalizedCandidates.length >= MAX_CANDIDATES) return;
     seenCandidates.add(key);
 
     const latitude = coordinate(
@@ -355,7 +358,7 @@ export function normalizeImageLocationResponse(
   for (const source of possibleCandidates) {
     const name = candidateName(source);
     if (name) appendCandidate(source, name, false);
-    if (normalizedCandidates.length >= 4) break;
+    if (normalizedCandidates.length >= MAX_CANDIDATES) break;
   }
 
   // The backend's primary answer carries a fused, map-verified confidence,
