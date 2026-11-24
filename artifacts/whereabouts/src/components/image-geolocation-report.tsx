@@ -63,8 +63,8 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
     </details>
     <HealthUrgencyCard investigation={item}/>
     <footer aria-label="Map methodology and privacy">
-      <p className="geo-map-method">Higher model scores produce stronger, broader fields. Spread is a display heuristic, not a measured search radius, location uncertainty, or calibrated probability. Distant fields stay separate; overlapping values use the stronger field, not a sum. Scores are never normalized to total 100%. Zoom into a field for local detail.</p>
-      <p className="geo-map-method">Map tiles are requested from OpenStreetMap for the viewed area. The original photograph and private notes are not sent to the tile provider. No place-name geocoding is performed.</p>
+      <p className="geo-map-method">Heat intensity uses confidence raised to 1.5. Nearby points accumulate intensity; the color also depends on zoom. The 28-pixel radius and 22-pixel blur are display settings, not a measured search radius or calibrated probability. Scores are never normalized to total 100%.</p>
+      <p className="geo-map-method">Map tiles are requested from CARTO for the viewed area using OpenStreetMap data. The original photograph and private notes are not sent to the tile provider. No place-name geocoding is performed.</p>
     </footer>
   </div>;
 }

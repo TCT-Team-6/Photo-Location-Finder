@@ -25,13 +25,13 @@ test('image report orders photo and notes beside map, then leads, visual evidenc
 test('geographic surface is the existing Leaflet/tile stack with a geodesic raster, not decorative markers or image uploads',()=>{
   const source=readFileSync(new URL('../components/geographic-confidence-map.tsx',import.meta.url),'utf8');
   assert.match(source,/from 'react-leaflet'/);assert.match(source,/<MapContainer/);
-  assert.match(source,/map\.containerPointToLatLng/);assert.match(source,/geographicFieldValue/);
-  assert.match(source,/ctx\.putImageData/);assert.match(source,/\.46\*255/);
+  assert.match(source,/<ConfidenceHeatLayer/);assert.match(source,/dark_nolabels/);
+  assert.match(source,/dark_only_labels/);assert.match(source,/opacity=\{0.6\}/);
   assert.doesNotMatch(source,/CircleMarker|<Circle|<Marker|createRadialGradient|normalize\(|\bfetch\(/);
   const report=readFileSync(new URL('../components/image-geolocation-report.tsx',import.meta.url),'utf8');
   assert.match(report,/not a measured search radius/);
   assert.match(report,/never normalized to total 100%/);
-  assert.ok(report.indexOf('Higher model scores produce stronger')>report.indexOf('<HealthUrgencyCard'));
+  assert.ok(report.indexOf('Heat intensity uses confidence')>report.indexOf('<HealthUrgencyCard'));
   assert.ok(report.indexOf('Map tiles are requested')>report.indexOf('<HealthUrgencyCard'));
   assert.doesNotMatch(source,/Higher model scores produce stronger|Map tiles are requested/);
   assert.match(source,/referrerPolicy="strict-origin"/);
