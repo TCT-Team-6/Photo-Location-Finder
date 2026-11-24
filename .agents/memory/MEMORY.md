@@ -12,3 +12,4 @@
 - [Demo family scenarios](demo-family-scenarios.md) — Fictional family inputs drive sample urgency; keep relative times and demo-only presentation separate from live analysis.
 - [AI Guide scope](ai-guide-scope.md) — Live guide organizes evidence, never infers whereabouts; guided demos use saved fictional data and explicit labels.
 - [Visual direction](visual-direction.md) — Camera-inspired tactile controls and A24-inspired imagery; avant-garde aesthetics must never impede usability.
+- [CARTO access](carto-access.md) — Raster tiles now require a Basemaps key; HTTP success alone cannot verify that geography rendered.

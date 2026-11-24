@@ -5,6 +5,8 @@ import {fieldBounds,mapTopCandidates,unwrapGeographicPoints,type GeographicPoint
 import {ConfidenceHeatLayer} from './confidence-heat-layer';
 import 'leaflet/dist/leaflet.css';
 
+const cartoKey=encodeURIComponent(import.meta.env.VITE_CARTO_BASEMAPS_KEY??'');
+
 function GeographicViewport({positions,selectedPosition,overview,focusVersion}:{positions:GeographicPoint[];selectedPosition:GeographicPoint|undefined;overview:number;focusVersion:number}){
   const map=useMap(),last=useRef<{selection:GeographicPoint|undefined;overview:number}|null>(null);
   useEffect(()=>{
@@ -36,10 +38,10 @@ export function GeographicConfidenceMap({candidates,selectedIndex,onSelect}:{can
     <p className="geo-eyebrow">Geographic comparison / top three</p><h2 className="geo-section-title" id="geographic-map-title">Where the leads point.</h2>
     <p className="geo-map-explanation">Confidence-weighted heat over candidate coordinates. Warmer colors indicate stronger local intensity—not verified location probability.</p>
     {fields.length?<><div className="geo-map-surface"><MapContainer key={mapKey} center={center} zoom={3} scrollWheelZoom={false} aria-label="Geographic map of the highest-ranked coordinate-bearing leads">
-      <TileLayer key={retry} referrerPolicy="strict-origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" eventHandlers={{loading:()=>setLoading(true),load:()=>setLoading(false),tileerror:()=>{setTileError(true);setLoading(false);}}}/>
+      <TileLayer key={retry} referrerPolicy="strict-origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' url={`https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${cartoKey}`} eventHandlers={{loading:()=>setLoading(true),load:()=>setLoading(false),tileerror:()=>{setTileError(true);setLoading(false);}}}/>
       <GeographicViewport positions={positions} selectedPosition={selectedPosition} overview={overview} focusVersion={focusVersion}/>
       <ConfidenceHeatLayer fields={fields} onError={setHeatError}/>
-      <Pane name="heat-labels" style={{zIndex:450,pointerEvents:'none'}}><TileLayer key={retry} referrerPolicy="strict-origin" url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png" opacity={0.6} eventHandlers={{tileerror:()=>setTileError(true)}}/></Pane>
+      <Pane name="heat-labels" style={{zIndex:450,pointerEvents:'none'}}><TileLayer key={retry} referrerPolicy="strict-origin" url={`https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=${cartoKey}`} opacity={0.6} eventHandlers={{tileerror:()=>setTileError(true)}}/></Pane>
     </MapContainer></div>
       {tileError?<p className="geo-map-status" role="alert" data-testid="status-map-tiles-error">Some geographic tiles could not load. Field coordinates are unchanged.<button type="button" data-testid="button-retry-map-tiles" onClick={()=>{setTileError(false);setLoading(true);setRetry(value=>value+1);}}>Retry tiles</button></p>:loading?<p className="geo-map-status skeleton" role="status" data-testid="status-map-tiles-loading">Loading geographic tiles…</p>:null}
       {heatError&&<p role="alert" className="geo-map-status">The heat renderer could not load. Candidate coordinates and scores remain available below.</p>}
