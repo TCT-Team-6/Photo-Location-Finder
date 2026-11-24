@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {MapContainer,Pane,TileLayer,useMap} from 'react-leaflet';
 import type {Investigation} from '@workspace/api-client-react';
-import {fieldBounds,mapTopCandidates,unwrapGeographicPoints,type GeographicPoint} from '@/lib/geographic-confidence';
+import {mapTopCandidates,unwrapGeographicPoints,type GeographicPoint} from '@/lib/geographic-confidence';
 import {ConfidenceHeatLayer} from './confidence-heat-layer';
 import 'leaflet/dist/leaflet.css';
 
@@ -12,7 +12,8 @@ function GeographicViewport({positions,selectedPosition,overview,focusVersion}:{
   useEffect(()=>{
     const previous=last.current,all=!previous||previous.overview!==overview;
     const points=all?positions:selectedPosition?[selectedPosition]:positions;
-    if(points.length)map.fitBounds(fieldBounds(points),{padding:[26,26],maxZoom:7,animate:false});
+    if(points.length===1)map.setView(points[0],14,{animate:false});
+    else if(points.length>1)map.fitBounds(unwrapGeographicPoints(points),{padding:[26,26],maxZoom:15,animate:false});
     last.current={selection:selectedPosition,overview};
   },[map,positions,selectedPosition,overview,focusVersion]);
   useEffect(()=>{
@@ -37,7 +38,7 @@ export function GeographicConfidenceMap({candidates,selectedIndex,onSelect}:{can
   return <><section className="geo-map-section" aria-labelledby="geographic-map-title" data-testid="map-confidence-fields">
     <p className="geo-eyebrow">Geographic comparison / top three</p><h2 className="geo-section-title" id="geographic-map-title">Where the leads point.</h2>
     <p className="geo-map-explanation">Confidence-weighted heat over candidate coordinates. Warmer colors indicate stronger local intensity—not verified location probability.</p>
-    {fields.length?<><div className="geo-map-surface"><MapContainer key={mapKey} center={center} zoom={3} scrollWheelZoom={false} aria-label="Geographic map of the highest-ranked coordinate-bearing leads">
+    {fields.length?<><div className="geo-map-surface"><MapContainer key={mapKey} center={center} zoom={3} minZoom={1} scrollWheelZoom={false} aria-label="Geographic map of the highest-ranked coordinate-bearing leads">
       <TileLayer key={retry} referrerPolicy="strict-origin" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' url={`https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${cartoKey}`} eventHandlers={{loading:()=>setLoading(true),load:()=>setLoading(false),tileerror:()=>{setTileError(true);setLoading(false);}}}/>
       <GeographicViewport positions={positions} selectedPosition={selectedPosition} overview={overview} focusVersion={focusVersion}/>
       <ConfidenceHeatLayer fields={fields} onError={setHeatError}/>

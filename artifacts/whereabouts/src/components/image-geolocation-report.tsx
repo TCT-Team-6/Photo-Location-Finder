@@ -63,7 +63,7 @@ export function ImageGeolocationReport({item,leads,sceneSummary,photoURL,photoLo
     </details>
     <HealthUrgencyCard investigation={item}/>
     <footer aria-label="Map methodology and privacy">
-      <p className="geo-map-method">Heat intensity uses confidence raised to 1.5. Nearby points accumulate intensity; the color also depends on zoom. The 28-pixel radius and 22-pixel blur are display settings, not a measured search radius or calibrated probability. Scores are never normalized to total 100%.</p>
+      <p className="geo-map-method">Heat intensity uses confidence raised to 1.5 without zoom-based dimming. Nearby points accumulate intensity. A 400-meter display footprint scales with map latitude and zoom, clamped to 6–120 pixels with 80% blur; it is not a measured search radius or calibrated probability. Scores are never normalized to total 100%.</p>
       <p className="geo-map-method">Map tiles are requested from CARTO for the viewed area using OpenStreetMap data. The original photograph and private notes are not sent to the tile provider. No place-name geocoding is performed.</p>
     </footer>
   </div>;
