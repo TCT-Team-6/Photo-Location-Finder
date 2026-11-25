@@ -23,8 +23,10 @@
 .geo-clue p:last-child{font-size:11px}
 .geo-map-section{border:1px solid #000;padding:20px;min-width:0}
 .geo-map-explanation{font-size:12px;line-height:1.7;color:var(--quiet);margin-top:14px}
-.geo-map-surface{position:relative;margin-top:20px;isolation:isolate;background:#0F1115}
-.geo-map-surface .leaflet-container{height:clamp(340px,52vh,500px);width:100%;background:#0F1115;font-family:var(--app-font-sans)}
+.geo-map-surface{position:relative;margin-top:20px;isolation:isolate;background:#AAD3DF}
+.geo-map-surface .leaflet-container{height:clamp(340px,52vh,500px);width:100%;background:#AAD3DF;font-family:var(--app-font-sans)}
+/* Keeps terrain realistic while separating its green-to-brown tints from the heat gradient. */
+.geo-map-surface .leaflet-tile-pane{filter:saturate(.55) brightness(1.04)}
 .geo-map-surface .leaflet-control-attribution{white-space:normal;line-height:1.5;max-width:100%}
 .geo-map-status{padding:14px 0;font-size:11px;line-height:1.6;color:var(--quiet)}
 .geo-map-status button{text-decoration:underline;text-underline-offset:4px;margin-left:10px}

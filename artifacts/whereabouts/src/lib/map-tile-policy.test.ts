@@ -7,11 +7,10 @@ test('OSM tile layers identify the site without revealing report paths',()=>{
     const source=readFileSync(new URL(`../components/${file}.tsx`,import.meta.url),'utf8');
     assert.match(source,/referrerPolicy="strict-origin"/);
     if(file==='geographic-confidence-map'){
-      assert.match(source,/basemaps\.cartocdn\.com\/dark_nolabels/);
-      assert.match(source,/basemaps\.cartocdn\.com\/dark_only_labels/);
-      assert.match(source,/carto\.com\/attributions/);
-      assert.match(source,/encodeURIComponent\(import\.meta\.env\.VITE_CARTO_BASEMAPS_KEY/);
-      assert.equal(source.match(/\?key=\$\{cartoKey\}/g)?.length,2);
+      assert.match(source,/https:\/\/\{s\}\.tile\.opentopomap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
+      assert.match(source,/SRTM/);assert.match(source,/CC-BY-SA/);
+      assert.match(source,/maxZoom=\{17\}/);
+      assert.doesNotMatch(source,/cartocdn|dark_/);
     }else assert.match(source,/https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
     assert.match(source,/openstreetmap\.org\/copyright/);
     assert.doesNotMatch(source,/referrerPolicy="no-referrer"/);
